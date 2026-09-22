@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Care | Department Queue Display</title>
+    <link rel="stylesheet" href="../css/display.css">
+</head>
+<body>
+
+    <main class="display-page">
+        <header class="display-header">
+            <img src="../assets/logo.png" alt="The Care Hospital Logo" class="display-logo">
+
+            <div class="header-title">
+                <!-- Prototype only. Later loaded according to URL/backend. -->
+                <h1>Cardiology</h1>
+                <p>Department Queue Display</p>
+            </div>
+        </header>
+
+        <section class="department-layout">
+            <div class="now-serving">
+                <p class="section-label">Now Serving</p>
+                <div class="serving-number">CD008</div>
+                <p class="counter-label">Please proceed to Counter 2</p>
+            </div>
+
+            <div class="next-queue">
+                <h2>Next Queue</h2>
+
+                <div class="next-list">
+                    <div class="next-item"><span>CD009</span><span>Waiting</span></div>
+                    <div class="next-item"><span>CD010</span><span>Waiting</span></div>
+                    <div class="next-item"><span>CD011</span><span>Waiting</span></div>
+                </div>
+
+                <p class="waiting-summary"><strong>4 patients</strong> currently waiting</p>
+            </div>
+        </section>
+
+        <p class="display-footer">Please wait until your queue number is called.</p>
+    </main>
+
+</body>
+</html>

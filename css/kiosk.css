@@ -1,0 +1,160 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Tahoma, Geneva, sans-serif;
+    background-image:
+        linear-gradient(rgba(244, 247, 250, 0.82), rgba(244, 247, 250, 0.82)),
+        url("../assets/background.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 20px;
+}
+
+.kiosk-card,
+.ticket-card {
+    width: 100%;
+    max-width: 760px;
+    background-color: rgba(255, 255, 255, 0.97);
+    padding: 48px 55px;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.14);
+    text-align: center;
+}
+
+.logo-img {
+    width: 220px;
+    max-width: 70%;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.system-name {
+    color: #1976d2;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.kiosk-card h1,
+.ticket-card h1 {
+    font-size: 32px;
+    color: #222;
+    margin-bottom: 8px;
+}
+
+.department-name {
+    display: inline-block;
+    margin: 12px 0 26px;
+    padding: 10px 22px;
+    background-color: #eaf3fb;
+    color: #125ca8;
+    border-radius: 30px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.instruction-text {
+    color: #666;
+    font-size: 18px;
+    line-height: 1.5;
+    margin-bottom: 32px;
+}
+
+.get-number-button,
+.done-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 86px;
+    padding: 20px 24px;
+    border: none;
+    border-radius: 14px;
+    background-color: #1976d2;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.get-number-button:hover,
+.done-button:hover {
+    background-color: #125ca8;
+    transform: translateY(-2px);
+}
+
+.kiosk-note {
+    margin-top: 28px;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.queue-number {
+    margin: 24px auto 12px;
+    font-size: 72px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    color: #1976d2;
+}
+
+.ticket-details {
+    margin: 24px 0 30px;
+    padding: 20px;
+    background-color: #f6f8fa;
+    border-radius: 12px;
+}
+
+.ticket-details p {
+    margin: 8px 0;
+    color: #444;
+    font-size: 17px;
+}
+
+.ticket-message {
+    color: #666;
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 28px;
+}
+
+.done-button {
+    min-height: 58px;
+    font-size: 18px;
+}
+
+@media (max-width: 650px) {
+    .kiosk-card,
+    .ticket-card {
+        padding: 35px 22px;
+    }
+
+    .kiosk-card h1,
+    .ticket-card h1 {
+        font-size: 26px;
+    }
+
+    .instruction-text {
+        font-size: 16px;
+    }
+
+    .queue-number {
+        font-size: 56px;
+    }
+
+    .get-number-button {
+        font-size: 20px;
+    }
+}

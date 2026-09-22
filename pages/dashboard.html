@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>The Care | Staff Dashboard</title>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+
+<body>
+
+    <header class="top-navbar">
+
+        <!-- Logo -->
+        <div class="navbar-logo">
+            <img src="../assets/logo.png" alt="The Care Logo">
+        </div>
+
+
+        <!-- Search Controls -->
+        <div class="search-controls">
+
+            <input
+                type="text"
+                class="search-input"
+                placeholder="Search queue number..."
+            >
+
+            <select class="filter-select">
+                <option>All Counters</option>
+                <option>Counter 1</option>
+                <option>Counter 2</option>
+                <option>Counter 3</option>
+            </select>
+
+            <select class="filter-select">
+                <option>Last 24 hours</option>
+                <option>Last 30 min</option>
+                <option>Last 1 hour</option>
+                <option>Last 3 hours</option>
+            </select>
+
+            <button class="search-button">
+                <i class="bi bi-search"></i>
+                Search
+            </button>
+
+        </div>
+
+
+        <!-- Staff Information -->
+        <div class="staff-info">
+
+            <span class="staff-id">
+                <i class="bi bi-person-badge"></i>
+                TEST001
+            </span>
+
+            <button class="logout-button">
+                <i class="bi bi-box-arrow-right"></i>
+                Log out
+            </button>
+
+        </div>
+
+    </header>
+
+    <main class="dashboard-container">
+
+        <section class="dashboard-card">
+
+            <div class="left-panel">
+
+                <!-- Department / Counter -->
+                <div class="location-row">
+
+                    <div class="info-badge">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        Cardiology
+                    </div>
+
+                    <i class="bi bi-chevron-right arrow"></i>
+
+                    <div class="info-badge">
+                        <i class="bi bi-display"></i>
+                        Counter 2
+                    </div>
+
+                </div>
+
+
+                <!-- Current Number -->
+                <h2 class="section-title">
+                    Current Number
+                </h2>
+
+
+                <div class="current-number">
+                    CD008
+                </div>
+
+
+                <!-- Status -->
+                <div class="serving-status">
+
+                    <span class="status-dot"></span>
+
+                    <span>
+                        Serving Now
+                    </span>
+
+                </div>
+
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+
+                    <div class="action">
+
+                        <button class="action-button recall-button">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Recall
+                        </button>
+
+                    </div>
+
+
+                    <div class="action">
+
+                        <button class="action-button complete-button">
+                            <i class="bi bi-check2-all"></i>
+                            Complete & Next
+                        </button>
+
+                        <span class="action-note">
+                            Complete only
+                        </span>
+
+                    </div>
+
+
+                    <div class="action">
+
+                        <button class="action-button hold-button">
+                            <i class="bi bi-pause-circle"></i>
+                            Hold & Next
+                        </button>
+
+                        <span class="action-note">
+                            Hold only
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="right-panel">
+
+                <!-- Header -->
+                <div class="queue-header">
+
+                    <h2>LIST</h2>
+
+                    <div class="queue-tabs">
+
+                        <button class="queue-tab active">
+                            WAIT
+                            <span>4</span>
+                        </button>
+
+                        <button class="queue-tab">
+                            HOLD
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Service Filter -->
+                <select class="service-filter">
+                    <option>All Services (4)</option>
+                    <option>Appointment</option>
+                    <option>Walk-In</option>
+                </select>
+
+
+                <!-- Queue List -->
+                <div class="queue-list">
+
+
+                    <!-- Queue Item -->
+                    <div class="queue-item">
+
+                        <div>
+                            <h3>CD009</h3>
+                            <p>10:56 AM</p>
+                        </div>
+
+                        <span class="queue-time">
+                            Just now
+                        </span>
+
+                    </div>
+
+
+                    <!-- Queue Item -->
+                    <div class="queue-item">
+
+                        <div>
+                            <h3>CD010</h3>
+                            <p>10:57 AM</p>
+                        </div>
+
+                        <span class="queue-time">
+                            Just now
+                        </span>
+
+                    </div>
+
+
+                    <!-- Queue Item -->
+                    <div class="queue-item">
+
+                        <div>
+                            <h3>CD011</h3>
+                            <p>10:58 AM</p>
+                        </div>
+
+                        <span class="queue-time">
+                            Just now
+                        </span>
+
+                    </div>
+
+
+                    <!-- Queue Item -->
+                    <div class="queue-item">
+
+                        <div>
+                            <h3>CD012</h3>
+                            <p>10:59 AM</p>
+                        </div>
+
+                        <span class="queue-time">
+                            Just now
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

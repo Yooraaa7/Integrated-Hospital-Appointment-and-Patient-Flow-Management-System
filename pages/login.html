@@ -1,175 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>The Care | QMS Staff Login</title>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Tahoma, Geneva, sans-serif;
-
-            background-image: url("../assets/background.jpeg");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-
-            min-height: 100vh;
-
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 450px;
-            padding: 20px;
-        }
-
-        .login-card {
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .logo img {
-            width: 200px;
-            height: auto;
-        }
-
-        .hospital-name {
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: #1976d2;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 20px;
-            color: #222;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #777;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-
-            border: 1px solid #ccc;
-            border-radius: 6px;
-
-            font-size: 15px;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: #1976d2;
-            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-
-            margin-bottom: 20px;
-
-            font-size: 14px;
-            color: #555;
-        }
-
-        .login-button {
-            width: 100%;
-            padding: 13px;
-
-            border: none;
-            border-radius: 6px;
-
-            background-color: #1976d2;
-            color: white;
-
-            font-size: 16px;
-            font-weight: bold;
-
-            cursor: pointer;
-        }
-
-        .login-button:hover {
-            background-color: #125ca8;
-        }
-
-        .footer-text {
-            text-align: center;
-            margin-top: 20px;
-
-            color: #5e5e5e;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        @media (max-width: 500px) {
-            .login-card {
-                padding: 30px 20px;
-            }
-
-            h1 {
-                font-size: 21px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../css/login.css">
 </head>
-
 <body>
 
     <div class="login-container">
-
         <div class="login-card">
 
-            <!-- The Care Logo -->
             <div class="logo">
                 <img src="../assets/logo.png" alt="The Care Hospital Logo">
             </div>
 
-            <h1>Queue Management System</h1><br><br>
+            <h1>Queue Management System</h1>
 
             <form>
 
+                <!-- Department -->
+                <div class="form-group">
+                    <label for="department">Department</label>
+
+                    <select id="department" name="department" required>
+                        <option value="" disabled selected>Select Department</option>
+                        <option value="general-medicine">General Medicine</option>
+                        <option value="cardiology">Cardiology</option>
+                        <option value="orthopaedics">Orthopaedics</option>
+                        <option value="dermatology">Dermatology</option>
+                        <option value="paediatrics">Paediatrics</option>
+                        <option value="ophthalmology">Ophthalmology</option>
+                    </select>
+                </div>
+
+                <!-- Counter -->
+                <div class="form-group">
+                    <label for="counter">Counter Number</label>
+
+                    <select id="counter" name="counter" disabled required>
+                        <option value="" disabled selected>Select Counter</option>
+                        <option value="1">Counter 1</option>
+                        <option value="2">Counter 2</option>
+                        <option value="3">Counter 3</option>
+                        <option value="4">Counter 4</option>
+                    </select>
+                </div>
+
+
+                <!-- Staff ID -->
                 <div class="form-group">
                     <label for="staffID">Staff ID</label>
 
@@ -182,6 +61,8 @@
                     >
                 </div>
 
+
+                <!-- Password -->
                 <div class="form-group">
                     <label for="password">Password</label>
 
@@ -194,11 +75,14 @@
                     >
                 </div>
 
+                <!-- Remember Me -->
                 <label class="remember-me">
                     <input type="checkbox" name="remember">
                     Remember me
                 </label>
 
+
+                <!-- Login -->
                 <button type="submit" class="login-button">
                     Login
                 </button>
@@ -211,9 +95,20 @@
             © 2026 The Care<br>
             Queue Management System
         </p>
-
     </div>
 
-</body>
+    <script>
+        const department = document.getElementById("department");
+        const counter = document.getElementById("counter");
 
+        department.addEventListener("change", function () {
+            if (department.value !== "") {
+                counter.disabled = false;
+            } else {
+                counter.disabled = true;
+            }
+        });
+    </script>
+
+</body>
 </html>

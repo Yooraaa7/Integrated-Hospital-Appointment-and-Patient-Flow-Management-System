@@ -1,0 +1,194 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Tahoma, Geneva, sans-serif;
+    background-color: #f1f5f8;
+    min-height: 100vh;
+    color: #222;
+}
+
+.display-page {
+    min-height: 100vh;
+    padding: 28px 36px 40px;
+}
+
+.display-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 22px;
+    border-bottom: 2px solid #dce4eb;
+}
+
+.display-logo {
+    width: 190px;
+    height: auto;
+}
+
+.header-title {
+    text-align: right;
+}
+
+.header-title h1 {
+    font-size: 30px;
+    color: #1976d2;
+}
+
+.header-title p {
+    margin-top: 6px;
+    color: #666;
+    font-size: 16px;
+}
+
+.department-layout {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 28px;
+    margin-top: 32px;
+}
+
+.now-serving,
+.next-queue,
+.department-card {
+    background-color: white;
+    border-radius: 16px;
+    border: 1px solid #dde5ec;
+}
+
+.now-serving {
+    padding: 46px 30px;
+    text-align: center;
+}
+
+.section-label {
+    color: #666;
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.serving-number {
+    margin: 28px 0 18px;
+    color: #1976d2;
+    font-size: 92px;
+    font-weight: bold;
+    letter-spacing: 5px;
+}
+
+.counter-label {
+    color: #555;
+    font-size: 18px;
+}
+
+.next-queue {
+    padding: 32px;
+}
+
+.next-queue h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 22px;
+}
+
+.next-list {
+    display: grid;
+    gap: 14px;
+}
+
+.next-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 17px 18px;
+    background-color: #f5f8fb;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.next-item span:last-child {
+    color: #777;
+    font-size: 15px;
+    font-weight: normal;
+}
+
+.waiting-summary {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8ee;
+    color: #555;
+    font-size: 17px;
+}
+
+.lobby-title {
+    margin: 30px 0 22px;
+    font-size: 26px;
+}
+
+.department-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.department-card {
+    padding: 24px;
+}
+
+.department-card h2 {
+    font-size: 19px;
+    margin-bottom: 20px;
+}
+
+.card-serving-label {
+    color: #777;
+    font-size: 13px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.card-number {
+    margin: 8px 0 16px;
+    color: #1976d2;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.card-waiting {
+    padding-top: 14px;
+    border-top: 1px solid #e6ebef;
+    color: #555;
+}
+
+.display-footer {
+    margin-top: 30px;
+    text-align: center;
+    color: #777;
+    font-size: 14px;
+}
+
+@media (max-width: 900px) {
+    .department-layout,
+    .department-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .display-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .header-title {
+        text-align: left;
+    }
+
+    .serving-number {
+        font-size: 68px;
+    }
+}
