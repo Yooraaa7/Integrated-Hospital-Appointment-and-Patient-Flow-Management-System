@@ -1,35 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Care | Walk-In Queue Kiosk</title>
+
+    <title>The Care | Queue Ticket Kiosk</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
     <link rel="stylesheet" href="../css/kiosk.css">
 </head>
+
 <body>
 
-    <main class="kiosk-card">
-        <img src="../assets/logo.png" alt="The Care Hospital Logo" class="logo-img">
+    <main class="kiosk-wrapper">
 
-        <p class="system-name">Queue Management System</p>
-        <h1>Walk-In Queue Kiosk</h1>
+        <section class="kiosk-card text-center">
 
-        <!-- Prototype only. Later this department name will be loaded from the URL/backend. -->
-        <div class="department-name">Cardiology</div>
+            <img
+                src="../assets/logo.png"
+                alt="The Care Logo"
+                class="kiosk-logo"
+            >
 
-        <p class="instruction-text">
-            Press the button below to receive your queue number for this department.
-        </p>
+            <p class="hospital-name mb-1">THE CARE</p>
 
-        <a href="ticket.html?department=cardiology" class="get-number-button">
-            Get Queue Number
-        </a>
+            <h1 class="department-name">
+                Cardiology
+            </h1>
 
-        <p class="kiosk-note">
-            Walk-in patients only. Patients with booked appointments should check in from their appointment details on The Care website.
-        </p>
+            <p class="kiosk-title">
+                Queue Ticket Kiosk
+            </p>
+
+            <div class="walkin-badge">
+                <i class="bi bi-person-walking"></i>
+                Walk-In Patients
+            </div>
+
+            <p class="instruction">
+                Press the button below to receive your queue number.
+            </p>
+
+            <a href="ticket.html" class="btn get-number-btn">
+                <i class="bi bi-ticket-perforated-fill me-2"></i>
+                Get Queue Number
+            </a>
+
+            <div class="kiosk-footer">
+                <i class="bi bi-info-circle me-1"></i>
+                Please keep your ticket and wait for your number to be called.
+            </div>
+
+        </section>
+
     </main>
 
 </body>
+
 </html>

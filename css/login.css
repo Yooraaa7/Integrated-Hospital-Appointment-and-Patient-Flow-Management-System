@@ -148,3 +148,16 @@ h1 {
     cursor: not-allowed;
     border-color: #d5d5d5;
 }
+
+.login-error {
+    min-height: 20px;
+
+    margin-bottom: 10px;
+
+    color: #dc3545;
+
+    text-align: center;
+
+    font-size: 13px;
+    font-weight: bold;
+}

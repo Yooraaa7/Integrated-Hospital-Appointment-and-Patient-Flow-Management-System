@@ -1,0 +1,156 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+
+    min-height: 100vh;
+
+    font-family: Tahoma, Geneva, sans-serif;
+
+    background-color: #eef2f6;
+}
+
+.ticket-wrapper {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+}
+
+.ticket-card {
+    width: 100%;
+    max-width: 450px;
+
+    background-color: white;
+
+    padding: 35px;
+
+    border-radius: 18px;
+
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.ticket-logo {
+    width: 85px;
+
+    margin-bottom: 10px;
+}
+
+.ticket-card h1 {
+    margin-bottom: 3px;
+
+    font-size: 27px;
+    font-weight: 700;
+
+    color: #193c5d;
+}
+
+.ticket-subtitle {
+    color: #7b8793;
+}
+
+.ticket-divider {
+    border-top: 2px dashed #d6dce2;
+
+    margin: 25px 0;
+}
+
+.queue-label {
+    margin-bottom: 5px;
+
+    color: #89939d;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    letter-spacing: 2px;
+}
+
+.queue-number {
+    color: #1976d2;
+
+    font-size: 70px;
+    font-weight: 700;
+
+    letter-spacing: 5px;
+
+    line-height: 1.2;
+}
+
+.walkin-label {
+    display: inline-block;
+
+    margin-top: 10px;
+
+    padding: 6px 15px;
+
+    background-color: #eef6ff;
+    color: #1976d2;
+
+    border-radius: 30px;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.ticket-details > div {
+    display: flex;
+    justify-content: space-between;
+
+    margin-bottom: 14px;
+
+    font-size: 14px;
+}
+
+.ticket-details span {
+    color: #7e8995;
+}
+
+.ticket-details strong {
+    color: #273746;
+}
+
+.ticket-note {
+    text-align: center;
+
+    margin: 25px 0;
+
+    padding: 18px;
+
+    background-color: #f7f9fb;
+
+    border-radius: 10px;
+
+    color: #66727e;
+}
+
+.ticket-note i {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #1976d2;
+
+    font-size: 22px;
+}
+
+.ticket-note p {
+    margin: 0;
+
+    font-size: 13px;
+}
+
+.ticket-footer {
+    margin-top: 20px;
+
+    text-align: center;
+
+    color: #8a949d;
+
+    font-size: 12px;
+}

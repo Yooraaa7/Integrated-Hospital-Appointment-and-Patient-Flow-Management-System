@@ -1,194 +1,303 @@
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
 
 body {
+    margin: 0;
+
     font-family: Tahoma, Geneva, sans-serif;
-    background-color: #f1f5f8;
-    min-height: 100vh;
-    color: #222;
+
+    background-color: #eef2f6;
+
+    color: #213547;
 }
 
-.display-page {
-    min-height: 100vh;
-    padding: 28px 36px 40px;
-}
+
+/* HEADER */
 
 .display-header {
+    min-height: 95px;
+
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    padding-bottom: 22px;
-    border-bottom: 2px solid #dce4eb;
+
+    padding: 15px 35px;
+
+    background-color: white;
+
+    border-bottom: 1px solid #dfe4e8;
 }
 
-.display-logo {
-    width: 190px;
-    height: auto;
+.display-header img {
+    width: 80px;
+
+    margin-right: 15px;
 }
 
-.header-title {
-    text-align: right;
+.display-header h1 {
+    margin: 0;
+
+    font-size: 25px;
+    font-weight: 700;
+
+    color: #17395c;
 }
 
-.header-title h1 {
-    font-size: 30px;
-    color: #1976d2;
+.display-header p {
+    margin: 2px 0 0;
+
+    color: #74818e;
+
+    font-size: 14px;
 }
 
-.header-title p {
-    margin-top: 6px;
-    color: #666;
-    font-size: 16px;
+.display-time {
+    margin-left: auto;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    color: #526474;
 }
 
-.department-layout {
+
+/* DEPARTMENT DISPLAY */
+
+.department-screen {
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.department-content {
+    flex: 1;
+
     display: grid;
-    grid-template-columns: 1.35fr 1fr;
-    gap: 28px;
-    margin-top: 32px;
+    grid-template-columns: 1.6fr 1fr;
+
+    gap: 30px;
+
+    padding: 40px;
 }
 
 .now-serving,
-.next-queue,
-.department-card {
+.next-section {
     background-color: white;
-    border-radius: 16px;
-    border: 1px solid #dde5ec;
+
+    border-radius: 18px;
+
+    padding: 35px;
+
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.06);
 }
 
 .now-serving {
-    padding: 46px 30px;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
 }
 
-.section-label {
-    color: #666;
-    font-size: 20px;
+.now-serving > p {
+    color: #758392;
+
     font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
 }
 
 .serving-number {
-    margin: 28px 0 18px;
     color: #1976d2;
-    font-size: 92px;
-    font-weight: bold;
-    letter-spacing: 5px;
+
+    font-size: 110px;
+    font-weight: 700;
+
+    letter-spacing: 8px;
 }
 
 .counter-label {
-    color: #555;
+    margin-top: 20px;
+
+    padding: 12px 22px;
+
+    border-radius: 30px;
+
+    background-color: #eaf4ff;
+
+    color: #355d83;
+
     font-size: 18px;
 }
 
-.next-queue {
-    padding: 32px;
-}
+.next-section h2 {
+    margin-bottom: 25px;
 
-.next-queue h2 {
-    color: #333;
-    font-size: 24px;
-    margin-bottom: 22px;
+    color: #607080;
+
+    font-size: 17px;
+
+    letter-spacing: 2px;
 }
 
 .next-list {
-    display: grid;
-    gap: 14px;
+    display: flex;
+    flex-direction: column;
+
+    gap: 13px;
 }
 
-.next-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 17px 18px;
-    background-color: #f5f8fb;
+.next-list div {
+    padding: 17px;
+
     border-radius: 10px;
-    font-size: 20px;
+
+    background-color: #f4f6f8;
+
+    text-align: center;
+
+    font-size: 28px;
     font-weight: bold;
 }
 
-.next-item span:last-child {
-    color: #777;
-    font-size: 15px;
-    font-weight: normal;
+
+/* LOBBY */
+
+.lobby-screen {
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
 }
 
-.waiting-summary {
-    margin-top: 22px;
-    padding-top: 20px;
-    border-top: 1px solid #e2e8ee;
-    color: #555;
-    font-size: 17px;
+.lobby-content {
+    flex: 1;
+
+    padding: 30px 40px;
 }
 
 .lobby-title {
-    margin: 30px 0 22px;
-    font-size: 26px;
+    margin-bottom: 25px;
+}
+
+.lobby-title h2 {
+    margin-bottom: 5px;
+
+    font-size: 25px;
+}
+
+.lobby-title p {
+    color: #77838e;
 }
 
 .department-grid {
     display: grid;
+
     grid-template-columns: repeat(3, 1fr);
+
     gap: 20px;
 }
 
 .department-card {
-    padding: 24px;
+    background-color: white;
+
+    padding: 25px;
+
+    border-radius: 15px;
+
+    border-top: 5px solid #1976d2;
+
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
 }
 
-.department-card h2 {
-    font-size: 19px;
-    margin-bottom: 20px;
+.department-card h3 {
+    min-height: 48px;
+
+    font-size: 18px;
+    font-weight: bold;
 }
 
-.card-serving-label {
-    color: #777;
-    font-size: 13px;
+.department-card p {
+    margin-bottom: 4px;
+
+    color: #87929d;
+
+    font-size: 12px;
+
     text-transform: uppercase;
-    font-weight: bold;
 }
 
-.card-number {
-    margin: 8px 0 16px;
+.department-card strong {
+    display: block;
+
     color: #1976d2;
-    font-size: 40px;
-    font-weight: bold;
+
+    font-size: 42px;
 }
 
-.card-waiting {
-    padding-top: 14px;
-    border-top: 1px solid #e6ebef;
-    color: #555;
+.department-card span {
+    display: inline-block;
+
+    margin-top: 10px;
+
+    padding: 5px 10px;
+
+    background-color: #f1f4f7;
+
+    border-radius: 20px;
+
+    color: #667480;
+
+    font-size: 12px;
 }
+
+
+/* FOOTER */
 
 .display-footer {
-    margin-top: 30px;
+    padding: 18px;
+
     text-align: center;
-    color: #777;
-    font-size: 14px;
+
+    background-color: #17395c;
+    color: white;
+
+    font-size: 13px;
 }
 
+
+/* RESPONSIVE */
+
 @media (max-width: 900px) {
-    .department-layout,
+
+    .department-content {
+        grid-template-columns: 1fr;
+    }
+
+    .department-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .serving-number {
+        font-size: 75px;
+    }
+}
+
+@media (max-width: 600px) {
+
     .department-grid {
         grid-template-columns: 1fr;
     }
 
     .display-header {
-        align-items: flex-start;
-        flex-direction: column;
+        padding: 12px 18px;
     }
 
-    .header-title {
-        text-align: left;
+    .display-time {
+        font-size: 16px;
     }
 
     .serving-number {
-        font-size: 68px;
+        font-size: 60px;
     }
 }

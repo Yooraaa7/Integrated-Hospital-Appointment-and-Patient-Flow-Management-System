@@ -8,88 +8,54 @@
     <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
-
     <div class="login-container">
         <div class="login-card">
-
             <div class="logo">
                 <img src="../assets/logo.png" alt="The Care Hospital Logo">
             </div>
 
             <h1>Queue Management System</h1>
+            <p class="subtitle">Staff Login</p>
 
-            <form>
-
-                <!-- Department -->
+            <form id="loginForm">
                 <div class="form-group">
                     <label for="department">Department</label>
-
                     <select id="department" name="department" required>
-                        <option value="" disabled selected>Select Department</option>
-                        <option value="general-medicine">General Medicine</option>
-                        <option value="cardiology">Cardiology</option>
-                        <option value="orthopaedics">Orthopaedics</option>
-                        <option value="dermatology">Dermatology</option>
-                        <option value="paediatrics">Paediatrics</option>
-                        <option value="ophthalmology">Ophthalmology</option>
+                        <option value="" selected disabled>Select Department</option>
+                        <option value="General Medicine">General Medicine</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Orthopaedics">Orthopaedics</option>
+                        <option value="Dermatology">Dermatology</option>
+                        <option value="Paediatrics">Paediatrics</option>
+                        <option value="Ophthalmology">Ophthalmology</option>
                     </select>
                 </div>
 
-                <!-- Counter -->
                 <div class="form-group">
                     <label for="counter">Counter Number</label>
-
                     <select id="counter" name="counter" disabled required>
-                        <option value="" disabled selected>Select Counter</option>
-                        <option value="1">Counter 1</option>
-                        <option value="2">Counter 2</option>
-                        <option value="3">Counter 3</option>
-                        <option value="4">Counter 4</option>
+                        <option value="" selected disabled>Select Counter</option>
+                        <option value="Counter 1">Counter 1</option>
+                        <option value="Counter 2">Counter 2</option>
+                        <option value="Counter 3">Counter 3</option>
+                        <option value="Counter 4">Counter 4</option>
                     </select>
                 </div>
 
-
-                <!-- Staff ID -->
                 <div class="form-group">
                     <label for="staffID">Staff ID</label>
-
-                    <input
-                        type="text"
-                        id="staffID"
-                        name="staffID"
-                        placeholder="Enter your Staff ID"
-                        required
-                    >
+                    <input type="text" id="staffID" name="staffID" placeholder="Enter your Staff ID" autocomplete="username" required>
                 </div>
 
-
-                <!-- Password -->
                 <div class="form-group">
                     <label for="password">Password</label>
-
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        placeholder="Enter your password"
-                        required
-                    >
+                    <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
                 </div>
 
-                <!-- Remember Me -->
-                <label class="remember-me">
-                    <input type="checkbox" name="remember">
-                    Remember me
-                </label>
+                <p id="loginError" class="login-error"></p>
 
-
-                <!-- Login -->
-                <button type="submit" class="login-button">
-                    Login
-                </button>
-
+                <button type="submit" class="login-button">Login</button>
             </form>
-
         </div>
 
         <p class="footer-text">
@@ -99,17 +65,37 @@
     </div>
 
     <script>
+        const loginForm = document.getElementById("loginForm");
         const department = document.getElementById("department");
         const counter = document.getElementById("counter");
+        const staffIDInput = document.getElementById("staffID");
+        const passwordInput = document.getElementById("password");
+        const loginError = document.getElementById("loginError");
 
         department.addEventListener("change", function () {
-            if (department.value !== "") {
-                counter.disabled = false;
+            counter.disabled = false;
+            counter.selectedIndex = 0;
+        });
+
+        loginForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            loginError.textContent = "";
+
+            const selectedDepartment = department.value;
+            const selectedCounter = counter.value;
+            const staffID = staffIDInput.value.trim();
+            const password = passwordInput.value;
+
+            if (staffID === "STA101" && password === "sta101") {
+                sessionStorage.setItem("department", selectedDepartment);
+                sessionStorage.setItem("counter", selectedCounter);
+                sessionStorage.setItem("staffID", staffID);
+
+                window.location.href = "dashboard.html";
             } else {
-                counter.disabled = true;
+                loginError.textContent = "Invalid Staff ID or password.";
             }
         });
     </script>
-
 </body>
 </html>
