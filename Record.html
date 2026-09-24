@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head runat="server">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head runat="server">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>Patient Record</title>
+    <title>Patient Record</title>
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-        <link rel="stylesheet"href="record.css">
-    </head>
-</html>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="Record.css">
+</head>
 
 <body>
+
+    <!-- Top Navigation -->
     <header class="top-navbar">
-    <div class="navbar-logo">
-        <img src="logo.png" alt="The Care Logo">
-    </div>
-    <!-- Staff Information -->
+
+        <!-- Logo -->
+        <div class="navbar-logo">
+            <img src="logo.png" alt="The Care Logo">
+        </div>
+
+        <!-- Staff Information -->
         <div class="staff-info">
 
             <span class="staff-id">
@@ -31,12 +40,17 @@
             </button>
 
         </div>
+
     </header>
 
+
+    <!-- Page Title -->
     <h1>Patient Information</h1>
+
 
     <!-- Search Controls -->
     <div class="glass-panel p-4">
+
         <div class="search-controls">
 
             <input
@@ -46,34 +60,47 @@
             >
 
             <select class="filter-select">
-
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
             </select>
 
             <select class="filter-select">
-
+                <option value="">Select Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
             </select>
 
             <button class="search-button">
                 <i class="bi bi-search"></i>
                 Search
             </button>
-        </div>
-        </div>
 
-    <table id="MyTable" class="threaded-table table table-striped table-hover">
-        <thread>
-            <th>Patient ID</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Gender</th>
-            <th>Date of Birth</th>
-            <th>Contact Number</th>
-            <th>Email</th>
-        </thread>
-    </table>
-
-    
+        </div>
 
     </div>
 
+
+    <!-- Patient Table -->
+    <table id="MyTable" class="threaded-table table table-striped table-hover">
+
+        <thead>
+            <tr>
+                <th>Patient ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Gender</th>
+                <th>Date of Birth</th>
+                <th>Contact Number</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <!-- Patient records will be displayed here -->
+        </tbody>
+
+    </table>
+
 </body>
+</html>
