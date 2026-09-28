@@ -2,63 +2,91 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>The Care | Queue Ticket Kiosk</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>The Care | Queue Kiosk</title>
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-    <link rel="stylesheet" href="../css/kiosk.css">
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../css/kiosk.css"
+    >
+
 </head>
+
 
 <body>
 
-    <main class="kiosk-wrapper">
+    <main class="kiosk-page">
 
-        <section class="kiosk-card text-center">
+        <section class="kiosk-card">
 
-            <img
-                src="../assets/logo.png"
-                alt="The Care Logo"
-                class="kiosk-logo"
+            <div class="logo">
+
+                <img
+                    src="../assets/logo.png"
+                    alt="The Care Hospital Logo"
+                >
+
+            </div>
+
+
+            <div class="instruction-section">
+
+                <h3>Welcome to The Care Hospital</h3>
+
+                <p>
+                    Please get your queue ticket
+                    for your visit.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="getTicketButton"
+                class="get-ticket-button"
             >
+                <i class="bi bi-ticket-perforated"></i>
+                Get Ticket
+            </button>
 
-            <p class="hospital-name mb-1">THE CARE</p>
 
-            <h1 class="department-name">
-                Cardiology
-            </h1>
+            <p
+                id="errorMessage"
+                class="error-message"
+            ></p>
 
-            <p class="kiosk-title">
-                Queue Ticket Kiosk
+
+            <p class="kiosk-footer">
+
+                Please take your ticket and wait
+                for your number to be called.
+
             </p>
-
-            <div class="walkin-badge">
-                <i class="bi bi-person-walking"></i>
-                Walk-In Patients
-            </div>
-
-            <p class="instruction">
-                Press the button below to receive your queue number.
-            </p>
-
-            <a href="ticket.html" class="btn get-number-btn">
-                <i class="bi bi-ticket-perforated-fill me-2"></i>
-                Get Queue Number
-            </a>
-
-            <div class="kiosk-footer">
-                <i class="bi bi-info-circle me-1"></i>
-                Please keep your ticket and wait for your number to be called.
-            </div>
 
         </section>
 
     </main>
+
+
+    <script src="../js/kiosk.js"></script>
 
 </body>
 

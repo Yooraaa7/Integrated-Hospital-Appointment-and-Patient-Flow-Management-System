@@ -2,97 +2,157 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>The Care | Queue Ticket</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    >
 
-    <link rel="stylesheet" href="../css/ticket.css">
+    <link
+        rel="stylesheet"
+        href="../css/ticket.css"
+    >
+
 </head>
+
 
 <body>
 
-    <main class="ticket-wrapper">
+    <main class="ticket-page">
 
-        <section class="ticket-card">
+        <div class="ticket">
 
-            <div class="text-center">
+            <!-- Logo -->
+            <div class="ticket-logo">
 
                 <img
                     src="../assets/logo.png"
-                    alt="The Care Logo"
-                    class="ticket-logo"
+                    alt="The Care Hospital Logo"
                 >
-
-                <h1>The Care</h1>
-
-                <p class="ticket-subtitle">
-                    Cardiology Department
-                </p>
 
             </div>
 
-            <div class="ticket-divider"></div>
 
-            <div class="text-center">
+            <div class="ticket-header">
 
-                <p class="queue-label">
-                    YOUR QUEUE NUMBER
+                <p class="ticket-label">
+                    QUEUE TICKET
                 </p>
 
-                <div class="queue-number">
-                    CD008
-                </div>
+                <h1 id="departmentName">
+                    Loading...
+                </h1>
 
-                <span class="walkin-label">
+                <span class="walk-in-badge">
+                    <i class="bi bi-person-walking"></i>
                     Walk-In
                 </span>
 
             </div>
 
-            <div class="ticket-divider"></div>
 
-            <div class="ticket-details">
+            <div class="queue-number-section">
 
-                <div>
-                    <span>Department</span>
-                    <strong>Cardiology</strong>
-                </div>
+                <p>
+                    Your Queue Number
+                </p>
 
-                <div>
-                    <span>Patients Ahead</span>
-                    <strong>4</strong>
-                </div>
-
-                <div>
-                    <span>Issued Time</span>
-                    <strong>10:42 AM</strong>
+                <div
+                    id="queueNumber"
+                    class="queue-number"
+                >
+                    ---
                 </div>
 
             </div>
 
-            <div class="ticket-note">
 
-                <i class="bi bi-volume-up-fill"></i>
+            <div class="ticket-info">
+
+                <div class="info-row">
+
+                    <span class="info-label">
+                        <i class="bi bi-people"></i>
+                        Patients Ahead
+                    </span>
+
+                    <strong id="patientsAhead">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span class="info-label">
+                        <i class="bi bi-clock"></i>
+                        Issued Time
+                    </span>
+
+                    <strong id="issuedTime">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span class="info-label">
+                        <i class="bi bi-hourglass-split"></i>
+                        Status
+                    </span>
+
+                    <strong id="queueStatus">
+                        Waiting
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="waiting-message">
+
+                <i class="bi bi-info-circle"></i>
 
                 <p>
-                    Please wait for your queue number to be called.
+                    Please wait for your queue number
+                    to be called.
                 </p>
 
             </div>
 
-            <p class="ticket-footer">
-                Thank you for visiting The Care.
-            </p>
 
-        </section>
+            <div class="ticket-footer">
+
+                <p>
+                    Thank you for visiting The Care.
+                </p>
+
+            </div>
+
+        </div>
 
     </main>
+
+
+    <script src="../js/ticket.js"></script>
 
 </body>
 

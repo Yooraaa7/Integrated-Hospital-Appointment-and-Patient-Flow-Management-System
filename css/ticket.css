@@ -2,17 +2,25 @@
     box-sizing: border-box;
 }
 
+
+html,
 body {
+    width: 100%;
+    height: 100%;
     margin: 0;
-
-    min-height: 100vh;
-
-    font-family: Tahoma, Geneva, sans-serif;
-
-    background-color: #eef2f6;
 }
 
-.ticket-wrapper {
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+
+    background: #f1f3f5;
+
+    color: #1f2937;
+}
+
+
+.ticket-page {
     min-height: 100vh;
 
     display: flex;
@@ -22,135 +30,247 @@ body {
     padding: 30px;
 }
 
-.ticket-card {
-    width: 100%;
-    max-width: 450px;
 
-    background-color: white;
+.ticket {
+    width: 430px;
 
-    padding: 35px;
+    background: white;
 
-    border-radius: 18px;
+    padding: 40px 35px 30px;
 
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.12);
+
+    position: relative;
 }
+
 
 .ticket-logo {
-    width: 85px;
+    display: flex;
 
-    margin-bottom: 10px;
+    justify-content: center;
+
+    margin-bottom: 25px;
 }
 
-.ticket-card h1 {
-    margin-bottom: 3px;
 
-    font-size: 27px;
+.ticket-logo img {
+    width: 150px;
+    max-width: 70%;
+
+    height: auto;
+
+    display: block;
+}
+
+
+.ticket-header {
+    text-align: center;
+
+    padding-bottom: 20px;
+
+    border-bottom: 2px dashed #d9dee3;
+}
+
+
+.ticket-label {
+    margin: 0 0 8px;
+
+    font-size: 11px;
+
     font-weight: 700;
-
-    color: #193c5d;
-}
-
-.ticket-subtitle {
-    color: #7b8793;
-}
-
-.ticket-divider {
-    border-top: 2px dashed #d6dce2;
-
-    margin: 25px 0;
-}
-
-.queue-label {
-    margin-bottom: 5px;
-
-    color: #89939d;
-
-    font-size: 12px;
-    font-weight: bold;
 
     letter-spacing: 2px;
+
+    color: #6c757d;
 }
 
-.queue-number {
-    color: #1976d2;
 
-    font-size: 70px;
+.ticket-header h1 {
+    margin: 0 0 15px;
+
+    font-size: 27px;
+
     font-weight: 700;
 
-    letter-spacing: 5px;
-
-    line-height: 1.2;
+    color: #1f2937;
 }
 
-.walkin-label {
-    display: inline-block;
 
-    margin-top: 10px;
+.walk-in-badge {
+    display: inline-flex;
 
-    padding: 6px 15px;
+    align-items: center;
 
-    background-color: #eef6ff;
-    color: #1976d2;
+    gap: 6px;
 
-    border-radius: 30px;
+    padding: 6px 12px;
+
+    border-radius: 20px;
+
+    background: #eef5ff;
+
+    color: #1677ff;
 
     font-size: 13px;
-    font-weight: bold;
+
+    font-weight: 600;
 }
 
-.ticket-details > div {
-    display: flex;
-    justify-content: space-between;
 
-    margin-bottom: 14px;
+.queue-number-section {
+    text-align: center;
+
+    padding: 25px 0;
+
+    border-bottom: 2px dashed #d9dee3;
+}
+
+
+.queue-number-section p {
+    margin: 0 0 5px;
+
+    color: #6c757d;
 
     font-size: 14px;
 }
 
-.ticket-details span {
-    color: #7e8995;
+
+.queue-number {
+    font-size: 58px;
+
+    line-height: 1.1;
+
+    font-weight: 800;
+
+    letter-spacing: 3px;
+
+    color: #1677ff;
 }
 
-.ticket-details strong {
-    color: #273746;
+
+.ticket-info {
+    padding: 20px 0;
+
+    border-bottom: 2px dashed #d9dee3;
 }
 
-.ticket-note {
-    text-align: center;
 
-    margin: 25px 0;
+.info-row {
+    display: flex;
 
-    padding: 18px;
+    align-items: center;
 
-    background-color: #f7f9fb;
+    justify-content: space-between;
+
+    padding: 9px 0;
+
+    font-size: 14px;
+}
+
+
+.info-label {
+    color: #6c757d;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.info-row strong {
+    color: #1f2937;
+}
+
+
+.waiting-message {
+    margin-top: 20px;
+
+    padding: 15px;
 
     border-radius: 10px;
 
-    color: #66727e;
+    background: #f8f9fa;
+
+    display: flex;
+
+    gap: 10px;
+
+    align-items: flex-start;
 }
 
-.ticket-note i {
-    display: block;
 
-    margin-bottom: 6px;
+.waiting-message i {
+    color: #1677ff;
 
-    color: #1976d2;
+    font-size: 18px;
 
-    font-size: 22px;
+    margin-top: 1px;
 }
 
-.ticket-note p {
+
+.waiting-message p {
     margin: 0;
 
     font-size: 13px;
+
+    line-height: 1.5;
+
+    color: #6c757d;
 }
 
-.ticket-footer {
-    margin-top: 20px;
+
+.return-message {
+    margin: 20px 0 0;
 
     text-align: center;
 
-    color: #8a949d;
-
     font-size: 12px;
+
+    color: #9ca3af;
+}
+
+
+.ticket-footer {
+    margin-top: 25px;
+
+    padding-top: 20px;
+
+    border-top: 1px solid #e9ecef;
+
+    text-align: center;
+}
+
+
+.ticket-footer p {
+    margin: 0;
+
+    font-size: 11px;
+
+    color: #9ca3af;
+}
+
+
+@media (max-width: 500px) {
+
+    .ticket-page {
+        padding: 15px;
+    }
+
+
+    .ticket {
+        width: 100%;
+
+        padding: 30px 25px 25px;
+    }
+
+
+    .queue-number {
+        font-size: 48px;
+    }
+
 }
