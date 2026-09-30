@@ -4,40 +4,14 @@ const getTicketButton =
 const errorMessage =
     document.getElementById("errorMessage");
 
-
-const departmentPrefixes = {
-
-    "General Medicine": "GM",
-
-    "Cardiology": "CD",
-
-    "Orthopaedics": "OR",
-
-    "Dermatology": "DR",
-
-    "Paediatrics": "PD",
-
-    "Ophthalmology": "OP"
-
-};
-
-
-const urlParams =
-    new URLSearchParams(window.location.search);
-
 const department =
-    urlParams.get("department");
+    QMS.getDepartmentFromUrl();
 
 
+if (!department) {
 
-if (
-    !department ||
-    !departmentPrefixes[department]
-) {
-
-    getTicketButton.disabled = true;
-
-    getTicketButton.style.opacity = "0.5";
+    getTicketButton.disabled =
+        true;
 
     errorMessage.textContent =
         "This kiosk has not been configured for a department.";
@@ -49,101 +23,53 @@ getTicketButton.addEventListener(
     "click",
     function () {
 
-        errorMessage.textContent = "";
+        errorMessage.textContent =
+            "";
 
-
-        if (
-            !department ||
-            !departmentPrefixes[department]
-        ) {
+        if (!department) {
 
             errorMessage.textContent =
                 "This kiosk has not been configured for a department.";
 
             return;
-
         }
 
+        getTicketButton.disabled =
+            true;
 
-        const prefix =
-            departmentPrefixes[department];
+        getTicketButton.innerHTML =
+            '<i class="bi bi-hourglass-split"></i> Preparing Ticket...';
 
+        try {
 
-        let queueCounters =
-            JSON.parse(
-                localStorage.getItem(
-                    "qmsQueueCounters"
-                )
-            ) || {};
+            const newQueue =
+                QMS.createWalkInQueue(
+                    department
+                );
 
+            window.location.href =
+                "ticket.html" +
+                "?department=" +
+                encodeURIComponent(
+                    newQueue.department
+                ) +
+                "&queue=" +
+                encodeURIComponent(
+                    newQueue.queueNumber
+                );
 
-        if (!queueCounters[prefix]) {
+        } catch (error) {
 
-            queueCounters[prefix] = 0;
+            console.error(error);
 
+            getTicketButton.disabled =
+                false;
+
+            getTicketButton.innerHTML =
+                '<i class="bi bi-ticket-perforated"></i> Get Ticket';
+
+            errorMessage.textContent =
+                "Unable to issue a ticket. Please try again.";
         }
-
-        queueCounters[prefix]++;
-
-
-        localStorage.setItem(
-            "qmsQueueCounters",
-            JSON.stringify(queueCounters)
-        );
-
-
-        const queueNumber =
-            prefix +
-            String(
-                queueCounters[prefix]
-            ).padStart(3, "0");
-
-
-        const issuedTime =
-            new Date().toISOString();
-
-
-        const newQueue = {
-
-            queueNumber: queueNumber,
-
-            department: department,
-
-            type: "Walk-In",
-
-            status: "WAIT",
-
-            counter: null,
-
-            issuedTime: issuedTime
-
-        };
-
-
-        let queues =
-            JSON.parse(
-                localStorage.getItem("qmsQueues")
-            ) || [];
-
-
-        queues.push(newQueue);
-
-
-        localStorage.setItem(
-            "qmsQueues",
-            JSON.stringify(queues)
-        );
-
-
-        window.location.href =
-            "ticket.html" +
-            "?department=" +
-            encodeURIComponent(department) +
-            "&queue=" +
-            encodeURIComponent(queueNumber) +
-            "&type=Walk-In" +
-            "&issued=" +
-            encodeURIComponent(issuedTime);
-
     }
 );

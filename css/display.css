@@ -13,7 +13,9 @@ body {
 }
 
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
 
 .display-header {
     min-height: 95px;
@@ -58,10 +60,25 @@ body {
     font-weight: bold;
 
     color: #526474;
+
+    white-space: nowrap;
+}
+
+.display-error {
+    margin: 15px 40px 0;
+
+    text-align: center;
+
+    color: #dc3545;
+
+    font-size: 14px;
+    font-weight: bold;
 }
 
 
-/* DEPARTMENT DISPLAY */
+/* =========================
+   DEPARTMENT DISPLAY
+========================= */
 
 .department-screen {
     min-height: 100vh;
@@ -89,7 +106,8 @@ body {
 
     padding: 35px;
 
-    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 3px 14px rgba(0, 0, 0, 0.06);
 }
 
 .now-serving {
@@ -98,9 +116,13 @@ body {
 
     align-items: center;
     justify-content: center;
+
+    min-width: 0;
 }
 
 .now-serving > p {
+    margin: 0 0 10px;
+
     color: #758392;
 
     font-weight: bold;
@@ -114,6 +136,8 @@ body {
     font-weight: 700;
 
     letter-spacing: 8px;
+
+    line-height: 1.1;
 }
 
 .counter-label {
@@ -128,7 +152,60 @@ body {
     color: #355d83;
 
     font-size: 18px;
+
+    text-align: center;
 }
+
+.active-counter-list {
+    width: 100%;
+
+    max-width: 560px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-top: 25px;
+}
+
+.active-counter-item,
+.active-counter-empty {
+    padding: 12px 14px;
+
+    border-radius: 9px;
+
+    background-color: #f4f6f8;
+
+    color: #64717e;
+
+    font-size: 12px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+.active-counter-item strong {
+    color: #1976d2;
+}
+
+.active-counter-empty {
+    grid-column: 1 / -1;
+
+    justify-content: center;
+
+    color: #87939e;
+}
+
+
+/* =========================
+   NEXT
+========================= */
 
 .next-section h2 {
     margin-bottom: 25px;
@@ -158,10 +235,28 @@ body {
 
     font-size: 28px;
     font-weight: bold;
+
+    color: #263645;
+}
+
+.next-empty {
+    padding: 25px;
+
+    text-align: center;
+
+    color: #929da7;
+
+    background-color: #f4f6f8;
+
+    border-radius: 10px;
+
+    font-size: 14px;
 }
 
 
-/* LOBBY */
+/* =========================
+   LOBBY
+========================= */
 
 .lobby-screen {
     min-height: 100vh;
@@ -187,13 +282,16 @@ body {
 }
 
 .lobby-title p {
+    margin: 0;
+
     color: #77838e;
 }
 
 .department-grid {
     display: grid;
 
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
 
     gap: 20px;
 }
@@ -207,11 +305,14 @@ body {
 
     border-top: 5px solid #1976d2;
 
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 3px 12px rgba(0, 0, 0, 0.06);
 }
 
 .department-card h3 {
     min-height: 48px;
+
+    margin: 0 0 15px;
 
     font-size: 18px;
     font-weight: bold;
@@ -233,26 +334,49 @@ body {
     color: #1976d2;
 
     font-size: 42px;
+
+    line-height: 1.2;
 }
 
-.department-card span {
+.lobby-counter {
     display: inline-block;
 
     margin-top: 10px;
 
     padding: 5px 10px;
 
-    background-color: #f1f4f7;
+    background-color: #eef5ff;
 
     border-radius: 20px;
 
-    color: #667480;
+    color: #4d6680;
 
     font-size: 12px;
 }
 
+.lobby-waiting {
+    margin-top: 14px;
 
-/* FOOTER */
+    color: #667480;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.lobby-next {
+    display: block;
+
+    margin-top: 8px;
+
+    color: #9aa5af;
+
+    font-size: 11px;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
 
 .display-footer {
     padding: 18px;
@@ -260,13 +384,16 @@ body {
     text-align: center;
 
     background-color: #17395c;
+
     color: white;
 
     font-size: 13px;
 }
 
 
-/* RESPONSIVE */
+/* =========================
+   RESPONSIVE
+========================= */
 
 @media (max-width: 900px) {
 
@@ -275,7 +402,8 @@ body {
     }
 
     .department-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns:
+            repeat(2, 1fr);
     }
 
     .serving-number {
@@ -289,15 +417,39 @@ body {
         grid-template-columns: 1fr;
     }
 
+    .department-content {
+        padding: 20px;
+    }
+
+    .lobby-content {
+        padding: 20px;
+    }
+
     .display-header {
         padding: 12px 18px;
     }
 
+    .display-header img {
+        width: 60px;
+    }
+
+    .display-header h1 {
+        font-size: 20px;
+    }
+
+    .display-header p {
+        font-size: 11px;
+    }
+
     .display-time {
-        font-size: 16px;
+        font-size: 14px;
     }
 
     .serving-number {
         font-size: 60px;
+    }
+
+    .active-counter-list {
+        grid-template-columns: 1fr;
     }
 }

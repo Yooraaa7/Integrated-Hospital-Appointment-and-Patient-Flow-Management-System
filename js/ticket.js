@@ -4,31 +4,24 @@ const departmentName =
 const queueNumberElement =
     document.getElementById("queueNumber");
 
-const patientsAheadElement =
-    document.getElementById("patientsAhead");
-
 const issuedTimeElement =
     document.getElementById("issuedTime");
 
-const queueStatusElement =
-    document.getElementById("queueStatus");
-
-const countdownElement =
-    document.getElementById("countdown");
-
+const qrCodeElement =
+    document.getElementById("qrCode");
 
 const urlParams =
-    new URLSearchParams(window.location.search);
+    new URLSearchParams(
+        window.location.search
+    );
 
 
 const department =
     urlParams.get("department");
 
+
 const queueNumber =
     urlParams.get("queue");
-
-const issuedTime =
-    urlParams.get("issued");
 
 
 if (department) {
@@ -47,24 +40,6 @@ if (queueNumber) {
 }
 
 
-if (issuedTime) {
-
-    const date =
-        new Date(issuedTime);
-
-
-    issuedTimeElement.textContent =
-        date.toLocaleTimeString(
-            [],
-            {
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        );
-
-}
-
-
 const queues =
     JSON.parse(
         localStorage.getItem("qmsQueues")
@@ -78,89 +53,68 @@ const currentQueue =
     );
 
 
-if (currentQueue) {
+if (
+    currentQueue &&
+    currentQueue.issuedTime
+) {
 
-    const currentIssuedTime =
+    const issuedDate =
         new Date(
             currentQueue.issuedTime
         );
 
 
-    const patientsAhead =
-        queues.filter(queue => {
+    if (!isNaN(issuedDate.getTime())) {
 
-            if (
-                queue.department !== department
-            ) {
-                return false;
-            }
-
-
-            if (
-                queue.status !== "WAIT"
-            ) {
-                return false;
-            }
-
-
-            const queueIssuedTime =
-                new Date(
-                    queue.issuedTime
-                );
-
-
-            return (
-                queueIssuedTime <
-                currentIssuedTime
+        issuedTimeElement.textContent =
+            issuedDate.toLocaleTimeString(
+                "en-MY",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true
+                }
             );
 
-        }).length;
+    } else {
 
+        issuedTimeElement.textContent =
+            "Invalid time";
 
-    patientsAheadElement.textContent =
-        patientsAhead;
+    }
 
+} else {
 
-    queueStatusElement.textContent =
-        "Waiting";
-
-}
-
-
-else {
-
-    patientsAheadElement.textContent =
-        "0";
-
-    queueStatusElement.textContent =
-        "Waiting";
+    issuedTimeElement.textContent =
+        "--";
 
 }
 
+// Display QR Code (No Functionality, just for visual representation) //
 
-let countdown = 6;
+if (queueNumber) {
 
+    qrCodeElement.innerHTML = "";
 
-const countdownTimer =
-    setInterval(function () {
-
-        countdown--;
-
-        countdownElement.textContent =
-            countdown;
+    const temporaryTrackingValue =
+        "QUEUE-" + queueNumber;
 
 
-        if (countdown <= 0) {
+    new QRCode(
+        qrCodeElement,
+        {
+            text:
+                temporaryTrackingValue,
 
-            clearInterval(countdownTimer);
+            width:
+                150,
 
+            height:
+                150,
 
-            window.location.href =
-                "kiosk.html?department=" +
-                encodeURIComponent(
-                    department
-                );
-
+            correctLevel:
+                QRCode.CorrectLevel.M
         }
+    );
 
-    }, 1000);
+}

@@ -3,13 +3,23 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>The Care | Lobby Queue Display</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-    <link rel="stylesheet" href="../css/display.css">
+    <link
+        rel="stylesheet"
+        href="../css/display.css"
+    >
 </head>
 
 <body>
@@ -18,15 +28,26 @@
 
         <header class="display-header">
 
-            <img src="../assets/logo.png" alt="The Care Logo">
+            <img
+                src="../assets/logo.png"
+                alt="The Care Logo"
+            >
 
             <div>
+
                 <h1>The Care</h1>
-                <p>General Queue Display</p>
+
+                <p>
+                    General Queue Display
+                </p>
+
             </div>
 
-            <div class="display-time">
-                10:42 AM
+            <div
+                id="displayTime"
+                class="display-time"
+            >
+                --:--:--
             </div>
 
         </header>
@@ -35,93 +56,22 @@
         <section class="lobby-content">
 
             <div class="lobby-title">
-                <h2>Current Queue Status</h2>
-                <p>Please proceed when your queue number is called.</p>
-            </div>
 
+                <h2>
+                    Current Queue Status
+                </h2>
 
-            <div class="department-grid">
-
-
-                <article class="department-card">
-
-                    <h3>General Medicine</h3>
-
-                    <p>Now Serving</p>
-
-                    <strong>GM018</strong>
-
-                    <span>7 Waiting</span>
-
-                </article>
-
-
-                <article class="department-card">
-
-                    <h3>Cardiology</h3>
-
-                    <p>Now Serving</p>
-
-                    <strong>CD008</strong>
-
-                    <span>4 Waiting</span>
-
-                </article>
-
-
-                <article class="department-card">
-
-                    <h3>Orthopaedics</h3>
-
-                    <p>Now Serving</p>
-
-                    <strong>OR012</strong>
-
-                    <span>6 Waiting</span>
-
-                </article>
-
-
-                <article class="department-card">
-
-                    <h3>Dermatology</h3>
-
-                    <p>Now Serving</p>
-
-                    <strong>DR015</strong>
-
-                    <span>3 Waiting</span>
-
-                </article>
-
-
-                <article class="department-card">
-
-                    <h3>Paediatrics</h3>
-
-                    <p>Now Serving</p>
-
-                    <strong>PD010</strong>
-
-                    <span>5 Waiting</span>
-
-                </article>
-
-
-                <article class="department-card">
-
-                    <h3>Ophthalmology</h3>
-
-                    <p>Now Serving</p>
-
-                    <strong>OP007</strong>
-
-                    <span>2 Waiting</span>
-
-                </article>
-
+                <p>
+                    Please proceed when your queue number is called.
+                </p>
 
             </div>
+
+
+            <div
+                id="departmentGrid"
+                class="department-grid"
+            ></div>
 
         </section>
 
@@ -131,6 +81,9 @@
         </footer>
 
     </main>
+
+    <script src="../js/qms.js"></script>
+    <script src="../js/lobby-display.js"></script>
 
 </body>
 

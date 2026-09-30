@@ -5,272 +5,501 @@
 
 html,
 body {
+
     width: 100%;
-    height: 100%;
+    min-height: 100%;
+
     margin: 0;
+
 }
 
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
 
-    background: #f1f3f5;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
-    color: #1f2937;
+    background-color: #f0f0f0;
+
 }
 
+
+/* ==================================================
+   Ticket Page
+================================================== */
 
 .ticket-page {
+
+    width: 100%;
     min-height: 100vh;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 40px;
 
-    padding: 30px;
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
 }
 
+
+/* ==================================================
+   Ticket
+================================================== */
 
 .ticket {
+
     width: 430px;
 
-    background: white;
+    background-color: #ffffff;
 
-    padding: 40px 35px 30px;
+    border-radius: 20px;
 
-    border-radius: 8px;
+    padding:
+        35px
+        40px
+        30px;
 
     box-shadow:
-        0 12px 35px rgba(0, 0, 0, 0.12);
+        0 20px 50px
+        rgba(0, 0, 0, 0.15);
 
-    position: relative;
+    text-align: center;
+
 }
 
 
+/* ==================================================
+   Logo
+================================================== */
+
 .ticket-logo {
+
+    width: 100%;
+
     display: flex;
 
     justify-content: center;
+    align-items: center;
 
-    margin-bottom: 25px;
+    margin-bottom: 20px;
+
 }
 
 
 .ticket-logo img {
+
     width: 150px;
-    max-width: 70%;
 
     height: auto;
 
-    display: block;
+    object-fit: contain;
+
 }
 
 
+/* ==================================================
+   Header
+================================================== */
+
 .ticket-header {
-    text-align: center;
 
-    padding-bottom: 20px;
+    padding-bottom: 25px;
 
-    border-bottom: 2px dashed #d9dee3;
+    border-bottom:
+        1px dashed #d1d5db;
+
 }
 
 
 .ticket-label {
-    margin: 0 0 8px;
 
-    font-size: 11px;
+    margin:
+        0 0 8px;
+
+    font-size: 12px;
 
     font-weight: 700;
 
     letter-spacing: 2px;
 
-    color: #6c757d;
+    color: #9ca3af;
+
 }
 
 
 .ticket-header h1 {
-    margin: 0 0 15px;
 
-    font-size: 27px;
+    margin:
+        0 0 12px;
 
-    font-weight: 700;
+    font-size: 24px;
+
+    font-weight: 600;
 
     color: #1f2937;
+
 }
 
 
+/* ==================================================
+   Walk-In Badge
+================================================== */
+
 .walk-in-badge {
+
     display: inline-flex;
 
     align-items: center;
+    justify-content: center;
 
     gap: 6px;
 
-    padding: 6px 12px;
+    padding:
+        6px 14px;
 
     border-radius: 20px;
 
-    background: #eef5ff;
+    background-color: #eef5ff;
 
     color: #1677ff;
 
     font-size: 13px;
 
     font-weight: 600;
+
 }
 
 
+/* ==================================================
+   Queue Number
+================================================== */
+
 .queue-number-section {
-    text-align: center;
 
-    padding: 25px 0;
+    padding:
+        28px 0;
 
-    border-bottom: 2px dashed #d9dee3;
+    border-bottom:
+        1px dashed #d1d5db;
+
 }
 
 
 .queue-number-section p {
-    margin: 0 0 5px;
 
-    color: #6c757d;
+    margin:
+        0 0 8px;
 
-    font-size: 14px;
+    font-size: 13px;
+
+    color: #6b7280;
+
 }
 
 
 .queue-number {
-    font-size: 58px;
 
-    line-height: 1.1;
+    font-size: 64px;
 
-    font-weight: 800;
+    line-height: 1;
 
-    letter-spacing: 3px;
+    font-weight: 700;
+
+    letter-spacing: 2px;
 
     color: #1677ff;
+
 }
 
 
-.ticket-info {
-    padding: 20px 0;
+/* ==================================================
+   Ticket Information
+================================================== */
 
-    border-bottom: 2px dashed #d9dee3;
+.ticket-info {
+
+    padding:
+        20px 0;
+
+    border-bottom:
+        1px dashed #d1d5db;
+
 }
 
 
 .info-row {
+
+    width: 100%;
+
     display: flex;
 
     align-items: center;
 
     justify-content: space-between;
 
-    padding: 9px 0;
-
-    font-size: 14px;
 }
 
 
 .info-label {
-    color: #6c757d;
 
     display: flex;
 
     align-items: center;
 
     gap: 8px;
+
+    font-size: 13px;
+
+    color: #6b7280;
+
+}
+
+
+.info-label i {
+
+    font-size: 15px;
+
 }
 
 
 .info-row strong {
+
+    font-size: 14px;
+
+    font-weight: 600;
+
     color: #1f2937;
+
 }
 
 
-.waiting-message {
-    margin-top: 20px;
+/* ==================================================
+   QR Code
+================================================== */
 
-    padding: 15px;
+.qr-section {
 
-    border-radius: 10px;
-
-    background: #f8f9fa;
+    padding:
+        25px 0
+        20px;
 
     display: flex;
 
-    gap: 10px;
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+
+.qr-code {
+
+    width: 150px;
+    height: 150px;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    margin-bottom: 12px;
+
+}
+
+
+.qr-code img {
+
+    width: 150px;
+    height: 150px;
+
+}
+
+
+.qr-title {
+
+    margin:
+        0 0 5px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    color: #1f2937;
+
+}
+
+
+.qr-description {
+
+    max-width: 250px;
+
+    margin: 0 auto;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+
+    color: #9ca3af;
+
+}
+
+
+/* ==================================================
+   Waiting Message
+================================================== */
+
+.waiting-message {
+
+    display: flex;
 
     align-items: flex-start;
+
+    gap: 9px;
+
+    padding:
+        14px 15px;
+
+    margin-top: 5px;
+
+    border-radius: 10px;
+
+    background-color: #f8fafc;
+
+    text-align: left;
+
 }
 
 
 .waiting-message i {
+
+    margin-top: 2px;
+
+    font-size: 15px;
+
     color: #1677ff;
 
-    font-size: 18px;
-
-    margin-top: 1px;
 }
 
 
 .waiting-message p {
+
     margin: 0;
-
-    font-size: 13px;
-
-    line-height: 1.5;
-
-    color: #6c757d;
-}
-
-
-.return-message {
-    margin: 20px 0 0;
-
-    text-align: center;
 
     font-size: 12px;
 
-    color: #9ca3af;
+    line-height: 1.5;
+
+    color: #6b7280;
+
 }
 
 
+/* ==================================================
+   Footer
+================================================== */
+
 .ticket-footer {
-    margin-top: 25px;
 
     padding-top: 20px;
 
-    border-top: 1px solid #e9ecef;
-
-    text-align: center;
 }
 
 
 .ticket-footer p {
+
     margin: 0;
 
     font-size: 11px;
 
     color: #9ca3af;
+
 }
 
 
-@media (max-width: 500px) {
+/* ==================================================
+   Responsive
+================================================== */
+
+@media (max-width: 768px) {
 
     .ticket-page {
-        padding: 15px;
+
+        padding: 20px;
+
+        align-items: flex-start;
+
     }
 
 
     .ticket {
+
         width: 100%;
 
-        padding: 30px 25px 25px;
+        max-width: 430px;
+
+        margin-top: 20px;
+
+    }
+
+}
+
+
+@media (max-height: 750px) {
+
+    .ticket-page {
+
+        padding: 20px;
+
+    }
+
+
+    .ticket {
+
+        padding:
+            25px 35px;
+
+    }
+
+
+    .ticket-logo {
+
+        margin-bottom: 12px;
+
+    }
+
+
+    .ticket-logo img {
+
+        width: 120px;
+
+    }
+
+
+    .queue-number-section {
+
+        padding:
+            20px 0;
+
     }
 
 
     .queue-number {
-        font-size: 48px;
+
+        font-size: 52px;
+
+    }
+
+
+    .qr-section {
+
+        padding:
+            18px 0;
+
     }
 
 }

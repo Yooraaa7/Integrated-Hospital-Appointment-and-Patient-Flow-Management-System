@@ -1,169 +1,331 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>The Care | QMS Staff Dashboard</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../css/dashboard.css">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../css/dashboard.css"
+    >
 </head>
+
 <body>
 
 <header class="top-navbar">
+
     <div class="navbar-logo">
-        <img src="../assets/logo.png" alt="The Care Logo">
+        <img
+            src="../assets/logo.png"
+            alt="The Care Logo"
+        >
     </div>
 
     <div class="search-controls">
-        <input type="text" class="form-control search-input" placeholder="Search queue number...">
 
-        <select class="form-select filter-select">
-            <option>All Counters</option>
-            <option>Counter 1</option>
-            <option>Counter 2</option>
-            <option>Counter 3</option>
-            <option>Counter 4</option>
+        <input
+            type="text"
+            id="searchInput"
+            class="form-control search-input"
+            placeholder="Search queue number..."
+        >
+
+        <select
+            id="counterFilter"
+            class="form-select filter-select"
+        >
+            <option value="ALL">
+                All Counters
+            </option>
+
+            <option value="Counter 1">
+                Counter 1
+            </option>
+
+            <option value="Counter 2">
+                Counter 2
+            </option>
+
+            <option value="Counter 3">
+                Counter 3
+            </option>
+
+            <option value="Counter 4">
+                Counter 4
+            </option>
         </select>
 
-        <select class="form-select filter-select">
-            <option>Last 24 hours</option>
-            <option>Last 30 min</option>
-            <option>Last 1 hour</option>
-            <option>Last 3 hours</option>
+        <select
+            id="timeFilter"
+            class="form-select filter-select"
+        >
+            <option value="24H">
+                Last 24 hours
+            </option>
+
+            <option value="30M">
+                Last 30 min
+            </option>
+
+            <option value="1H">
+                Last 1 hour
+            </option>
+
+            <option value="3H">
+                Last 3 hours
+            </option>
+
+            <option value="ALL">
+                All time
+            </option>
         </select>
 
-        <button type="button" class="btn btn-primary search-btn">
-            <i class="bi bi-search"></i> Search
+        <button
+            type="button"
+            id="searchButton"
+            class="btn btn-primary search-btn"
+        >
+            <i class="bi bi-search"></i>
+            Search
         </button>
+
     </div>
 
     <div class="staff-info">
+
         <span>
             <i class="bi bi-person-badge"></i>
-            <span id="dashboardStaffID">STA101</span>
+            <span id="dashboardStaffID">
+                STA101
+            </span>
         </span>
 
-        <button type="button" id="logoutButton" class="btn btn-danger logout-btn">
-            <i class="bi bi-box-arrow-right"></i> Log out
+        <button
+            type="button"
+            id="logoutButton"
+            class="btn btn-danger logout-btn"
+        >
+            <i class="bi bi-box-arrow-right"></i>
+            Log out
         </button>
+
     </div>
+
 </header>
 
+
 <main class="dashboard-wrapper">
+
     <section class="dashboard-card">
 
         <section class="left-panel">
+
             <div class="location-row">
+
                 <span class="location-pill">
                     <i class="bi bi-geo-alt-fill"></i>
-                    <span id="dashboardDepartment">Cardiology</span>
+                    <span id="dashboardDepartment">
+                        Cardiology
+                    </span>
                 </span>
 
                 <i class="bi bi-chevron-right location-arrow"></i>
 
                 <span class="location-pill">
                     <i class="bi bi-display"></i>
-                    <span id="dashboardCounter">Counter 2</span>
+                    <span id="dashboardCounter">
+                        Counter 2
+                    </span>
                 </span>
+
             </div>
 
-            <h2 class="current-title">CURRENT NUMBER</h2>
 
-            <div class="current-number-box">CD008</div>
+            <h2 class="current-title">
+                CURRENT NUMBER
+            </h2>
 
-            <div class="serving-status">
-                <span class="status-dot"></span>
-                <i class="bi bi-person-check"></i>
-                Serving Now
+
+            <div
+                id="currentNumber"
+                class="current-number-box"
+            >
+                —
             </div>
+
+
+            <p
+                id="currentType"
+                class="current-type"
+            >
+                No queue is currently being served.
+            </p>
+
+
+            <div
+                id="servingStatus"
+                class="serving-status"
+            >
+                <span class="status-dot idle"></span>
+                <i class="bi bi-check-circle"></i>
+                Ready for next patient
+            </div>
+
 
             <div class="action-row">
-                <div class="action-group">
-                    <button type="button" class="action-button recall-btn">
-                        <i class="bi bi-arrow-repeat"></i> Recall
-                    </button>
-                </div>
 
                 <div class="action-group">
-                    <button type="button" class="action-button complete-btn">
-                        <i class="bi bi-check2-all"></i> Complete & Next
+
+                    <button
+                        type="button"
+                        id="recallButton"
+                        class="action-button recall-btn"
+                        disabled
+                    >
+                        <i class="bi bi-arrow-repeat"></i>
+                        Recall
                     </button>
-                    <small>Complete only</small>
+
+                    <small>
+                        Call again
+                    </small>
+
                 </div>
 
+
                 <div class="action-group">
-                    <button type="button" class="action-button hold-btn">
-                        <i class="bi bi-pause-circle"></i> Hold & Next
+
+                    <button
+                        type="button"
+                        id="completeButton"
+                        class="action-button complete-btn"
+                        disabled
+                    >
+                        <i class="bi bi-check2-all"></i>
+                        Complete & Next
                     </button>
-                    <small>Hold only</small>
+
+                    <small>
+                        Complete current
+                    </small>
+
                 </div>
+
+
+                <div class="action-group">
+
+                    <button
+                        type="button"
+                        id="holdButton"
+                        class="action-button hold-btn"
+                        disabled
+                    >
+                        <i class="bi bi-pause-circle"></i>
+                        Hold & Next
+                    </button>
+
+                    <small>
+                        Hold current
+                    </small>
+
+                </div>
+
             </div>
+
+
+            <p
+                id="dashboardMessage"
+                class="dashboard-message"
+            ></p>
+
         </section>
 
+
         <aside class="right-panel">
+
             <div class="queue-heading">
+
                 <h2>LIST</h2>
 
                 <div class="queue-tabs">
-                    <button type="button" class="queue-tab active">WAIT <span>4</span></button>
-                    <button type="button" class="queue-tab">HOLD <span>1</span></button>
+
+                    <button
+                        type="button"
+                        id="waitTab"
+                        class="queue-tab active"
+                    >
+                        WAIT
+                        <span id="waitCount">
+                            0
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        id="holdTab"
+                        class="queue-tab"
+                    >
+                        HOLD
+                        <span id="holdCount">
+                            0
+                        </span>
+                    </button>
+
                 </div>
+
             </div>
 
-            <select class="form-select service-filter">
-                <option>All Services (4)</option>
-                <option>Appointment</option>
-                <option>Walk-In</option>
+
+            <select
+                id="serviceFilter"
+                class="form-select service-filter"
+            >
+                <option value="ALL">
+                    All Services
+                </option>
+
+                <option value="Appointment">
+                    Appointment
+                </option>
+
+                <option value="Walk-In">
+                    Walk-In
+                </option>
             </select>
 
-            <div class="queue-list">
-                <article class="queue-item">
-                    <div><h3>CD009</h3><p>Walk-In • 10:56 AM</p></div>
-                    <span>Just now</span>
-                </article>
 
-                <article class="queue-item">
-                    <div><h3>CD010</h3><p>Appointment • 10:57 AM</p></div>
-                    <span>1 min</span>
-                </article>
+            <div
+                id="queueList"
+                class="queue-list"
+            ></div>
 
-                <article class="queue-item">
-                    <div><h3>CD011</h3><p>Walk-In • 10:58 AM</p></div>
-                    <span>2 min</span>
-                </article>
-
-                <article class="queue-item">
-                    <div><h3>CD012</h3><p>Appointment • 10:59 AM</p></div>
-                    <span>3 min</span>
-                </article>
-            </div>
         </aside>
 
     </section>
+
 </main>
 
-<script>
-    const department = sessionStorage.getItem("department");
-    const counter = sessionStorage.getItem("counter");
-    const staffID = sessionStorage.getItem("staffID");
 
-    if (!staffID || !department || !counter) {
-        window.location.href = "login.html";
-    } else {
-        document.getElementById("dashboardDepartment").textContent = department;
-        document.getElementById("dashboardCounter").textContent = counter;
-        document.getElementById("dashboardStaffID").textContent = staffID;
-    }
-
-    document.getElementById("logoutButton").addEventListener("click", function () {
-        sessionStorage.removeItem("department");
-        sessionStorage.removeItem("counter");
-        sessionStorage.removeItem("staffID");
-        window.location.href = "login.html";
-    });
-</script>
+<script src="../js/qms.js"></script>
+<script src="../js/dashboard.js"></script>
 
 </body>
+
 </html>
