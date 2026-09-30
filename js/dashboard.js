@@ -121,6 +121,26 @@ if (
             "queueList"
         );
 
+    const queueTimelineView =
+        document.getElementById(
+            "queueTimelineView"
+        );
+
+    const queueTimeline =
+        document.getElementById(
+            "queueTimeline"
+        );
+
+    const timelineQueueNumber =
+        document.getElementById(
+            "timelineQueueNumber"
+        );
+
+    const closeTimelineButton =
+        document.getElementById(
+            "closeTimelineButton"
+        );
+
     const logoutButton =
         document.getElementById(
             "logoutButton"
@@ -250,6 +270,37 @@ if (
     // --------------------------------------------------------
     // Render current queue
     // --------------------------------------------------------
+
+
+    function handleQueueSelection(queue) {
+
+        if (!queue) {
+            return;
+        }
+
+        /*
+         * WAIT queues are newly waiting, so staff CALL them.
+         * HOLD queues have already been called before, so selecting
+         * them must RECALL them instead of creating another CALLED event.
+         */
+        if (queue.status === "HOLD") {
+
+            if (typeof QMS.recallQueue === "function") {
+                QMS.recallQueue(
+                    queue.queueNumber
+                );
+            }
+
+        } else if (queue.status === "WAIT") {
+
+            if (typeof QMS.callQueue === "function") {
+                handleQueueSelection(queue);
+            }
+        }
+
+        render();
+    }
+
 
     function renderCurrent() {
 
@@ -834,13 +885,203 @@ if (
 
     searchButton.addEventListener(
         "click",
-        applySearch
+        searchQueueHistory
     );
 
     searchInput.addEventListener(
         "input",
         applySearch
     );
+
+    searchInput.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (event.key === "Enter") {
+                searchQueueHistory();
+            }
+        }
+    );
+
+    closeTimelineButton.addEventListener(
+        "click",
+        function () {
+            renderTimeline(null);
+        }
+    );
+
+
+
+    // --------------------------------------------------------
+    // Queue history timeline
+    // --------------------------------------------------------
+
+    function getTimelineHistory(queue) {
+
+        if (
+            Array.isArray(queue.history) &&
+            queue.history.length
+        ) {
+            return queue.history
+                .slice()
+                .sort(
+                    (a, b) =>
+                        new Date(a.timestamp) -
+                        new Date(b.timestamp)
+                );
+        }
+
+        // Compatibility for queues created before history was added.
+        const fallback = [];
+
+        if (queue.issuedTime) {
+            fallback.push({
+                type: "ISSUED",
+                timestamp: queue.issuedTime,
+                counter: null,
+                staffID: null
+            });
+        }
+
+        if (queue.calledTime) {
+            fallback.push({
+                type: "CALLED",
+                timestamp: queue.calledTime,
+                counter: queue.counter || null,
+                staffID: queue.calledBy || null
+            });
+        }
+
+        if (queue.holdTime) {
+            fallback.push({
+                type: "HOLD",
+                timestamp: queue.holdTime,
+                counter: queue.counter || null,
+                staffID: queue.calledBy || null
+            });
+        }
+
+        if (queue.completedTime) {
+            fallback.push({
+                type: "COMPLETE",
+                timestamp: queue.completedTime,
+                counter: queue.counter || null,
+                staffID: queue.calledBy || null
+            });
+        }
+
+        return fallback.sort(
+            (a, b) =>
+                new Date(a.timestamp) -
+                new Date(b.timestamp)
+        );
+    }
+
+
+    function renderTimeline(queue) {
+
+        const mainView = document.getElementById("dashboardMainView");
+        const timelineView = document.getElementById("queueTimelineView");
+
+        if (!mainView || !timelineView) return;
+
+        if (!queue) {
+            mainView.style.display = "";
+            timelineView.style.display = "none";
+            queueTimeline.innerHTML = "";
+            timelineQueueNumber.textContent = "";
+            return;
+        }
+
+        mainView.style.display = "none";
+        timelineView.style.display = "";
+        timelineQueueNumber.textContent = `${queue.queueNumber} • ${queue.department} • ${queue.type}`;
+
+        const history = getTimelineHistory(queue);
+        queueTimeline.innerHTML = "";
+
+        if (!history.length) {
+            const empty=document.createElement("div");
+            empty.className="timeline-empty";
+            empty.textContent="No queue history is available.";
+            queueTimeline.appendChild(empty);
+            return;
+        }
+
+        // History data is oldest -> newest. CSS column-reverse puts newest at top and oldest at bottom.
+        history.forEach(event => {
+            const item=document.createElement("div");
+            const type=String(event.type||"").toLowerCase();
+            item.className=`timeline-item timeline-${type}`;
+
+            const marker=document.createElement("span");
+            marker.className="timeline-marker";
+            const dot=document.createElement("span");
+            marker.appendChild(dot);
+
+            const content=document.createElement("div");
+            content.className="timeline-content";
+
+            const time=document.createElement("span");
+            time.className="timeline-time";
+            const date=new Date(event.timestamp);
+            time.textContent=isNaN(date.getTime()) ? event.timestamp : date.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit",hour12:true});
+
+            const message=document.createElement("span");
+            message.className="timeline-message";
+            message.textContent=QMS.getHistoryMessage(event.type);
+
+            content.appendChild(time);
+            content.appendChild(message);
+            item.appendChild(marker);
+            item.appendChild(content);
+            queueTimeline.appendChild(item);
+        });
+    }
+
+    function searchQueueHistory() {
+
+        const value =
+            searchInput.value
+                .trim()
+                .toUpperCase();
+
+        searchText = value;
+
+        if (!value) {
+            renderTimeline(null);
+            renderList();
+            return;
+        }
+
+        const queues =
+            QMS.getDepartmentQueues(
+                session.department
+            );
+
+        const queue =
+            queues.find(
+                item =>
+                    String(item.queueNumber)
+                        .toUpperCase() === value
+            );
+
+        if (!queue) {
+            renderTimeline(null);
+
+            showMessage(
+                `Queue ${value} was not found in ${session.department}.`,
+                "error"
+            );
+
+            renderList();
+
+            return;
+        }
+
+        renderTimeline(queue);
+        renderList();
+    }
 
 
     // --------------------------------------------------------
@@ -873,6 +1114,25 @@ if (
             ) {
 
                 render();
+
+                const timelineNumber =
+                    timelineQueueNumber &&
+                    timelineQueueNumber.textContent
+                        .split(" • ")[0];
+
+                if (timelineNumber) {
+                    const updatedQueue =
+                        QMS.getDepartmentQueues(
+                            session.department
+                        ).find(
+                            queue =>
+                                queue.queueNumber === timelineNumber
+                        );
+
+                    if (updatedQueue) {
+                        renderTimeline(updatedQueue);
+                    }
+                }
             }
         }
     );

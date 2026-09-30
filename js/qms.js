@@ -238,6 +238,42 @@ const QMS = (() => {
         );
     }
 
+
+    function addQueueHistory(
+        item,
+        type,
+        timestamp,
+        counter = null,
+        staffID = null
+    ) {
+
+        if (!Array.isArray(item.history)) {
+            item.history = [];
+        }
+
+        item.history.push({
+            type: type,
+            timestamp: timestamp,
+            counter: counter,
+            staffID: staffID
+        });
+
+        return item;
+    }
+
+    function getHistoryMessage(type) {
+
+        const messages = {
+            ISSUED: "Ticket Issued",
+            CALLED: "Queue Called",
+            HOLD: "Queue Put on Hold",
+            RECALL: "Queue Recalled",
+            COMPLETE: "Queue Completed"
+        };
+
+        return messages[type] || type;
+    }
+
     function createQueue(
         department,
         type = "Walk-In"
@@ -306,7 +342,16 @@ const QMS = (() => {
                 0,
 
             calledBy:
-                null
+                null,
+
+            history: [
+                {
+                    type: "ISSUED",
+                    timestamp: now,
+                    counter: null,
+                    staffID: null
+                }
+            ]
         };
 
         const queues =
@@ -547,6 +592,14 @@ const QMS = (() => {
                     item.calledBy =
                         staffID || null;
 
+                    addQueueHistory(
+                        item,
+                        "CALLED",
+                        now,
+                        counter,
+                        staffID || null
+                    );
+
                     return item;
                 }
             );
@@ -592,6 +645,14 @@ const QMS = (() => {
 
                     item.lastActionTime =
                         now;
+
+                    addQueueHistory(
+                        item,
+                        "RECALL",
+                        now,
+                        item.counter || counter || null,
+                        item.calledBy || null
+                    );
 
                     return item;
                 }
@@ -643,6 +704,14 @@ const QMS = (() => {
                     item.lastActionTime =
                         now;
 
+                    addQueueHistory(
+                        item,
+                        "COMPLETE",
+                        now,
+                        item.counter || counter || null,
+                        item.calledBy || null
+                    );
+
                     return item;
                 }
             );
@@ -692,6 +761,14 @@ const QMS = (() => {
 
                     item.lastActionTime =
                         now;
+
+                    addQueueHistory(
+                        item,
+                        "HOLD",
+                        now,
+                        item.counter || counter || null,
+                        item.calledBy || null
+                    );
 
                     return item;
                 }
@@ -983,6 +1060,9 @@ const QMS = (() => {
         formatDateTime,
         formatRelativeTime,
         isWithinTimeRange,
+
+        addQueueHistory,
+        getHistoryMessage,
 
         getLatestServing,
         getActiveServing,

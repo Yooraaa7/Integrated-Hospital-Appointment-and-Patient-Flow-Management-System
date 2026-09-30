@@ -131,7 +131,7 @@
 </header>
 
 
-<main class="dashboard-wrapper">
+<main id="dashboardMainView" class="dashboard-wrapper">
 
     <section class="dashboard-card">
 
@@ -322,6 +322,22 @@
 
 </main>
 
+
+
+
+<!-- QUEUE SEARCH RESULT / TIMELINE -->
+<div id="queueTimelineView" class="dashboard-wrapper queue-search-view" style="display:none;">
+<section class="queue-timeline-section">
+<div class="timeline-top">
+<div>
+<h2 class="timeline-heading">Queue History</h2>
+<p id="timelineQueueNumber" class="timeline-queue-number"></p>
+</div>
+<button type="button" id="closeTimelineButton" class="btn btn-outline-secondary timeline-close"><i class="bi bi-arrow-left"></i> Back</button>
+</div>
+<div id="queueTimeline" class="queue-timeline"></div>
+</section>
+</div>
 
 <script src="../js/qms.js"></script>
 <script src="../js/dashboard.js"></script>
