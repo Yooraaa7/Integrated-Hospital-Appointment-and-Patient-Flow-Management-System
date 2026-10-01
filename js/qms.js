@@ -567,6 +567,11 @@ const QMS = (() => {
         const now =
             new Date().toISOString();
 
+        // A queue selected from HOLD is being recalled,
+        // not called for the first time.
+        const wasOnHold =
+            queue.status === "HOLD";
+
         const updated =
             updateQueue(
                 queueNumber,
@@ -594,7 +599,9 @@ const QMS = (() => {
 
                     addQueueHistory(
                         item,
-                        "CALLED",
+                        wasOnHold
+                            ? "RECALL"
+                            : "CALLED",
                         now,
                         counter,
                         staffID || null

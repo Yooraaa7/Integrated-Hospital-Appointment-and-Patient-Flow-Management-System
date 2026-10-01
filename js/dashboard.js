@@ -271,37 +271,6 @@ if (
     // Render current queue
     // --------------------------------------------------------
 
-
-    function handleQueueSelection(queue) {
-
-        if (!queue) {
-            return;
-        }
-
-        /*
-         * WAIT queues are newly waiting, so staff CALL them.
-         * HOLD queues have already been called before, so selecting
-         * them must RECALL them instead of creating another CALLED event.
-         */
-        if (queue.status === "HOLD") {
-
-            if (typeof QMS.recallQueue === "function") {
-                QMS.recallQueue(
-                    queue.queueNumber
-                );
-            }
-
-        } else if (queue.status === "WAIT") {
-
-            if (typeof QMS.callQueue === "function") {
-                handleQueueSelection(queue);
-            }
-        }
-
-        render();
-    }
-
-
     function renderCurrent() {
 
         const current =
@@ -472,7 +441,7 @@ if (
 
                 const actionText =
                     activeTab === "HOLD"
-                        ? "Resume"
+                        ? "Recall"
                         : "Call";
 
                 const counterText =
@@ -507,7 +476,7 @@ if (
                         >
                             <i class="bi ${
                                 activeTab === "HOLD"
-                                    ? "bi-play-fill"
+                                    ? "bi-arrow-repeat"
                                     : "bi-megaphone"
                             }"></i>
                             ${actionText}
