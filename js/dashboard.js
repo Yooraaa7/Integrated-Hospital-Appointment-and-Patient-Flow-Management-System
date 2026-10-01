@@ -96,16 +96,6 @@ if (
             "serviceFilter"
         );
 
-    const counterFilter =
-        document.getElementById(
-            "counterFilter"
-        );
-
-    const timeFilter =
-        document.getElementById(
-            "timeFilter"
-        );
-
     const searchInput =
         document.getElementById(
             "searchInput"
@@ -217,12 +207,6 @@ if (
         const service =
             serviceFilter.value;
 
-        const timeRange =
-            timeFilter.value;
-
-        const selectedCounter =
-            counterFilter.value;
-
         const search =
             searchText.toUpperCase();
 
@@ -235,30 +219,10 @@ if (
         }
 
 
-        if (
-            !QMS.isWithinTimeRange(
-                queue.issuedTime,
-                timeRange
-            )
-        ) {
-            return false;
-        }
-
-
-        if (
-            activeTab === "HOLD" &&
-            selectedCounter !== "ALL" &&
-            queue.counter !== selectedCounter
-        ) {
-            return false;
-        }
-
-
+        // Queue history search is for one specific queue number.
         if (
             search &&
-            !queue.queueNumber
-                .toUpperCase()
-                .includes(search)
+            String(queue.queueNumber).toUpperCase() !== search
         ) {
             return false;
         }
@@ -827,39 +791,14 @@ if (
         render
     );
 
-    counterFilter.addEventListener(
-        "change",
-        renderList
-    );
-
-    timeFilter.addEventListener(
-        "change",
-        renderList
-    );
-
 
     // --------------------------------------------------------
     // Search
     // --------------------------------------------------------
 
-    function applySearch() {
-
-        searchText =
-            searchInput.value
-                .trim()
-                .toUpperCase();
-
-        renderList();
-    }
-
     searchButton.addEventListener(
         "click",
         searchQueueHistory
-    );
-
-    searchInput.addEventListener(
-        "input",
-        applySearch
     );
 
     searchInput.addEventListener(
@@ -895,8 +834,8 @@ if (
                 .slice()
                 .sort(
                     (a, b) =>
-                        new Date(a.timestamp) -
-                        new Date(b.timestamp)
+                        new Date(b.timestamp) -
+                        new Date(a.timestamp)
                 );
         }
 
@@ -941,16 +880,39 @@ if (
 
         return fallback.sort(
             (a, b) =>
-                new Date(a.timestamp) -
-                new Date(b.timestamp)
+                new Date(b.timestamp) -
+                new Date(a.timestamp)
         );
+    }
+
+
+    function formatTimelineTime(value) {
+
+        if (!value) {
+            return "--:--:--";
+        }
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return "--:--:--";
+        }
+
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const seconds = String(date.getSeconds()).padStart(2, "0");
+
+        return `${hours}:${minutes}:${seconds}`;
     }
 
 
     function renderTimeline(queue) {
 
-        const mainView = document.getElementById("dashboardMainView");
-        const timelineView = document.getElementById("queueTimelineView");
+        const mainView =
+            document.getElementById("dashboardMainView");
+
+        const timelineView =
+            document.getElementById("queueTimelineView");
 
         if (!mainView || !timelineView) return;
 
@@ -964,46 +926,74 @@ if (
 
         mainView.style.display = "none";
         timelineView.style.display = "";
-        timelineQueueNumber.textContent = `${queue.queueNumber} • ${queue.department} • ${queue.type}`;
+
+        timelineQueueNumber.textContent =
+            `${queue.queueNumber} • ${queue.department} • ${queue.type}`;
 
         const history = getTimelineHistory(queue);
+
         queueTimeline.innerHTML = "";
 
         if (!history.length) {
-            const empty=document.createElement("div");
-            empty.className="timeline-empty";
-            empty.textContent="No queue history is available.";
+            const empty = document.createElement("div");
+            empty.className = "timeline-empty";
+            empty.textContent = "No queue history is available.";
             queueTimeline.appendChild(empty);
             return;
         }
 
-        // History data is oldest -> newest. CSS column-reverse puts newest at top and oldest at bottom.
+        // History is rendered newest -> oldest so the newest event is always at the top.
         history.forEach(event => {
-            const item=document.createElement("div");
-            const type=String(event.type||"").toLowerCase();
-            item.className=`timeline-item timeline-${type}`;
 
-            const marker=document.createElement("span");
-            marker.className="timeline-marker";
-            const dot=document.createElement("span");
+            const item = document.createElement("div");
+            const type = String(event.type || "").toLowerCase();
+
+            item.className =
+                `timeline-item timeline-${type}`;
+
+            const time = document.createElement("time");
+            time.className = "timeline-time";
+            time.dateTime = event.timestamp || "";
+            time.textContent = formatTimelineTime(event.timestamp);
+
+            const marker = document.createElement("div");
+            marker.className = "timeline-marker";
+
+            const dot = document.createElement("span");
             marker.appendChild(dot);
 
-            const content=document.createElement("div");
-            content.className="timeline-content";
+            const content = document.createElement("div");
+            content.className = "timeline-content";
 
-            const time=document.createElement("span");
-            time.className="timeline-time";
-            const date=new Date(event.timestamp);
-            time.textContent=isNaN(date.getTime()) ? event.timestamp : date.toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit",hour12:true});
+            const message = document.createElement("p");
+            message.className = "timeline-message";
+            message.textContent =
+                QMS.getHistoryMessage(event.type);
 
-            const message=document.createElement("span");
-            message.className="timeline-message";
-            message.textContent=QMS.getHistoryMessage(event.type);
-
-            content.appendChild(time);
             content.appendChild(message);
+
+            if (event.counter || event.staffID) {
+                const meta = document.createElement("span");
+                meta.className = "timeline-meta";
+
+                const details = [];
+
+                if (event.counter) {
+                    details.push(event.counter);
+                }
+
+                if (event.staffID) {
+                    details.push(event.staffID);
+                }
+
+                meta.textContent = details.join(" • ");
+                content.appendChild(meta);
+            }
+
+            item.appendChild(time);
             item.appendChild(marker);
             item.appendChild(content);
+
             queueTimeline.appendChild(item);
         });
     }

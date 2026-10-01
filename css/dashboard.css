@@ -645,72 +645,78 @@ body {
 }
 
 /* =========================
-   QUEUE TIMELINE
+   QUEUE HISTORY TIMELINE
 ========================= */
+
+.queue-search-view {
+    padding-top: 28px;
+    padding-bottom: 40px;
+}
 
 .queue-timeline-section {
     width: 100%;
-
     max-width: 1200px;
 
-    padding: 25px 30px;
+    margin: 0 auto;
+    padding: 30px 40px 40px;
 
-    background-color: white;
+    background-color: #ffffff;
 
-    border: 1px solid #edf0f2;
+    border: 1px solid #e6eaee;
+    border-radius: 16px;
 
-    border-radius: 12px;
-
-    box-shadow:
-        0 4px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
 }
 
 .timeline-top {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
 
-    gap: 15px;
+    gap: 20px;
 
-    margin-bottom: 25px;
+    padding-bottom: 22px;
+    margin-bottom: 10px;
+
+    border-bottom: 1px solid #edf0f2;
 }
 
 .timeline-heading {
     margin: 0;
 
-    font-size: 17px;
-    font-weight: bold;
+    font-size: 20px;
+    font-weight: 700;
 
     color: #263645;
 }
 
 .timeline-queue-number {
-    margin: 5px 0 0;
+    margin: 6px 0 0;
 
     color: #8b96a1;
 
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .timeline-close {
+    flex-shrink: 0;
     white-space: nowrap;
 
     font-size: 12px;
+    padding: 7px 13px;
 }
 
 .queue-timeline {
     position: relative;
 
-    max-width: 850px;
+    width: 100%;
+    max-width: 950px;
 
     margin: 0 auto;
-
-    padding: 10px 0 10px 45px;
+    padding: 28px 0 10px;
 
     display: flex;
-
-    flex-direction: column-reverse;
+    flex-direction: column;
 }
 
 .queue-timeline::before {
@@ -718,80 +724,102 @@ body {
 
     position: absolute;
 
-    top: 10px;
-    bottom: 10px;
+    top: 46px;
+    bottom: 46px;
 
-    left: 16px;
+    left: 169px;
 
     width: 2px;
 
-    background-color: #d9dee3;
+    background-color: #dfe4e8;
+
+    z-index: 0;
 }
 
 .timeline-item {
     position: relative;
 
-    min-height: 75px;
+    display: grid;
+    grid-template-columns: 125px 58px minmax(0, 1fr);
+    column-gap: 15px;
 
-    display: flex;
+    min-height: 76px;
 
-    align-items: flex-start;
+    align-items: start;
 
-    padding-bottom: 20px;
+    padding: 0 10px 26px;
+}
+
+.timeline-time {
+    padding-top: 4px;
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 20px;
+
+    text-align: right;
+
+    color: #7b8792;
+
+    white-space: nowrap;
 }
 
 .timeline-marker {
-    position: absolute;
+    position: relative;
 
-    left: -36px;
+    width: 32px;
+    height: 32px;
 
-    top: 4px;
-
-    width: 14px;
-    height: 14px;
+    margin: 0 auto;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
-    background-color: white;
-
+    background-color: #ffffff;
     border-radius: 50%;
 
     z-index: 2;
 }
 
 .timeline-marker span {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
 
     border-radius: 50%;
 
-    background-color: #6c757d;
+    box-shadow: 0 0 0 4px #ffffff;
 }
 
 .timeline-content {
+    min-width: 0;
+
     display: flex;
-
     flex-direction: column;
-
     gap: 4px;
 
-    padding-left: 5px;
-}
-
-.timeline-time {
-    font-family: Tahoma, Geneva, sans-serif;
-
-    font-size: 11px;
-
-    color: #8b96a1;
+    padding-top: 2px;
 }
 
 .timeline-message {
-    font-size: 13px;
-    font-weight: bold;
+    margin: 0;
+
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.timeline-meta {
+    font-size: 11px;
+    line-height: 16px;
+
+    color: #8b96a1;
 }
 
 .timeline-issued .timeline-marker span {
@@ -835,7 +863,7 @@ body {
 }
 
 .timeline-empty {
-    padding: 30px;
+    padding: 50px 20px;
 
     text-align: center;
 
@@ -844,51 +872,101 @@ body {
     font-size: 13px;
 }
 
-@media (max-width: 650px) {
+@media (max-width: 800px) {
 
     .queue-timeline-section {
-        padding: 20px 18px;
+        padding: 24px 24px 32px;
+    }
+
+    .queue-timeline {
+        max-width: 100%;
+    }
+
+    .timeline-item {
+        grid-template-columns: 100px 48px minmax(0, 1fr);
+        column-gap: 10px;
+    }
+
+    .queue-timeline::before {
+        left: 134px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .queue-search-view {
+        padding: 18px 14px 30px;
+    }
+
+    .queue-timeline-section {
+        padding: 22px 18px 30px;
+        border-radius: 12px;
     }
 
     .timeline-top {
         align-items: flex-start;
     }
 
+    .timeline-heading {
+        font-size: 18px;
+    }
+
     .queue-timeline {
-        padding-left: 38px;
+        padding-top: 22px;
+    }
+
+    .timeline-item {
+        grid-template-columns: 75px 34px minmax(0, 1fr);
+        column-gap: 8px;
+        min-height: 70px;
+        padding-left: 0;
+        padding-right: 0;
     }
 
     .queue-timeline::before {
-        left: 12px;
+        left: 100px;
+    }
+
+    .timeline-time {
+        font-size: 10px;
     }
 
     .timeline-marker {
-        left: -31px;
+        width: 28px;
+        height: 28px;
+    }
+
+    .timeline-marker span {
+        width: 10px;
+        height: 10px;
+    }
+
+    .timeline-message {
+        font-size: 13px;
     }
 }
 
+@media (max-width: 440px) {
 
-/* =========================
-   SEARCH RESULT TIMELINE VIEW
-========================= */
-.queue-search-view{padding-top:0;}
-.queue-search-view .queue-timeline-section{width:100%;max-width:1200px;padding:25px 30px;background-color:white;border:1px solid #edf0f2;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.08);}
-.timeline-top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:25px;}
-.timeline-heading{margin:0;font-size:17px;font-weight:bold;color:#263645;}
-.timeline-queue-number{margin:5px 0 0;color:#8b96a1;font-size:11px;}
-.timeline-close{white-space:nowrap;font-size:12px;}
-.queue-timeline{position:relative;max-width:850px;margin:0 auto;padding:10px 0 10px 45px;display:flex;flex-direction:column-reverse;}
-.queue-timeline::before{content:"";position:absolute;top:10px;bottom:10px;left:16px;width:2px;background-color:#d9dee3;}
-.timeline-item{position:relative;min-height:75px;display:flex;align-items:flex-start;padding-bottom:20px;}
-.timeline-marker{position:absolute;left:-36px;top:4px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;background-color:white;border-radius:50%;z-index:2;}
-.timeline-marker span{width:10px;height:10px;border-radius:50%;}
-.timeline-content{display:flex;flex-direction:column;gap:4px;padding-left:5px;}
-.timeline-time{font-family:Tahoma,Geneva,sans-serif;font-size:11px;color:#8b96a1;}
-.timeline-message{font-size:13px;font-weight:bold;}
-.timeline-issued .timeline-marker span{background-color:#263645}.timeline-issued .timeline-message{color:#263645}
-.timeline-called .timeline-marker span{background-color:#198754}.timeline-called .timeline-message{color:#198754}
-.timeline-hold .timeline-marker span{background-color:#dc3545}.timeline-hold .timeline-message{color:#dc3545}
-.timeline-recall .timeline-marker span{background-color:#fd7e14}.timeline-recall .timeline-message{color:#fd7e14}
-.timeline-complete .timeline-marker span{background-color:#0d6efd}.timeline-complete .timeline-message{color:#0d6efd}
-.timeline-empty{padding:30px;text-align:center;color:#98a1aa;font-size:13px;}
-@media(max-width:650px){.queue-search-view{padding-top:0}.queue-search-view .queue-timeline-section{padding:20px 18px}.timeline-top{align-items:flex-start}.queue-timeline{padding-left:38px}.queue-timeline::before{left:12px}.timeline-marker{left:-31px}}
+    .timeline-top {
+        flex-direction: column;
+    }
+
+    .timeline-close {
+        align-self: flex-start;
+    }
+
+    .timeline-item {
+        grid-template-columns: 68px 30px minmax(0, 1fr);
+        column-gap: 7px;
+    }
+
+    .queue-timeline::before {
+        left: 90px;
+    }
+
+    .timeline-meta {
+        font-size: 10px;
+    }
+}
+
