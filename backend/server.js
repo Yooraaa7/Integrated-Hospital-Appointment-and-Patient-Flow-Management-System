@@ -6,6 +6,8 @@ const pool = require("./config/database");
 
 const departmentRoutes = require("./routes/departmentRoutes");
 const counterRoutes = require("./routes/counterRoutes");
+const patientRoutes = require("./routes/patientRoutes");
+const queueRoutes = require("./routes/queueRoutes");
 
 const app = express();
 
@@ -58,6 +60,8 @@ app.get("/api/health", async (req, res) => {
 
 app.use("/api/departments", departmentRoutes);
 app.use("/api/counters", counterRoutes);
+app.use("/api/patients", patientRoutes);
+app.use("/api/queues", queueRoutes);
 
 
 /* ============================================================
