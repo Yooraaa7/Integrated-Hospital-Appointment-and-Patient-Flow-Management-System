@@ -40,16 +40,6 @@ const QMS = (() => {
         "Counter 4"
     ];
 
-    // Prototype account.
-    // Real authentication will move to the backend/database later.
-    const STAFF_ACCOUNTS = [
-        {
-            staffID: "STA101",
-            password: "sta101",
-            name: "QMS Staff"
-        }
-    ];
-
     function getDepartments() {
         return DEPARTMENTS.slice();
     }
@@ -109,135 +99,8 @@ const QMS = (() => {
         );
     }
 
-    function loadQueues() {
-
-        try {
-
-            const saved =
-                localStorage.getItem(
-                    STORAGE_KEYS.queues
-                );
-
-            const queues =
-                saved ? JSON.parse(saved) : [];
-
-            return Array.isArray(queues)
-                ? queues
-                : [];
-
-        } catch (error) {
-
-            console.error(
-                "Unable to load QMS queues.",
-                error
-            );
-
-            return [];
-        }
-    }
-
-    function saveQueues(queues) {
-
-        localStorage.setItem(
-            STORAGE_KEYS.queues,
-            JSON.stringify(queues)
-        );
-
-        localStorage.setItem(
-            STORAGE_KEYS.updatedAt,
-            Date.now().toString()
-        );
-    }
-
-    function loadQueueCounters() {
-
-        try {
-
-            const saved =
-                localStorage.getItem(
-                    STORAGE_KEYS.counters
-                );
-
-            const counters =
-                saved ? JSON.parse(saved) : {};
-
-            return counters &&
-                typeof counters === "object"
-                ? counters
-                : {};
-
-        } catch (error) {
-
-            return {};
-        }
-    }
-
-    function saveQueueCounters(counters) {
-
-        localStorage.setItem(
-            STORAGE_KEYS.counters,
-            JSON.stringify(counters)
-        );
-    }
-
-    function getNextQueueNumber(department) {
-
-        const prefix =
-            getPrefix(department);
-
-        if (!prefix) {
-            throw new Error(
-                "Invalid department."
-            );
-        }
-
-        const queues =
-            loadQueues();
-
-        const counters =
-            loadQueueCounters();
-
-        const storedCounter =
-            Number(counters[prefix] || 0);
-
-        const existingNumbers =
-            queues
-                .filter(
-                    queue =>
-                        queue.department === department &&
-                        typeof queue.queueNumber === "string" &&
-                        queue.queueNumber.startsWith(prefix)
-                )
-                .map(
-                    queue =>
-                        Number(
-                            queue.queueNumber
-                                .replace(prefix, "")
-                        ) || 0
-                );
-
-        const largestExisting =
-            existingNumbers.length
-                ? Math.max(...existingNumbers)
-                : 0;
-
-        const nextNumber =
-            Math.max(
-                storedCounter,
-                largestExisting
-            ) + 1;
-
-        counters[prefix] =
-            nextNumber;
-
-        saveQueueCounters(counters);
-
-        return (
-            prefix +
-            String(nextNumber).padStart(3, "0")
-        );
-    }
-
+    function loadQueues() { return window.QMS_REMOTE_ROWS || []; }
+    function saveQueues() { throw Error("Queues must be changed through the server API"); }
 
     function addQueueHistory(
         item,
@@ -272,104 +135,6 @@ const QMS = (() => {
         };
 
         return messages[type] || type;
-    }
-
-    function createQueue(
-        department,
-        type = "Walk-In"
-    ) {
-
-        const normalizedDepartment =
-            normalizeDepartment(department);
-
-        if (!normalizedDepartment) {
-            throw new Error(
-                "Invalid department."
-            );
-        }
-
-        const queueNumber =
-            getNextQueueNumber(
-                normalizedDepartment
-            );
-
-        const now =
-            new Date().toISOString();
-
-        const newQueue = {
-
-            id:
-                "Q-" +
-                Date.now() +
-                "-" +
-                Math.random()
-                    .toString(36)
-                    .slice(2, 8),
-
-            queueNumber:
-                queueNumber,
-
-            department:
-                normalizedDepartment,
-
-            type:
-                type,
-
-            status:
-                "WAIT",
-
-            // Counter is intentionally null.
-            // It is assigned only when staff calls the queue.
-            counter:
-                null,
-
-            issuedTime:
-                now,
-
-            calledTime:
-                null,
-
-            holdTime:
-                null,
-
-            completedTime:
-                null,
-
-            lastActionTime:
-                now,
-
-            recallCount:
-                0,
-
-            calledBy:
-                null,
-
-            history: [
-                {
-                    type: "ISSUED",
-                    timestamp: now,
-                    counter: null,
-                    staffID: null
-                }
-            ]
-        };
-
-        const queues =
-            loadQueues();
-
-        queues.push(newQueue);
-
-        saveQueues(queues);
-
-        return newQueue;
-    }
-
-    function createWalkInQueue(department) {
-
-        return createQueue(
-            department,
-            "Walk-In"
-        );
     }
 
     function getQueueByNumber(queueNumber) {
@@ -979,25 +744,6 @@ const QMS = (() => {
         ).length;
     }
 
-    function validateStaffLogin(
-        staffID,
-        password
-    ) {
-
-        const normalizedID =
-            String(staffID || "")
-                .trim()
-                .toUpperCase();
-
-        return (
-            STAFF_ACCOUNTS.find(
-                account =>
-                    account.staffID === normalizedID &&
-                    account.password === password
-            ) || null
-        );
-    }
-
     function getSession() {
 
         return {
@@ -1047,10 +793,7 @@ const QMS = (() => {
         getDepartmentFromUrl,
 
         loadQueues,
-        saveQueues,
 
-        createQueue,
-        createWalkInQueue,
         getQueueByNumber,
         getDepartmentQueues,
 
@@ -1075,7 +818,6 @@ const QMS = (() => {
         getActiveServing,
         getWaitingCount,
 
-        validateStaffLogin,
         getSession,
         clearSession
     };

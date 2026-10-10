@@ -11,8 +11,12 @@ const queueRoutes = require("./routes/queueRoutes");
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.disable("x-powered-by");
+app.use(cors({origin: process.env.ALLOWED_ORIGIN || false}));
+app.use(express.json({limit:"16kb"}));
+const path = require("path");
+app.use(express.static(path.resolve(__dirname,"..")));
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) { throw new Error("Configure JWT_SECRET of at least 32 characters in .env"); }
 
 
 /* ============================================================
@@ -58,6 +62,7 @@ app.get("/api/health", async (req, res) => {
    QMS ROUTES
    ============================================================ */
 
+app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/departments", departmentRoutes);
 app.use("/api/counters", counterRoutes);
 app.use("/api/patients", patientRoutes);

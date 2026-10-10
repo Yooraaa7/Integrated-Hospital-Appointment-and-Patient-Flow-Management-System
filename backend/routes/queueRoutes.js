@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../config/database");
+const { requireStaff } = require("../middleware/auth");
 
 
 // =====================================================
@@ -140,8 +141,7 @@ router.post("/walk-in", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to create walk-in queue",
-            error: error.message
+            message: "Failed to create walk-in queue"
         });
 
     } finally {
@@ -166,8 +166,7 @@ router.get("/", async (req, res) => {
             SELECT
                 q.id,
                 q.queue_number,
-                q.patient_id,
-                q.appointment_id,
+                
                 q.department_id,
                 d.department_code AS department_code,
                 d.department_name AS department_name,
@@ -179,10 +178,24 @@ router.get("/", async (req, res) => {
                 q.hold_at,
                 q.completed_at,
                 q.created_at,
-                q.updated_at
+                q.updated_at,
+                q.recall_count,
+                c.counter_number,
+                u.staff_id,
+                (SELECT COALESCE(json_agg(json_build_object(
+                    'type', h.action_type, 'timestamp', h.action_at,
+                    'counter', CASE WHEN hc.counter_number IS NULL THEN NULL ELSE 'Counter ' || hc.counter_number END,
+                    'staffID', hu.staff_id
+                ) ORDER BY h.action_at), '[]'::json)
+                FROM queue_history h
+                LEFT JOIN counters hc ON hc.id=h.counter_id
+                LEFT JOIN users hu ON hu.id=h.staff_id
+                WHERE h.queue_id=q.id) AS history
             FROM queues q
             JOIN departments d
                 ON d.id = q.department_id
+            LEFT JOIN counters c ON c.id = q.counter_id
+            LEFT JOIN users u ON u.id = q.called_by
             WHERE 1 = 1
         `;
 
@@ -221,8 +234,7 @@ router.get("/", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to retrieve queues",
-            error: error.message
+            message: "Failed to retrieve queues"
         });
     }
 });
@@ -235,9 +247,11 @@ router.get("/", async (req, res) => {
 // WAIT -> SERVING = CALLED
 // HOLD -> SERVING = RECALL
 // =====================================================
-router.post("/:id/call", async (req, res) => {
+router.post("/:id/call", requireStaff, async (req, res) => {
     const { id } = req.params;
-    const { counter_id, staff_id } = req.body;
+    const { counter_id } = req.body;
+    const staff_id = req.staff.staff_id;
+    if (Number(counter_id) !== Number(req.staff.counter_id)) return res.status(403).json({success:false,message:"Not authorised for this counter"});
 
     const client = await pool.connect();
 
@@ -439,8 +453,7 @@ router.post("/:id/call", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to call queue",
-            error: error.message
+            message: "Failed to call queue"
         });
 
     } finally {
@@ -453,9 +466,11 @@ router.post("/:id/call", async (req, res) => {
 // POST /api/queues/:id/recall
 // Recall currently serving queue
 // =====================================================
-router.post("/:id/recall", async (req, res) => {
+router.post("/:id/recall", requireStaff, async (req, res) => {
     const { id } = req.params;
-    const { counter_id, staff_id } = req.body;
+    const { counter_id } = req.body;
+    const staff_id = req.staff.staff_id;
+    if (Number(counter_id) !== Number(req.staff.counter_id)) return res.status(403).json({success:false,message:"Not authorised for this counter"});
 
     const client = await pool.connect();
 
@@ -575,8 +590,7 @@ router.post("/:id/recall", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to recall queue",
-            error: error.message
+            message: "Failed to recall queue"
         });
 
     } finally {
@@ -589,9 +603,11 @@ router.post("/:id/recall", async (req, res) => {
 // POST /api/queues/:id/hold
 // Put serving queue on hold
 // =====================================================
-router.post("/:id/hold", async (req, res) => {
+router.post("/:id/hold", requireStaff, async (req, res) => {
     const { id } = req.params;
-    const { counter_id, staff_id } = req.body;
+    const { counter_id } = req.body;
+    const staff_id = req.staff.staff_id;
+    if (Number(counter_id) !== Number(req.staff.counter_id)) return res.status(403).json({success:false,message:"Not authorised for this counter"});
 
     const client = await pool.connect();
 
@@ -712,8 +728,7 @@ router.post("/:id/hold", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to put queue on hold",
-            error: error.message
+            message: "Failed to put queue on hold"
         });
 
     } finally {
@@ -726,9 +741,11 @@ router.post("/:id/hold", async (req, res) => {
 // POST /api/queues/:id/complete
 // Complete serving queue
 // =====================================================
-router.post("/:id/complete", async (req, res) => {
+router.post("/:id/complete", requireStaff, async (req, res) => {
     const { id } = req.params;
-    const { counter_id, staff_id } = req.body;
+    const { counter_id } = req.body;
+    const staff_id = req.staff.staff_id;
+    if (Number(counter_id) !== Number(req.staff.counter_id)) return res.status(403).json({success:false,message:"Not authorised for this counter"});
 
     const client = await pool.connect();
 
@@ -849,8 +866,7 @@ router.post("/:id/complete", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to complete queue",
-            error: error.message
+            message: "Failed to complete queue"
         });
 
     } finally {

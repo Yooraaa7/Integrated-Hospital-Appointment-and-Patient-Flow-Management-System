@@ -450,10 +450,10 @@ if (
 
 
                 const call =
-                    function () {
+                    async function () {
 
                         const result =
-                            QMS.callQueue(
+                            await QMS.callQueue(
                                 queue.queueNumber,
                                 session.department,
                                 session.counter,
@@ -532,7 +532,7 @@ if (
     // Call next waiting queue
     // --------------------------------------------------------
 
-    function callNext() {
+    async function callNext() {
 
         const current =
             QMS.getCurrentServing(
@@ -567,7 +567,7 @@ if (
         }
 
         const result =
-            QMS.callQueue(
+            await QMS.callQueue(
                 next.queueNumber,
                 session.department,
                 session.counter,
@@ -591,10 +591,10 @@ if (
 
     recallButton.addEventListener(
         "click",
-        function () {
+        async function () {
 
             const result =
-                QMS.recallCurrent(
+                await QMS.recallCurrent(
                     session.department,
                     session.counter
                 );
@@ -617,10 +617,10 @@ if (
 
     completeButton.addEventListener(
         "click",
-        function () {
+        async function () {
 
             const completed =
-                QMS.completeCurrent(
+                await QMS.completeCurrent(
                     session.department,
                     session.counter
                 );
@@ -646,7 +646,7 @@ if (
             if (next) {
 
                 const called =
-                    QMS.callQueue(
+                    await QMS.callQueue(
                         next.queueNumber,
                         session.department,
                         session.counter,
@@ -681,10 +681,10 @@ if (
 
     holdButton.addEventListener(
         "click",
-        function () {
+        async function () {
 
             const held =
-                QMS.holdCurrent(
+                await QMS.holdCurrent(
                     session.department,
                     session.counter
                 );
@@ -710,7 +710,7 @@ if (
             if (next) {
 
                 const called =
-                    QMS.callQueue(
+                    await QMS.callQueue(
                         next.queueNumber,
                         session.department,
                         session.counter,

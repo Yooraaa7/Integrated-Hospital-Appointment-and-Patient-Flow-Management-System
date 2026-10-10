@@ -21,7 +21,7 @@ if (!department) {
 
 getTicketButton.addEventListener(
     "click",
-    function () {
+    async function () {
 
         errorMessage.textContent =
             "";
@@ -43,7 +43,7 @@ getTicketButton.addEventListener(
         try {
 
             const newQueue =
-                QMS.createWalkInQueue(
+                await QMS.createWalkInQueue(
                     department
                 );
 

@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const pool = require("../config/database");
+const {requireStaff}=require("../middleware/auth");
 
 
-router.post("/", async (req, res) => {
+router.post("/", requireStaff, async (req, res) => {
     try {
         const {
             patient_number,

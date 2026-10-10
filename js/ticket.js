@@ -40,55 +40,23 @@ if (queueNumber) {
 }
 
 
-const queues =
-    JSON.parse(
-        localStorage.getItem("qmsQueues")
-    ) || [];
-
-
-const currentQueue =
-    queues.find(
-        queue =>
-            queue.queueNumber === queueNumber
-    );
-
-
-if (
-    currentQueue &&
-    currentQueue.issuedTime
-) {
-
-    const issuedDate =
-        new Date(
-            currentQueue.issuedTime
-        );
-
-
-    if (!isNaN(issuedDate.getTime())) {
-
-        issuedTimeElement.textContent =
-            issuedDate.toLocaleTimeString(
-                "en-MY",
-                {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true
-                }
-            );
-
-    } else {
-
-        issuedTimeElement.textContent =
-            "Invalid time";
-
+// Ticket information is retrieved from PostgreSQL, not localStorage.
+(async () => {
+    try {
+        const response = await fetch('/api/queues');
+        if (!response.ok) throw new Error('Queue server unavailable');
+        const result = await response.json();
+        const current = (result.queues || []).find(q => q.queue_number === queueNumber);
+        issuedTimeElement.textContent = current && current.issued_at
+            ? new Date(current.issued_at).toLocaleTimeString('en-MY', {
+                hour:'2-digit', minute:'2-digit',hour12:true
+              })
+            : '--';
+    } catch (error) {
+        issuedTimeElement.textContent = '--';
+        console.error(error);
     }
-
-} else {
-
-    issuedTimeElement.textContent =
-        "--";
-
-}
+})();
 
 // Display QR Code (No Functionality, just for visual representation) //
 
