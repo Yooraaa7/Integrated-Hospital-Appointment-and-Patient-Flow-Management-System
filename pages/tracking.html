@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="referrer" content="no-referrer">
+
+    <title>The Care | Live Queue Tracking</title>
+
+    <link rel="stylesheet" href="../css/tracking.css">
+</head>
+
+<body>
+    <main class="tracking-container">
+        <section class="tracking-card">
+
+            <header class="tracking-header">
+                <img
+                    src="../assets/logo.png"
+                    alt="The Care Hospital"
+                    class="hospital-logo"
+                >
+
+                <p class="tracking-title">LIVE QUEUE TRACKING</p>
+
+                <p id="departmentName" class="department-name">
+                    Loading department...
+                </p>
+
+                <p class="small-label">YOUR QUEUE NUMBER</p>
+
+                <h1 id="queueNumber" class="queue-number">
+                    ---
+                </h1>
+            </header>
+
+            <!-- Main queue status -->
+            <section
+                id="statusPanel"
+                class="status-panel"
+                data-status="WAIT"
+                aria-live="polite"
+            >
+                <p class="small-label">YOUR CURRENT STATUS</p>
+
+                <h2 id="queueStatus">Loading...</h2>
+
+                <p id="statusMessage">
+                    Checking your queue status...
+                </p>
+            </section>
+
+            <!-- Visible only when NOW SERVING -->
+            <section
+                id="counterPanel"
+                class="counter-panel"
+                hidden
+                aria-live="polite"
+            >
+                <p>IT'S YOUR TURN!</p>
+                <p>Please proceed to</p>
+
+                <h2 id="assignedCounter">Counter --</h2>
+            </section>
+
+            <!-- Only visible for WAIT and HOLD -->
+            <section
+                id="queueProgress"
+                class="queue-progress"
+                aria-label="Department queue progress"
+                hidden
+            >
+                <article class="queue-info-card">
+                    <h3>Currently Serving</h3>
+                    <div id="nowServing" class="serving-list">
+                        --
+                    </div>
+                </article>
+
+                <article class="queue-info-card">
+                    <h3>Next in Queue</h3>
+
+                    <strong id="nextQueue" class="next-number">
+                        --
+                    </strong>
+
+                    <p class="small-note">Expected next</p>
+                </article>
+            </section>
+
+            <!-- API/network errors -->
+            <p
+                id="errorMessage"
+                class="error-message"
+                role="alert"
+                hidden
+            ></p>
+
+            <footer class="tracking-footer">
+                <span class="live-indicator"></span>
+                <span id="lastUpdated">Connecting...</span>
+
+                <p>
+                    Automatically updates every 5 seconds.
+                    Please keep this page open.
+                </p>
+            </footer>
+
+        </section>
+    </main>
+
+    <script src="../js/tracking.js" defer></script>
+</body>
+</html>

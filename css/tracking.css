@@ -1,0 +1,269 @@
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #1d3047;
+    background: #edf3f8;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.tracking-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.tracking-card {
+    width: min(100%, 490px);
+    background: white;
+    border: 1px solid #dce6f0;
+    border-radius: 20px;
+    box-shadow: 0 14px 42px rgba(32, 62, 92, 0.12);
+    padding: 26px;
+}
+
+/* Header */
+
+.tracking-header {
+    text-align: center;
+    padding: 5px 0 22px;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.hospital-logo {
+    width: 132px;
+    max-height: 66px;
+    object-fit: contain;
+}
+
+.tracking-title {
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #57708b;
+    margin: 18px 0 8px;
+}
+
+.department-name {
+    font-size: 15px;
+    color: #57708b;
+    margin-bottom: 22px;
+}
+
+.small-label {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #63758a;
+}
+
+.queue-number {
+    font-size: clamp(42px, 9vw, 62px);
+    margin: 5px 0 0;
+    color: #183450;
+}
+
+/* Status panel */
+
+.status-panel {
+    text-align: center;
+    background: #fff5d9;
+    border-radius: 16px;
+    padding: 24px 15px;
+    margin: 20px 0;
+}
+
+.status-panel h2 {
+    font-size: 30px;
+    margin: 8px 0;
+    color: #93600b;
+}
+
+.status-panel p {
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.status-panel[data-status="WAIT"] {
+    background: #fff5d9;
+}
+
+.status-panel[data-status="WAIT"] h2 {
+    color: #93600b;
+}
+
+.status-panel[data-status="SERVING"] {
+    background: #dcf8e9;
+}
+
+.status-panel[data-status="SERVING"] h2 {
+    color: #087346;
+}
+
+.status-panel[data-status="HOLD"] {
+    background: #ffe9d7;
+}
+
+.status-panel[data-status="HOLD"] h2 {
+    color: #a15319;
+}
+
+.status-panel[data-status="COMPLETED"] {
+    background: #edf1f5;
+}
+
+.status-panel[data-status="COMPLETED"] h2 {
+    color: #536476;
+}
+
+/* Assigned counter: NOW SERVING only */
+
+.counter-panel {
+    text-align: center;
+    background: #e0f5e8;
+    border: 1px solid #8accaa;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+.counter-panel p {
+    font-size: 13px;
+    color: #23613e;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.counter-panel h2 {
+    font-size: 36px;
+    color: #087346;
+    margin: 12px 0 0;
+}
+
+/* Queue numbers: WAIT and HOLD only */
+
+.queue-progress {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.queue-info-card {
+    min-width: 0;
+    text-align: center;
+    background: #f1f5f9;
+    border-radius: 13px;
+    padding: 17px 9px;
+}
+
+.queue-info-card h3 {
+    font-size: 12px;
+    color: #65768a;
+    margin: 0 0 14px;
+}
+
+.serving-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    min-height: 50px;
+}
+
+.serving-ticket {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: white;
+    border: 1px solid #d8e5ee;
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-size: 13px;
+    color: #27445e;
+}
+
+.serving-ticket small {
+    font-size: 10px;
+    color: #64748b;
+}
+
+.next-number {
+    display: block;
+    font-size: 25px;
+    color: #1b3753;
+    margin: 6px 0;
+}
+
+.small-note {
+    font-size: 11px;
+    color: #74859a;
+}
+
+.empty-message {
+    font-size: 12px;
+    color: #74859a;
+}
+
+/* Errors and footer */
+
+.error-message {
+    color: #a72a2a;
+    background: #fff0f0;
+    padding: 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.tracking-footer {
+    border-top: 1px solid #e8edf3;
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    font-size: 12px;
+    color: #687b8c;
+}
+
+.tracking-footer p {
+    font-size: 11px;
+    margin-top: 8px;
+}
+
+.live-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #2ab381;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+/* Mobile */
+
+@media (max-width: 380px) {
+    .tracking-card {
+        padding: 16px;
+    }
+
+    .queue-progress {
+        gap: 8px;
+    }
+
+    .queue-info-card {
+        padding: 14px 6px;
+    }
+}

@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+
 require("dotenv").config();
 
 const pool = require("./config/database");
@@ -8,21 +10,57 @@ const departmentRoutes = require("./routes/departmentRoutes");
 const counterRoutes = require("./routes/counterRoutes");
 const patientRoutes = require("./routes/patientRoutes");
 const queueRoutes = require("./routes/queueRoutes");
+const trackingRoutes = require("./routes/trackingRoutes");
 
 const app = express();
 
 app.disable("x-powered-by");
-app.use(cors({origin: process.env.ALLOWED_ORIGIN || false}));
-app.use(express.json({limit:"16kb"}));
-const path = require("path");
-app.use(express.static(path.resolve(__dirname,"..")));
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) { throw new Error("Configure JWT_SECRET of at least 32 characters in .env"); }
 
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGIN || false
+}));
 
-/* ============================================================
-   TEST ROUTE
-   ============================================================ */
+app.use(express.json({
+    limit: "16kb"
+}));
 
+// Serve only the frontend folders.
+// Do not expose backend files or .env.
+const publicRoot = path.resolve(__dirname, "..");
+
+app.use(
+    "/pages",
+    express.static(path.join(publicRoot, "pages"))
+);
+
+app.use(
+    "/js",
+    express.static(path.join(publicRoot, "js"))
+);
+
+app.use(
+    "/css",
+    express.static(path.join(publicRoot, "css"))
+);
+
+app.use(
+    "/assets",
+    express.static(path.join(publicRoot, "assets"))
+);
+
+app.get("/index.html", (req, res) => {
+    res.sendFile(path.join(publicRoot, "index.html"));
+});
+
+// JWT configuration
+if (!process.env.JWT_SECRET ||
+    process.env.JWT_SECRET.length < 32) {
+    throw new Error(
+        "Configure JWT_SECRET with at least 32 characters"
+    );
+}
+
+// Backend test
 app.get("/", (req, res) => {
     res.json({
         success: true,
@@ -30,11 +68,7 @@ app.get("/", (req, res) => {
     });
 });
 
-
-/* ============================================================
-   DATABASE TEST
-   ============================================================ */
-
+// PostgreSQL connection test
 app.get("/api/health", async (req, res) => {
     try {
         const result = await pool.query(
@@ -48,7 +82,7 @@ app.get("/api/health", async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Database error:", error);
 
         res.status(500).json({
             success: false,
@@ -57,22 +91,17 @@ app.get("/api/health", async (req, res) => {
     }
 });
 
-
-/* ============================================================
-   QMS ROUTES
-   ============================================================ */
-
+// Existing QMS routes
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/departments", departmentRoutes);
 app.use("/api/counters", counterRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/queues", queueRoutes);
 
+// New public QR tracking route
+app.use("/api/tracking", trackingRoutes);
 
-/* ============================================================
-   START SERVER
-   ============================================================ */
-
+// Start backend
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

@@ -118,7 +118,8 @@ router.post("/walk-in", async (req, res) => {
                 queue_type,
                 priority,
                 status,
-                issued_at
+                issued_at,
+                tracking_token
             `,
             [
                 department_id,

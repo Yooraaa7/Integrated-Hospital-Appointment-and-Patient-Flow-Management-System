@@ -11,78 +11,130 @@ const qrCodeElement =
     document.getElementById("qrCode");
 
 const urlParams =
-    new URLSearchParams(
-        window.location.search
-    );
+    new URLSearchParams(window.location.search);
 
+const trackingToken = urlParams.get("token");
 
-const department =
-    urlParams.get("department");
+const qrSection = document.querySelector(".qr-section");
 
+// Find or create the tracking message
+let trackingHint =
+    document.getElementById("trackingHint");
 
-const queueNumber =
-    urlParams.get("queue");
-
-
-if (department) {
-
-    departmentName.textContent =
-        department;
-
+if (!trackingHint) {
+    trackingHint = document.createElement("p");
+    trackingHint.id = "trackingHint";
+    trackingHint.className = "qr-description";
+    qrSection.appendChild(trackingHint);
 }
 
+// Find or create the tracking button
+let trackingLink =
+    document.getElementById("trackingLink");
 
-if (queueNumber) {
+if (!trackingLink) {
+    trackingLink = document.createElement("a");
+    trackingLink.id = "trackingLink";
+    trackingLink.className =
+        "btn btn-outline-primary btn-sm";
 
-    queueNumberElement.textContent =
-        queueNumber;
+    trackingLink.textContent = "Open Live Tracking";
+    trackingLink.target = "_blank";
+    trackingLink.rel = "noopener noreferrer";
+    trackingLink.hidden = true;
 
+    qrSection.appendChild(trackingLink);
 }
 
+async function loadTicket() {
+    if (!trackingToken) {
+        departmentName.textContent =
+            urlParams.get("department") || "Unknown department";
 
-// Ticket information is retrieved from PostgreSQL, not localStorage.
-(async () => {
-    try {
-        const response = await fetch('/api/queues');
-        if (!response.ok) throw new Error('Queue server unavailable');
-        const result = await response.json();
-        const current = (result.queues || []).find(q => q.queue_number === queueNumber);
-        issuedTimeElement.textContent = current && current.issued_at
-            ? new Date(current.issued_at).toLocaleTimeString('en-MY', {
-                hour:'2-digit', minute:'2-digit',hour12:true
-              })
-            : '--';
-    } catch (error) {
-        issuedTimeElement.textContent = '--';
-        console.error(error);
+        queueNumberElement.textContent =
+            urlParams.get("queue") || "---";
+
+        issuedTimeElement.textContent = "--";
+
+        trackingHint.textContent =
+            "This ticket does not have a tracking token.";
+
+        trackingLink.hidden = true;
+        return;
     }
-})();
 
-// Display QR Code (No Functionality, just for visual representation) //
+    try {
+        const response = await fetch(
+            `/api/tracking/${encodeURIComponent(trackingToken)}`,
+            { cache: "no-store" }
+        );
 
-if (queueNumber) {
+        const result = await response.json();
 
-    qrCodeElement.innerHTML = "";
-
-    const temporaryTrackingValue =
-        "QUEUE-" + queueNumber;
-
-
-    new QRCode(
-        qrCodeElement,
-        {
-            text:
-                temporaryTrackingValue,
-
-            width:
-                150,
-
-            height:
-                150,
-
-            correctLevel:
-                QRCode.CorrectLevel.M
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "Unable to load ticket"
+            );
         }
-    );
 
+        // Populate ticket using the actual PostgreSQL record
+        departmentName.textContent =
+            result.queue.department_name;
+
+        queueNumberElement.textContent =
+            result.queue.queue_number;
+
+        issuedTimeElement.textContent =
+            result.queue.issued_at
+                ? new Date(
+                    result.queue.issued_at
+                ).toLocaleTimeString("en-MY", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                })
+                : "--";
+
+        // Generate unique tracking link
+        const trackingUrl = new URL(
+            "tracking.html",
+            window.location.href
+        );
+
+        trackingUrl.search = "";
+
+        trackingUrl.searchParams.set(
+            "token",
+            trackingToken
+        );
+
+        // Provide clickable link
+        trackingLink.href = trackingUrl.href;
+        trackingLink.hidden = false;
+
+        // Generate actual QR code
+        qrCodeElement.replaceChildren();
+
+        if (typeof QRCode === "undefined") {
+            throw new Error("QR code library failed to load");
+        }
+
+        new QRCode(qrCodeElement, {
+            text: trackingUrl.href,
+            width: 150,
+            height: 150,
+            correctLevel: QRCode.CorrectLevel.M
+        });
+
+            trackingHint.textContent =
+                "Scan this QR code to track your queue live.";
+
+    } catch (error) {
+        console.error("Ticket QR error:", error);
+
+        trackingHint.textContent =
+            "Unable to generate live tracking: " +
+            error.message;
+    }
 }
+
+loadTicket();
