@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Form - Appointment &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <div class="search-controls">
+            <input type="text" class="search-input" placeholder="Search patient or doctor name / ID">
+            <select class="filter-select">
+                <option value="">All records</option>
+                <option value="appointment">Appointments</option>
+                <option value="doctor">Doctors</option>
+            </select>
+            <button type="button" class="search-button">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+        </div>
+
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <button type="button" class="logout-button">Logout</button>
+        </div>
+    </header>
+
+    <div class="page-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-title">APPOINTMENT &amp; DOCTOR MANAGEMENT</div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html" class="active"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                        <li><a href="DoctorProfile.html"><i class="fa-solid fa-id-card"></i> Doctor Profile</a></li>
+                        <li><a href="DoctorSchedule.html"><i class="fa-solid fa-clock"></i> Schedule &amp; Availability</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Notifications</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="NotificationCenter.html"><i class="fa-solid fa-bell"></i> Notification Center</a></li>
+                        <li><a href="NotificationLog.html"><i class="fa-solid fa-list-check"></i> Notification Log</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="CancellationAnalysis.html"><i class="fa-solid fa-ban"></i> Cancellations &amp; No-Shows</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                        <li><a href="NotificationPerformance.html"><i class="fa-solid fa-envelope-circle-check"></i> Notification Performance</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+
+            <div class="page-header">
+                <div>
+                    <h1 id="pageTitle">New appointment</h1>
+                    <p id="pageSubtitle">Choose a doctor and date, then pick an available time slot.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="Appointments.html" class="action-button secondary"><i class="fa-solid fa-arrow-left"></i> Back to appointments</a>
+                </div>
+            </div>
+
+            <!-- Message banner (conflict warning or read-only notice) -->
+            <div class="attention-row warning" id="banner" style="display: none; margin-bottom: 18px;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div class="attention-text" id="bannerText"></div>
+            </div>
+
+            <!-- Connect this form to your backend: set action and method, and
+                 save the posted values to the Appointment table. -->
+            <form class="panel-grid" id="appointmentForm" method="post" action="" novalidate>
+
+                <!-- Left: patient and appointment details -->
+                <div class="panel">
+                    <fieldset id="formFields" style="border: 0; padding: 0; margin: 0; min-width: 0;">
+
+                        <h2 class="form-section-title">Patient</h2>
+                        <div class="form-grid" style="margin-bottom: 26px;">
+                            <div class="field">
+                                <label for="patientId">Patient ID <span class="required">*</span></label>
+                                <input type="text" id="patientId" name="patientId" placeholder="e.g. P-1001">
+                                <div class="form-error">Enter the patient ID.</div>
+                            </div>
+
+                            <div class="field">
+                                <label for="patientName">Patient name <span class="required">*</span></label>
+                                <input type="text" id="patientName" name="patientName">
+                                <div class="form-error">Enter the patient name.</div>
+                            </div>
+
+                            <div class="field">
+                                <label for="phone">Phone</label>
+                                <input type="tel" id="phone" name="phone" placeholder="e.g. 012-3456789">
+                            </div>
+
+                            <div class="field" id="emailField">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email">
+                                <div class="form-error" id="contactError">Add a phone number or email to send notifications.</div>
+                            </div>
+                        </div>
+
+                        <h2 class="form-section-title">Appointment</h2>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="department">Department <span class="required">*</span></label>
+                                <select id="department" name="department">
+                                    <option value="">Select department</option>
+                                    <option>General Medicine</option>
+                                    <option>Cardiology</option>
+                                    <option>Orthopaedics</option>
+                                    <option>Paediatrics</option>
+                                    <option>Dermatology</option>
+                                </select>
+                                <div class="form-error">Select a department.</div>
+                            </div>
+
+                            <div class="field">
+                                <label for="doctor">Doctor <span class="required">*</span></label>
+                                <select id="doctor" name="doctor" disabled>
+                                    <option value="">Select department first</option>
+                                </select>
+                                <div class="form-error">Select a doctor.</div>
+                            </div>
+
+                            <div class="field">
+                                <label for="date">Date <span class="required">*</span></label>
+                                <input type="date" id="date" name="date">
+                                <div class="form-error">Select a date.</div>
+                            </div>
+
+                            <div class="field" id="statusField" style="display: none;">
+                                <label for="status">Status</label>
+                                <select id="status" name="status">
+                                    <option>Booked</option>
+                                    <option>Rescheduled</option>
+                                    <option>Completed</option>
+                                    <option>Cancelled</option>
+                                    <option>No-show</option>
+                                </select>
+                            </div>
+
+                            <div class="field full">
+                                <label for="notes">Reason or notes</label>
+                                <textarea id="notes" name="notes" placeholder="Symptoms, referral details or special requests"></textarea>
+                            </div>
+
+                            <div class="full">
+                                <label class="check-row">
+                                    <input type="checkbox" id="notify" name="notify" checked>
+                                    <span id="notifyLabel">Send a confirmation to the patient</span>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="form-actions" id="formActions" style="margin-top: 22px;">
+                        <button type="submit" class="action-button" id="saveButton"><i class="fa-solid fa-floppy-disk"></i> Save appointment</button>
+                        <a href="Appointments.html" class="action-button secondary">Cancel</a>
+                    </div>
+                </div>
+
+                <!-- Right: time slot picker -->
+                <div class="panel">
+                    <h2 class="form-section-title">Time slot <span class="required">*</span></h2>
+
+                    <div id="slotArea"></div>
+                    <input type="hidden" id="slot" name="slot">
+                    <div class="form-error" id="slotError" style="margin-top: 10px;">Select a time slot.</div>
+
+                    <div class="slot-selected-text" id="slotSelected"></div>
+
+                    <div class="slot-legend" id="slotLegend">
+                        <span class="legend-item"><span class="legend-swatch" style="background-color: #ffffff; border: 1px solid #93c5fd;"></span> Available</span>
+                        <span class="legend-item"><span class="legend-swatch" style="background-color: #1677ff;"></span> Selected</span>
+                        <span class="legend-item"><span class="legend-swatch" style="background-color: #f1f5f9; border: 1px solid #e2e8f0;"></span> Booked</span>
+                        <span class="legend-item"><span class="legend-swatch" style="background-color: #f5f3ff; border: 1px solid #ddd6fe;"></span> OT or leave</span>
+                    </div>
+                </div>
+
+            </form>
+
+        </main>
+    </div>
+
+    <script>
+        const el = id => document.getElementById(id);
+
+        /* ================================================================
+           DEMO DATA - replace each block with data from your database.
+           ================================================================ */
+
+        // Doctors per department
+        const doctorsByDept = {
+            "General Medicine": ["Dr. Tan Bee Lian"],
+            "Cardiology":       ["Dr. Ahmad Faris"],
+            "Orthopaedics":     ["Dr. Lee Chong Wei"],
+            "Paediatrics":      ["Dr. Siti Hajar"],
+            "Dermatology":      ["Dr. Nadia Rahman"]
+        };
+
+        // Consultation hours (use each doctor's own hours from the Doctor schedule)
+        const consultationSlots = {
+            morning:   ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30"],
+            afternoon: ["14:00", "14:30", "15:00", "15:30", "16:00", "16:30"]
+        };
+
+        // Already booked slots, keyed by "doctor|date"
+        const bookedSlots = {
+            "Dr. Ahmad Faris|2026-10-16":    ["09:00", "11:00"],
+            "Dr. Lee Chong Wei|2026-10-16":  ["09:30"],
+            "Dr. Siti Hajar|2026-10-16":     ["10:00"],
+            "Dr. Lee Chong Wei|2026-10-20":  ["10:00", "10:30"],
+            "Dr. Tan Bee Lian|2026-10-21":   ["14:00"]
+        };
+
+        // OT blocks, keyed by "doctor|date"
+        const otSlots = {
+            "Dr. Lee Chong Wei|2026-10-16": ["14:00", "14:30", "15:00", "15:30"],
+            "Dr. Lee Chong Wei|2026-10-20": ["09:30", "10:00", "10:30", "11:00", "11:30"]
+        };
+
+        // Leave periods (inclusive dates)
+        const leaveDays = {
+            "Dr. Nadia Rahman": ["2026-10-16", "2026-10-18"]
+        };
+
+        // Existing appointments, used when the page opens as Appointment Form.html?id=A-2042
+        const appointments = {
+            "A-2041": { patientId: "P-1001", patientName: "Tan Mei Ling",       phone: "012-3456701", email: "mei.ling@example.com", department: "Cardiology",       doctor: "Dr. Ahmad Faris",   date: "2026-10-16", slot: "09:00", status: "Completed",   notes: "Routine heart check." },
+            "A-2042": { patientId: "P-1002", patientName: "Rajesh Kumar",       phone: "012-3456702", email: "rajesh@example.com",   department: "Orthopaedics",     doctor: "Dr. Lee Chong Wei", date: "2026-10-16", slot: "09:30", status: "Booked",      notes: "Knee pain follow-up." },
+            "A-2043": { patientId: "P-1003", patientName: "Nur Aisyah",         phone: "012-3456703", email: "",                     department: "Paediatrics",      doctor: "Dr. Siti Hajar",    date: "2026-10-16", slot: "10:00", status: "Rescheduled", notes: "" },
+            "A-2044": { patientId: "P-1004", patientName: "Wong Kah Yee",       phone: "012-3456704", email: "kahyee@example.com",   department: "Dermatology",      doctor: "Dr. Nadia Rahman",  date: "2026-10-16", slot: "10:30", status: "Cancelled",   notes: "" },
+            "A-2045": { patientId: "P-1005", patientName: "Muhammad Haziq",     phone: "012-3456705", email: "",                     department: "Cardiology",       doctor: "Dr. Ahmad Faris",   date: "2026-10-16", slot: "11:00", status: "No-show",     notes: "" },
+            "A-2051": { patientId: "P-1006", patientName: "Chong Wai Hong",     phone: "012-3456706", email: "waihong@example.com",  department: "Orthopaedics",     doctor: "Dr. Lee Chong Wei", date: "2026-10-20", slot: "10:00", status: "Booked",      notes: "Shoulder review." },
+            "A-2052": { patientId: "P-1007", patientName: "Lim Siew Mei",       phone: "012-3456707", email: "siewmei@example.com",  department: "Orthopaedics",     doctor: "Dr. Lee Chong Wei", date: "2026-10-20", slot: "10:30", status: "Booked",      notes: "" },
+            "A-2053": { patientId: "P-1008", patientName: "Farid Hakim",        phone: "012-3456708", email: "farid@example.com",    department: "General Medicine", doctor: "Dr. Tan Bee Lian",  date: "2026-10-21", slot: "14:00", status: "Booked",      notes: "Fever for 3 days." }
+        };
+
+        /* ================================================================
+           Page state
+        ================================================================ */
+        const params = new URLSearchParams(location.search);
+        const editId = params.get("id");
+        const existing = editId ? appointments[editId] : null;
+        const isEditing = !!existing;
+        const lockedStatuses = ["Completed", "Cancelled", "No-show"];
+        const readOnly = isEditing && lockedStatuses.includes(existing.status);
+
+        function todayISO() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, "0");
+            return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+        }
+
+        function fillDoctors(dept, selected) {
+            const select = el("doctor");
+            select.innerHTML = "";
+
+            if (!dept) {
+                select.innerHTML = '<option value="">Select department first</option>';
+                select.disabled = true;
+                return;
+            }
+
+            select.disabled = false;
+            select.innerHTML = '<option value="">Select doctor</option>';
+            doctorsByDept[dept].forEach(name => {
+                const opt = document.createElement("option");
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+            if (selected) select.value = selected;
+        }
+
+        function slotState(doctor, date, time) {
+            const key = doctor + "|" + date;
+
+            const leave = leaveDays[doctor];
+            if (leave && date >= leave[0] && date <= leave[1]) return "leave";
+
+            if ((otSlots[key] || []).includes(time)) return "ot";
+
+            const own = isEditing && existing.doctor === doctor && existing.date === date && existing.slot === time;
+            if (!own && (bookedSlots[key] || []).includes(time)) return "booked";
+
+            return "free";
+        }
+
+        function renderSlots() {
+            const area = el("slotArea");
+            const doctor = el("doctor").value;
+            const date = el("date").value;
+
+            if (readOnly) {
+                area.innerHTML = '<p class="slot-hint">This appointment is ' + existing.status.toLowerCase() +
+                                 ' and its time can no longer be changed.</p>';
+                el("slotSelected").textContent = "Time: " + existing.slot;
+                el("slotLegend").style.display = "none";
+                return;
+            }
+
+            if (!doctor || !date) {
+                area.innerHTML = '<p class="slot-hint">Choose a doctor and date to see available time slots.</p>';
+                el("slot").value = "";
+                el("slotSelected").textContent = "";
+                return;
+            }
+
+            area.innerHTML = "";
+
+            [["Morning", consultationSlots.morning], ["Afternoon", consultationSlots.afternoon]].forEach(([label, times]) => {
+                const title = document.createElement("div");
+                title.className = "slot-group-label";
+                title.textContent = label;
+                area.appendChild(title);
+
+                const grid = document.createElement("div");
+                grid.className = "slot-grid";
+
+                times.forEach(time => {
+                    const state = slotState(doctor, date, time);
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "slot" + (state === "ot" || state === "leave" ? " ot" : "");
+                    btn.textContent = time;
+                    btn.dataset.time = time;
+
+                    if (state !== "free") {
+                        btn.disabled = true;
+                        btn.title = state === "booked" ? "Already booked" : state === "ot" ? "Doctor in OT" : "Doctor on leave";
+                    } else {
+                        btn.addEventListener("click", () => selectSlot(time));
+                    }
+
+                    if (el("slot").value === time && state === "free") btn.classList.add("selected");
+                    grid.appendChild(btn);
+                });
+
+                area.appendChild(grid);
+            });
+
+            // Clear the selection if it is no longer available for this doctor/date
+            const current = el("slot").value;
+            if (current && slotState(doctor, date, current) !== "free") {
+                el("slot").value = "";
+            }
+            updateSlotText();
+        }
+
+        function selectSlot(time) {
+            el("slot").value = time;
+            document.querySelectorAll(".slot").forEach(b => b.classList.toggle("selected", b.dataset.time === time));
+            el("slotError").style.display = "none";
+            updateSlotText();
+        }
+
+        function updateSlotText() {
+            const v = el("slot").value;
+            el("slotSelected").textContent = v ? "Selected time: " + v : "";
+        }
+
+        function showBanner(text) {
+            el("bannerText").textContent = text;
+            el("banner").style.display = "flex";
+        }
+
+        /* ================================================================
+           Setup
+        ================================================================ */
+        if (isEditing) {
+            el("pageTitle").textContent = (readOnly ? "Appointment " : "Edit appointment ") + editId;
+            el("pageSubtitle").textContent = readOnly
+                ? "This record is closed. You can view it but not change it."
+                : "Change the details or pick a new slot to reschedule.";
+            el("statusField").style.display = "block";
+            el("notifyLabel").textContent = "Notify the patient about this change";
+
+            el("patientId").value = existing.patientId;
+            el("patientName").value = existing.patientName;
+            el("phone").value = existing.phone;
+            el("email").value = existing.email;
+            el("department").value = existing.department;
+            fillDoctors(existing.department, existing.doctor);
+            el("date").value = existing.date;
+            el("status").value = existing.status;
+            el("notes").value = existing.notes;
+            el("slot").value = existing.slot;
+
+            // Existing appointment: patient ID stays fixed
+            el("patientId").readOnly = true;
+
+            if (readOnly) {
+                el("formFields").disabled = true;
+                el("formActions").innerHTML = '<a href="Appointments.html" class="action-button secondary">Back to appointments</a>';
+            } else if (slotState(existing.doctor, existing.date, existing.slot) === "ot") {
+                showBanner("This appointment clashes with the doctor's OT. Pick a new time slot or date, then save to reschedule and notify the patient.");
+                el("slot").value = "";
+            }
+        } else {
+            el("date").min = todayISO();
+        }
+
+        el("department").addEventListener("change", () => {
+            fillDoctors(el("department").value);
+            el("slot").value = "";
+            renderSlots();
+        });
+
+        el("doctor").addEventListener("change", renderSlots);
+        el("date").addEventListener("change", renderSlots);
+
+        renderSlots();
+        if (isEditing && !readOnly && el("slot").value) selectSlot(el("slot").value);
+
+        /* ---------- Validation ---------- */
+        function setInvalid(id, invalid) {
+            el(id).closest(".field").classList.toggle("invalid", invalid);
+            return invalid;
+        }
+
+        el("appointmentForm").addEventListener("submit", e => {
+            let bad = false;
+
+            bad = setInvalid("patientId", !el("patientId").value.trim()) || bad;
+            bad = setInvalid("patientName", !el("patientName").value.trim()) || bad;
+            bad = setInvalid("department", !el("department").value) || bad;
+            bad = setInvalid("doctor", !el("doctor").value) || bad;
+            bad = setInvalid("date", !el("date").value) || bad;
+
+            const noContact = el("notify").checked && !el("phone").value.trim() && !el("email").value.trim();
+            bad = setInvalid("email", noContact) || bad;
+
+            const noSlot = !el("slot").value;
+            el("slotError").style.display = noSlot ? "block" : "none";
+            bad = noSlot || bad;
+
+            if (bad) {
+                e.preventDefault();
+                return;
+            }
+
+            // Moving a booked appointment to a new date or time makes it Rescheduled
+            if (isEditing && el("status").value === "Booked" &&
+                (el("date").value !== existing.date || el("slot").value !== existing.slot)) {
+                el("status").value = "Rescheduled";
+            }
+
+            // The form now posts to your backend (see the form action above).
+        });
+    </script>
+
+</body>
+</html>
