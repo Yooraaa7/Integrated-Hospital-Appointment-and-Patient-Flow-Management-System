@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Management - Doctor &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <div class="search-controls">
+            <input type="text" class="search-input" placeholder="Search patient or doctor name / ID">
+            <select class="filter-select">
+                <option value="">All records</option>
+                <option value="appointment">Appointments</option>
+                <option value="doctor">Doctors</option>
+            </select>
+            <button type="button" class="search-button">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+        </div>
+
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <button type="button" class="logout-button">Logout</button>
+        </div>
+    </header>
+
+    <div class="page-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-title">APPOINTMENT &amp; DOCTOR MANAGEMENT</div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html" class="active"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                        <li><a href="DoctorProfile.html"><i class="fa-solid fa-id-card"></i> Doctor Profile</a></li>
+                        <li><a href="DoctorSchedule.html"><i class="fa-solid fa-clock"></i> Schedule &amp; Availability</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Notifications</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Notifications.html"><i class="fa-solid fa-bell"></i> Notification Center</a></li>
+                        <li><a href="NotificationLog.html"><i class="fa-solid fa-list-check"></i> Notification Log</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="CancellationAnalysis.html"><i class="fa-solid fa-ban"></i> Cancellations &amp; No-Shows</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                        <li><a href="NotificationPerformance.html"><i class="fa-solid fa-envelope-circle-check"></i> Notification Performance</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+ 
+            <div class="page-header">
+                <div>
+                    <h1>Doctor Management</h1>
+                    <p>Add, edit and manage doctor profiles, status and schedules.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="DoctorProfile.html" class="action-button"><i class="fa-solid fa-user-plus"></i> Add doctor</a>
+                </div>
+            </div>
+ 
+            <!-- Filters -->
+            <section class="panel panel-full">
+                <div class="filter-bar">
+                    <div class="field">
+                        <label for="filterSearch">Doctor name or ID</label>
+                        <input type="text" id="filterSearch" placeholder="e.g. Faris or D-002">
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterDept">Department</label>
+                        <select id="filterDept">
+                            <option value="">All departments</option>
+                            <option>General Medicine</option>
+                            <option>Cardiology</option>
+                            <option>Orthopaedics</option>
+                            <option>Paediatrics</option>
+                            <option>Dermatology</option>
+                        </select>
+                    </div>
+ 
+                    <div class="field">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus">
+                            <option value="">All statuses</option>
+                            <option>Active</option>
+                            <option>On leave</option>
+                            <option>Inactive</option>
+                        </select>
+                    </div>
+ 
+                    <div class="filter-actions">
+                        <button type="button" class="search-button" id="btnSearch"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                        <button type="button" class="action-button secondary" id="btnReset">Reset</button>
+                    </div>
+                </div>
+            </section>
+ 
+            <!-- Doctor table -->
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Doctors</h2>
+                    <span class="date-label" id="resultCount"></span>
+                </div>
+ 
+                <div class="table-responsive">
+                    <table class="table table-hover" id="doctorTable">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Specialty</th>
+                                <th>Department</th>
+                                <th>Contact</th>
+                                <th>Upcoming appts</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Replace these sample rows with records from your database. -->
+                            <tr data-id="D-001" data-name="Dr. Tan Bee Lian" data-dept="General Medicine" data-status="Active" data-upcoming="14">
+                                <td>
+                                    <div class="doctor-cell">
+                                        <div class="avatar">TB</div>
+                                        <div><div class="doctor-name">Dr. Tan Bee Lian</div><span class="cell-sub">D-001</span></div>
+                                    </div>
+                                </td>
+                                <td>Family Medicine</td>
+                                <td>General Medicine</td>
+                                <td>012-3000001<span class="cell-sub">bee.lian@hospital.example</span></td>
+                                <td>14</td>
+                                <td class="status-cell"><span class="badge badge-duty">Active</span></td>
+                                <td><div class="table-actions">
+                                    <a href="DoctorProfile.html?id=D-001" class="table-button">Edit</a>
+                                    <a href="DoctorSchedule.html?id=D-001" class="table-button">Schedule</a>
+                                    <button type="button" class="table-button danger btn-deactivate">Deactivate</button>
+                                </div></td>
+                            </tr>
+                            <tr data-id="D-002" data-name="Dr. Ahmad Faris" data-dept="Cardiology" data-status="Active" data-upcoming="22">
+                                <td>
+                                    <div class="doctor-cell">
+                                        <div class="avatar">AF</div>
+                                        <div><div class="doctor-name">Dr. Ahmad Faris</div><span class="cell-sub">D-002</span></div>
+                                    </div>
+                                </td>
+                                <td>Cardiologist</td>
+                                <td>Cardiology</td>
+                                <td>012-3000002<span class="cell-sub">ahmad.faris@hospital.example</span></td>
+                                <td>22</td>
+                                <td class="status-cell"><span class="badge badge-duty">Active</span></td>
+                                <td><div class="table-actions">
+                                    <a href="DoctorProfile.html?id=D-002" class="table-button">Edit</a>
+                                    <a href="DoctorSchedule.html?id=D-002" class="table-button">Schedule</a>
+                                    <button type="button" class="table-button danger btn-deactivate">Deactivate</button>
+                                </div></td>
+                            </tr>
+                            <tr data-id="D-003" data-name="Dr. Lee Chong Wei" data-dept="Orthopaedics" data-status="Active" data-upcoming="18">
+                                <td>
+                                    <div class="doctor-cell">
+                                        <div class="avatar">LC</div>
+                                        <div><div class="doctor-name">Dr. Lee Chong Wei</div><span class="cell-sub">D-003</span></div>
+                                    </div>
+                                </td>
+                                <td>Orthopaedic Surgeon</td>
+                                <td>Orthopaedics</td>
+                                <td>012-3000003<span class="cell-sub">chong.wei@hospital.example</span></td>
+                                <td>18</td>
+                                <td class="status-cell"><span class="badge badge-duty">Active</span></td>
+                                <td><div class="table-actions">
+                                    <a href="DoctorProfile.html?id=D-003" class="table-button">Edit</a>
+                                    <a href="DoctorSchedule.html?id=D-003" class="table-button">Schedule</a>
+                                    <button type="button" class="table-button danger btn-deactivate">Deactivate</button>
+                                </div></td>
+                            </tr>
+                            <tr data-id="D-004" data-name="Dr. Siti Hajar" data-dept="Paediatrics" data-status="Active" data-upcoming="11">
+                                <td>
+                                    <div class="doctor-cell">
+                                        <div class="avatar">SH</div>
+                                        <div><div class="doctor-name">Dr. Siti Hajar</div><span class="cell-sub">D-004</span></div>
+                                    </div>
+                                </td>
+                                <td>Paediatrician</td>
+                                <td>Paediatrics</td>
+                                <td>012-3000004<span class="cell-sub">siti.hajar@hospital.example</span></td>
+                                <td>11</td>
+                                <td class="status-cell"><span class="badge badge-duty">Active</span></td>
+                                <td><div class="table-actions">
+                                    <a href="DoctorProfile.html?id=D-004" class="table-button">Edit</a>
+                                    <a href="DoctorSchedule.html?id=D-004" class="table-button">Schedule</a>
+                                    <button type="button" class="table-button danger btn-deactivate">Deactivate</button>
+                                </div></td>
+                            </tr>
+                            <tr data-id="D-005" data-name="Dr. Nadia Rahman" data-dept="Dermatology" data-status="On leave" data-upcoming="5">
+                                <td>
+                                    <div class="doctor-cell">
+                                        <div class="avatar">NR</div>
+                                        <div><div class="doctor-name">Dr. Nadia Rahman</div><span class="cell-sub">D-005</span></div>
+                                    </div>
+                                </td>
+                                <td>Dermatologist</td>
+                                <td>Dermatology</td>
+                                <td>012-3000005<span class="cell-sub">nadia.rahman@hospital.example</span></td>
+                                <td>5</td>
+                                <td class="status-cell"><span class="badge badge-leave">On leave</span></td>
+                                <td><div class="table-actions">
+                                    <a href="DoctorProfile.html?id=D-005" class="table-button">Edit</a>
+                                    <a href="DoctorSchedule.html?id=D-005" class="table-button">Schedule</a>
+                                    <button type="button" class="table-button danger btn-deactivate">Deactivate</button>
+                                </div></td>
+                            </tr>
+                            <tr data-id="D-006" data-name="Dr. Kumar Selvam" data-dept="General Medicine" data-status="Active" data-upcoming="9">
+                                <td>
+                                    <div class="doctor-cell">
+                                        <div class="avatar">KS</div>
+                                        <div><div class="doctor-name">Dr. Kumar Selvam</div><span class="cell-sub">D-006</span></div>
+                                    </div>
+                                </td>
+                                <td>General Practitioner</td>
+                                <td>General Medicine</td>
+                                <td>012-3000006<span class="cell-sub">kumar.selvam@hospital.example</span></td>
+                                <td>9</td>
+                                <td class="status-cell"><span class="badge badge-duty">Active</span></td>
+                                <td><div class="table-actions">
+                                    <a href="DoctorProfile.html?id=D-006" class="table-button">Edit</a>
+                                    <a href="DoctorSchedule.html?id=D-006" class="table-button">Schedule</a>
+                                    <button type="button" class="table-button danger btn-deactivate">Deactivate</button>
+                                </div></td>
+                            </tr>
+                            <tr data-id="D-007" data-name="Dr. Chen Li Wei" data-dept="Cardiology" data-status="Inactive" data-upcoming="0">
+                                <td>
+                                    <div class="doctor-cell">
+                                        <div class="avatar">CL</div>
+                                        <div><div class="doctor-name">Dr. Chen Li Wei</div><span class="cell-sub">D-007</span></div>
+                                    </div>
+                                </td>
+                                <td>Cardiologist</td>
+                                <td>Cardiology</td>
+                                <td>012-3000007<span class="cell-sub">li.wei@hospital.example</span></td>
+                                <td>0</td>
+                                <td class="status-cell"><span class="badge badge-inactive">Inactive</span></td>
+                                <td><div class="table-actions">
+                                    <a href="DoctorProfile.html?id=D-007" class="table-button">Edit</a>
+                                    <a href="DoctorSchedule.html?id=D-007" class="table-button">Schedule</a>
+                                    <button type="button" class="table-button btn-activate">Activate</button>
+                                </div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+ 
+                <div class="empty-row" id="emptyMessage">No doctors match your filters.</div>
+            </section>
+ 
+        </main>
+    </div>
+ 
+ 
+    <!-- Deactivate modal -->
+    <div class="modal-backdrop" id="statusModal" role="dialog" aria-modal="true" aria-labelledby="statusTitle">
+        <div class="modal">
+            <h2 id="statusTitle">Deactivate doctor</h2>
+            <p id="statusSummary"></p>
+ 
+            <div class="message-box warning" id="statusWarning"></div>
+ 
+            <div class="modal-actions">
+                <button type="button" class="action-button secondary" id="statusClose">Keep active</button>
+                <button type="button" class="action-button danger" id="statusConfirm">Deactivate</button>
+            </div>
+        </div>
+    </div>
+ 
+    <script>
+        const el = id => document.getElementById(id);
+        const rows = Array.from(document.querySelectorAll("#doctorTable tbody tr"));
+ 
+        const badgeClass = { "Active": "badge-duty", "On leave": "badge-leave", "Inactive": "badge-inactive" };
+ 
+        /* ---------- Filters ---------- */
+        function applyFilters() {
+            const text = el("filterSearch").value.trim().toLowerCase();
+            const dept = el("filterDept").value;
+            const status = el("filterStatus").value;
+            let visible = 0;
+ 
+            rows.forEach(row => {
+                const d = row.dataset;
+                const show =
+                    (!text || d.name.toLowerCase().includes(text) || d.id.toLowerCase().includes(text)) &&
+                    (!dept || d.dept === dept) &&
+                    (!status || d.status === status);
+ 
+                row.style.display = show ? "" : "none";
+                if (show) visible++;
+            });
+ 
+            el("resultCount").textContent = visible + " of " + rows.length + " doctors";
+            el("emptyMessage").style.display = visible ? "none" : "block";
+        }
+ 
+        el("btnSearch").addEventListener("click", applyFilters);
+        el("filterSearch").addEventListener("keydown", e => { if (e.key === "Enter") applyFilters(); });
+        el("btnReset").addEventListener("click", () => {
+            ["filterSearch", "filterDept", "filterStatus"].forEach(id => el(id).value = "");
+            applyFilters();
+        });
+ 
+        /* ---------- Status change ---------- */
+        const modal = el("statusModal");
+        let activeRow = null;
+ 
+        function setStatus(row, status) {
+            row.dataset.status = status;
+            row.querySelector(".status-cell").innerHTML = '<span class="badge ' + badgeClass[status] + '">' + status + '</span>';
+ 
+            const actions = row.querySelector(".table-actions");
+            const old = actions.querySelector(".btn-activate, .btn-deactivate");
+            const btn = document.createElement("button");
+            btn.type = "button";
+ 
+            if (status === "Inactive") {
+                btn.className = "table-button btn-activate";
+                btn.textContent = "Activate";
+            } else {
+                btn.className = "table-button danger btn-deactivate";
+                btn.textContent = "Deactivate";
+            }
+            old.replaceWith(btn);
+            bindButton(btn);
+            applyFilters();
+        }
+ 
+        function openModal(row) {
+            activeRow = row;
+            const upcoming = Number(row.dataset.upcoming);
+ 
+            el("statusSummary").textContent = row.dataset.name + " will no longer appear when booking appointments.";
+ 
+            if (upcoming > 0) {
+                el("statusWarning").innerHTML =
+                    row.dataset.name + " still has <strong>" + upcoming + " upcoming appointments</strong>. " +
+                    'Reschedule or cancel them first in <a href="Appointments.html">All Appointments</a>.';
+                el("statusWarning").classList.add("show");
+                el("statusConfirm").disabled = true;
+                el("statusConfirm").style.opacity = "0.5";
+                el("statusConfirm").style.cursor = "not-allowed";
+            } else {
+                el("statusWarning").classList.remove("show");
+                el("statusConfirm").disabled = false;
+                el("statusConfirm").style.opacity = "";
+                el("statusConfirm").style.cursor = "";
+            }
+ 
+            modal.classList.add("open");
+            el("statusClose").focus();
+        }
+ 
+        function closeModal() {
+            modal.classList.remove("open");
+            activeRow = null;
+        }
+ 
+        function bindButton(btn) {
+            if (btn.classList.contains("btn-deactivate")) {
+                btn.addEventListener("click", () => openModal(btn.closest("tr")));
+            } else {
+                // Demo only: save the new status to the database here.
+                btn.addEventListener("click", () => setStatus(btn.closest("tr"), "Active"));
+            }
+        }
+ 
+        document.querySelectorAll(".btn-deactivate, .btn-activate").forEach(bindButton);
+ 
+        el("statusClose").addEventListener("click", closeModal);
+        modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+        document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+ 
+        el("statusConfirm").addEventListener("click", () => {
+            if (!activeRow || el("statusConfirm").disabled) return;
+            // Demo only: set the doctor's status to Inactive in the database.
+            // Doctors are deactivated, not deleted, so past appointments keep their doctor record.
+            setStatus(activeRow, "Inactive");
+            closeModal();
+        });
+ 
+        applyFilters();
+    </script>
+
+</body>
+</html>

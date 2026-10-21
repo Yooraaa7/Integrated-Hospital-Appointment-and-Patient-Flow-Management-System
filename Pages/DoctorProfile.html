@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Profile - Appointment &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <div class="search-controls">
+            <input type="text" class="search-input" placeholder="Search patient or doctor name / ID">
+            <select class="filter-select">
+                <option value="">All records</option>
+                <option value="appointment">Appointments</option>
+                <option value="doctor">Doctors</option>
+            </select>
+            <button type="button" class="search-button">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+        </div>
+
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <button type="button" class="logout-button">Logout</button>
+        </div>
+    </header>
+
+    <div class="page-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-title">APPOINTMENT &amp; DOCTOR MANAGEMENT</div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                        <li><a href="DoctorProfile.html" class="active"><i class="fa-solid fa-id-card"></i> Doctor Profile</a></li>
+                        <li><a href="DoctorSchedule.html"><i class="fa-solid fa-clock"></i> Schedule &amp; Availability</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Notifications</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Notifications.html"><i class="fa-solid fa-bell"></i> Notification Center</a></li>
+                        <li><a href="NotificationLog.html"><i class="fa-solid fa-list-check"></i> Notification Log</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="CancellationAnalysis.html"><i class="fa-solid fa-ban"></i> Cancellations &amp; No-Shows</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                        <li><a href="NotificationPerformance.html"><i class="fa-solid fa-envelope-circle-check"></i> Notification Performance</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+
+            <div class="page-header">
+                <div>
+                    <h1 id="pageTitle">Add doctor</h1>
+                    <p id="pageSubtitle">Create a doctor profile. Set consultation hours after saving.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="Doctors.html" class="action-button secondary"><i class="fa-solid fa-arrow-left"></i> Back to doctors</a>
+                </div>
+            </div>
+
+            <!-- Connect this form to your backend: set action and method, then save
+                 the posted values to the Doctor table. -->
+            <form class="panel-grid" id="doctorForm" method="post" action="" enctype="multipart/form-data" novalidate>
+
+                <!-- Left: profile fields -->
+                <div class="panel">
+
+                    <h2 class="form-section-title">Basic information</h2>
+                    <div class="form-grid" style="margin-bottom: 26px;">
+                        <div class="field">
+                            <label for="doctorId">Doctor ID</label>
+                            <input type="text" id="doctorId" name="doctorId" value="Assigned on save" readonly>
+                        </div>
+
+                        <div class="field">
+                            <label for="fullName">Full name <span class="required">*</span></label>
+                            <input type="text" id="fullName" name="fullName" placeholder="e.g. Dr. Ahmad Faris">
+                            <div class="form-error">Enter the doctor's name.</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="department">Department <span class="required">*</span></label>
+                            <select id="department" name="department">
+                                <option value="">Select department</option>
+                                <option>General Medicine</option>
+                                <option>Cardiology</option>
+                                <option>Orthopaedics</option>
+                                <option>Paediatrics</option>
+                                <option>Dermatology</option>
+                            </select>
+                            <div class="form-error">Select a department.</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="specialty">Specialty <span class="required">*</span></label>
+                            <input type="text" id="specialty" name="specialty" placeholder="e.g. Cardiologist">
+                            <div class="form-error">Enter the specialty.</div>
+                        </div>
+
+                        <div class="field full">
+                            <label for="qualifications">Qualifications</label>
+                            <input type="text" id="qualifications" name="qualifications" placeholder="e.g. MBBS, MRCP, Fellowship in Interventional Cardiology">
+                        </div>
+
+                        <div class="field">
+                            <label for="experience">Years of experience</label>
+                            <input type="number" id="experience" name="experience" min="0" max="60">
+                        </div>
+
+                        <div class="field">
+                            <label for="languages">Languages spoken</label>
+                            <input type="text" id="languages" name="languages" placeholder="e.g. English, Malay, Mandarin">
+                        </div>
+
+                        <div class="field">
+                            <label for="room">Consultation room</label>
+                            <input type="text" id="room" name="room" placeholder="e.g. Room 3B">
+                        </div>
+
+                        <div class="field">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option>Active</option>
+                                <option>On leave</option>
+                                <option>Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="field full">
+                            <label for="photo">Profile photo</label>
+                            <div class="photo-row">
+                                <div class="avatar large" id="photoPreview">?</div>
+                                <input type="file" id="photo" name="photo" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="form-section-title">Contact</h2>
+                    <div class="form-grid" style="margin-bottom: 26px;">
+                        <div class="field">
+                            <label for="phone">Phone <span class="required">*</span></label>
+                            <input type="tel" id="phone" name="phone" placeholder="e.g. 012-3456789">
+                            <div class="form-error">Enter a phone number.</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="email">Email <span class="required">*</span></label>
+                            <input type="email" id="email" name="email">
+                            <div class="form-error">Enter a valid email address.</div>
+                        </div>
+                    </div>
+
+                    <h2 class="form-section-title">About</h2>
+                    <div class="field">
+                        <label for="bio">Short biography</label>
+                        <textarea id="bio" name="bio" placeholder="Areas of interest, services offered and so on"></textarea>
+                    </div>
+
+                    <div class="form-actions" style="margin-top: 22px;">
+                        <button type="submit" class="action-button"><i class="fa-solid fa-floppy-disk"></i> Save doctor</button>
+                        <a href="Doctors.html" class="action-button secondary">Cancel</a>
+                    </div>
+                </div>
+
+                <!-- Right: summary -->
+                <div class="panel profile-summary">
+                    <div class="avatar large" id="summaryAvatar">?</div>
+                    <h2 id="summaryName">New doctor</h2>
+                    <div class="summary-sub" id="summaryRole">Department and specialty</div>
+                    <span class="badge badge-duty" id="summaryBadge">Active</span>
+
+                    <ul class="summary-list">
+                        <li><span>Doctor ID</span><span id="summaryId">Not assigned yet</span></li>
+                        <li><span>Upcoming appointments</span><span id="summaryUpcoming">0</span></li>
+                        <li><span>Consultation room</span><span id="summaryRoom">Not set</span></li>
+                    </ul>
+
+                    <div class="stack-buttons" id="summaryActions">
+                        <div class="slot-hint" style="margin: 0;">Consultation hours, OT and leave can be set after the profile is saved.</div>
+                    </div>
+                </div>
+
+            </form>
+
+        </main>
+    </div>
+
+
+    <script>
+        const el = id => document.getElementById(id);
+
+        /* DEMO DATA - replace with doctors from your database. */
+        const doctors = {
+            "D-001": { name: "Dr. Tan Bee Lian",  department: "General Medicine", specialty: "Family Medicine",      qualifications: "MBBS, MMed (Family Medicine)", experience: 14, languages: "English, Malay, Hokkien", room: "Room 1A", status: "Active",   phone: "012-3000001", email: "bee.lian@hospital.example",    bio: "", upcoming: 14 },
+            "D-002": { name: "Dr. Ahmad Faris",   department: "Cardiology",       specialty: "Cardiologist",         qualifications: "MBBS, MRCP, Fellowship in Interventional Cardiology", experience: 22, languages: "English, Malay", room: "Room 2B", status: "Active",   phone: "012-3000002", email: "ahmad.faris@hospital.example",  bio: "Special interest in heart failure and preventive cardiology.", upcoming: 22 },
+            "D-003": { name: "Dr. Lee Chong Wei", department: "Orthopaedics",     specialty: "Orthopaedic Surgeon",  qualifications: "MBBS, MS (Orthopaedics)", experience: 18, languages: "English, Mandarin, Malay", room: "Room 3C", status: "Active",   phone: "012-3000003", email: "chong.wei@hospital.example",    bio: "Joint replacement and sports injuries.", upcoming: 18 },
+            "D-004": { name: "Dr. Siti Hajar",    department: "Paediatrics",      specialty: "Paediatrician",        qualifications: "MBBS, MMed (Paediatrics)", experience: 11, languages: "English, Malay", room: "Room 4A", status: "Active",   phone: "012-3000004", email: "siti.hajar@hospital.example",   bio: "", upcoming: 11 },
+            "D-005": { name: "Dr. Nadia Rahman",  department: "Dermatology",      specialty: "Dermatologist",        qualifications: "MBBS, MRCP (Dermatology)", experience: 9,  languages: "English, Malay", room: "Room 5B", status: "On leave", phone: "012-3000005", email: "nadia.rahman@hospital.example", bio: "", upcoming: 5 },
+            "D-006": { name: "Dr. Kumar Selvam",  department: "General Medicine", specialty: "General Practitioner", qualifications: "MBBS", experience: 7, languages: "English, Malay, Tamil", room: "Room 1B", status: "Active",   phone: "012-3000006", email: "kumar.selvam@hospital.example", bio: "", upcoming: 9 },
+            "D-007": { name: "Dr. Chen Li Wei",   department: "Cardiology",       specialty: "Cardiologist",         qualifications: "MBBS, MRCP", experience: 12, languages: "English, Mandarin", room: "Room 2C", status: "Inactive", phone: "012-3000007", email: "li.wei@hospital.example",      bio: "", upcoming: 0 }
+        };
+
+        const badgeClass = { "Active": "badge-duty", "On leave": "badge-leave", "Inactive": "badge-inactive" };
+
+        const params = new URLSearchParams(location.search);
+        const editId = params.get("id");
+        const existing = editId ? doctors[editId] : null;
+
+        function initials(name) {
+            const parts = name.replace(/^Dr\.?\s*/i, "").trim().split(/\s+/).filter(Boolean);
+            if (!parts.length) return "?";
+            return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+        }
+
+        let photoUrl = "";
+
+        function setAvatar(node, text) {
+            if (photoUrl) {
+                node.style.backgroundImage = "url(" + photoUrl + ")";
+                node.textContent = "";
+            } else {
+                node.style.backgroundImage = "";
+                node.textContent = text;
+            }
+        }
+
+        function refreshSummary() {
+            const name = el("fullName").value.trim();
+            const dept = el("department").value;
+            const spec = el("specialty").value.trim();
+            const status = el("status").value;
+            const text = initials(name);
+
+            el("summaryName").textContent = name || "New doctor";
+            el("summaryRole").textContent = [spec, dept].filter(Boolean).join(", ") || "Department and specialty";
+            el("summaryRoom").textContent = el("room").value.trim() || "Not set";
+            el("summaryBadge").textContent = status;
+            el("summaryBadge").className = "badge " + badgeClass[status];
+
+            setAvatar(el("summaryAvatar"), name ? text : "?");
+            setAvatar(el("photoPreview"), name ? text : "?");
+        }
+
+        if (existing) {
+            el("pageTitle").textContent = "Edit doctor " + editId;
+            el("pageSubtitle").textContent = "Update the profile, status and contact details.";
+
+            el("doctorId").value = editId;
+            el("fullName").value = existing.name;
+            el("department").value = existing.department;
+            el("specialty").value = existing.specialty;
+            el("qualifications").value = existing.qualifications;
+            el("experience").value = existing.experience;
+            el("languages").value = existing.languages;
+            el("room").value = existing.room;
+            el("status").value = existing.status;
+            el("phone").value = existing.phone;
+            el("email").value = existing.email;
+            el("bio").value = existing.bio;
+
+            el("summaryId").textContent = editId;
+            el("summaryUpcoming").textContent = existing.upcoming;
+
+            el("summaryActions").innerHTML =
+                '<a href="DoctorSchedule.html?id=' + editId + '" class="action-button"><i class="fa-solid fa-clock"></i> Manage schedule</a>' +
+                '<a href="Appointments.html" class="action-button secondary"><i class="fa-solid fa-calendar-days"></i> View appointments</a>';
+        }
+
+        ["fullName", "department", "specialty", "status", "room"].forEach(id => {
+            el(id).addEventListener("input", refreshSummary);
+            el(id).addEventListener("change", refreshSummary);
+        });
+
+        el("photo").addEventListener("change", () => {
+            const file = el("photo").files[0];
+            if (!file) return;
+            if (photoUrl) URL.revokeObjectURL(photoUrl);
+            photoUrl = URL.createObjectURL(file);
+            refreshSummary();
+        });
+
+        refreshSummary();
+
+        /* ---------- Validation ---------- */
+        function setInvalid(id, invalid) {
+            el(id).closest(".field").classList.toggle("invalid", invalid);
+            return invalid;
+        }
+
+        el("doctorForm").addEventListener("submit", e => {
+            let bad = false;
+            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el("email").value.trim());
+
+            bad = setInvalid("fullName", !el("fullName").value.trim()) || bad;
+            bad = setInvalid("department", !el("department").value) || bad;
+            bad = setInvalid("specialty", !el("specialty").value.trim()) || bad;
+            bad = setInvalid("phone", !el("phone").value.trim()) || bad;
+            bad = setInvalid("email", !emailOk) || bad;
+
+            if (bad) {
+                e.preventDefault();
+                const first = document.querySelector(".field.invalid");
+                if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+
+            // The form now posts to your backend (see the form action above).
+            // A doctor set to Inactive or On leave should not appear in the booking slot picker.
+        });
+    </script>
+
+</body>
+</html>
