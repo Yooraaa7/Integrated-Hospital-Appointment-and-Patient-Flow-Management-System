@@ -67,6 +67,8 @@
         return {
             id: q.id,
             queueNumber: q.queue_number,
+            appointmentId: q.appointment_id,
+            appointmentTime: q.scheduled_at,
 
             // Unique PostgreSQL tracking token
             trackingToken: q.tracking_token || null,

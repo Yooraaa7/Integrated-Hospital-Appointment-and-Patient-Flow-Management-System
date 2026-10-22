@@ -11,6 +11,7 @@ const counterRoutes = require("./routes/counterRoutes");
 const patientRoutes = require("./routes/patientRoutes");
 const queueRoutes = require("./routes/queueRoutes");
 const trackingRoutes = require("./routes/trackingRoutes");
+const appointmentQueueRoutes = require("./routes/appointmentQueueRoutes");
 
 const app = express();
 
@@ -46,6 +47,11 @@ app.use(
 app.use(
     "/assets",
     express.static(path.join(publicRoot, "assets"))
+);
+
+app.use(
+    "/api/appointment-queues",
+    appointmentQueueRoutes
 );
 
 app.get("/index.html", (req, res) => {

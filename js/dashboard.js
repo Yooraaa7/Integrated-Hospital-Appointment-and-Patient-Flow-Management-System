@@ -1,228 +1,161 @@
-const session =
-    QMS.getSession();
-
-
-// ------------------------------------------------------------
-// Authentication guard
-// ------------------------------------------------------------
+const session = QMS.getSession();
 
 if (
     !session.department ||
     !session.counter ||
     !session.staffID
 ) {
-
-    window.location.href =
-        "login.html";
+    window.location.href = "login.html";
 
 } else {
+    "use strict";
 
-    // --------------------------------------------------------
-    // Page elements
-    // --------------------------------------------------------
+    // =============================================
+    // ELEMENTS
+    // =============================================
 
-    const dashboardDepartment =
-        document.getElementById(
-            "dashboardDepartment"
-        );
+    const $ = id => document.getElementById(id);
 
-    const dashboardCounter =
-        document.getElementById(
-            "dashboardCounter"
-        );
+    const dashboardDepartment = $("dashboardDepartment");
+    const dashboardCounter = $("dashboardCounter");
+    const dashboardStaffID = $("dashboardStaffID");
 
-    const dashboardStaffID =
-        document.getElementById(
-            "dashboardStaffID"
-        );
+    const currentNumber = $("currentNumber");
+    const currentType = $("currentType");
+    const servingStatus = $("servingStatus");
 
-    const currentNumber =
-        document.getElementById(
-            "currentNumber"
-        );
+    const recallButton = $("recallButton");
+    const completeButton = $("completeButton");
+    const holdButton = $("holdButton");
 
-    const currentType =
-        document.getElementById(
-            "currentType"
-        );
+    const dashboardMessage = $("dashboardMessage");
 
-    const servingStatus =
-        document.getElementById(
-            "servingStatus"
-        );
+    const waitTab = $("waitTab");
+    const holdTab = $("holdTab");
+    const waitCount = $("waitCount");
+    const holdCount = $("holdCount");
 
-    const recallButton =
-        document.getElementById(
-            "recallButton"
-        );
+    const serviceFilter = $("serviceFilter");
+    const searchInput = $("searchInput");
+    const searchButton = $("searchButton");
+    const queueList = $("queueList");
 
-    const completeButton =
-        document.getElementById(
-            "completeButton"
-        );
+    const queueTimelineView = $("queueTimelineView");
+    const queueTimeline = $("queueTimeline");
+    const timelineQueueNumber = $("timelineQueueNumber");
+    const closeTimelineButton = $("closeTimelineButton");
 
-    const holdButton =
-        document.getElementById(
-            "holdButton"
-        );
+    const logoutButton = $("logoutButton");
 
-    const dashboardMessage =
-        document.getElementById(
-            "dashboardMessage"
-        );
+    // =============================================
+    // STATE
+    // =============================================
 
-    const waitTab =
-        document.getElementById(
-            "waitTab"
-        );
+    let activeTab = "WAIT";
+    let searchText = "";
+    let actionInProgress = false;
+    let currentTimelineNumber = null;
 
-    const holdTab =
-        document.getElementById(
-            "holdTab"
-        );
+    dashboardDepartment.textContent = session.department;
+    dashboardCounter.textContent = session.counter;
+    dashboardStaffID.textContent = session.staffID;
 
-    const waitCount =
-        document.getElementById(
-            "waitCount"
-        );
+    // =============================================
+    // HELPERS
+    // =============================================
 
-    const holdCount =
-        document.getElementById(
-            "holdCount"
-        );
+    function createElement(tag, className, text) {
+        const element = document.createElement(tag);
 
-    const serviceFilter =
-        document.getElementById(
-            "serviceFilter"
-        );
+        if (className) {
+            element.className = className;
+        }
 
-    const searchInput =
-        document.getElementById(
-            "searchInput"
-        );
+        if (text !== undefined) {
+            element.textContent = String(text);
+        }
 
-    const searchButton =
-        document.getElementById(
-            "searchButton"
-        );
-
-    const queueList =
-        document.getElementById(
-            "queueList"
-        );
-
-    const queueTimelineView =
-        document.getElementById(
-            "queueTimelineView"
-        );
-
-    const queueTimeline =
-        document.getElementById(
-            "queueTimeline"
-        );
-
-    const timelineQueueNumber =
-        document.getElementById(
-            "timelineQueueNumber"
-        );
-
-    const closeTimelineButton =
-        document.getElementById(
-            "closeTimelineButton"
-        );
-
-    const logoutButton =
-        document.getElementById(
-            "logoutButton"
-        );
-
-
-    // --------------------------------------------------------
-    // Dashboard state
-    // --------------------------------------------------------
-
-    let activeTab =
-        "WAIT";
-
-    let searchText =
-        "";
-
-
-    // --------------------------------------------------------
-    // Header information
-    // --------------------------------------------------------
-
-    dashboardDepartment.textContent =
-        session.department;
-
-    dashboardCounter.textContent =
-        session.counter;
-
-    dashboardStaffID.textContent =
-        session.staffID;
-
-
-    // --------------------------------------------------------
-    // Message helper
-    // --------------------------------------------------------
-
-    function showMessage(
-        message,
-        type = "info"
-    ) {
-
-        dashboardMessage.textContent =
-            message;
-
-        dashboardMessage.className =
-            "dashboard-message " +
-            type;
-
-        clearTimeout(
-            showMessage.timer
-        );
-
-        showMessage.timer =
-            setTimeout(
-                function () {
-
-                    dashboardMessage.textContent =
-                        "";
-
-                    dashboardMessage.className =
-                        "dashboard-message";
-
-                },
-                3500
-            );
+        return element;
     }
 
+    function showMessage(message, type = "info") {
+        dashboardMessage.textContent = message;
+        dashboardMessage.className =
+            "dashboard-message " + type;
 
-    // --------------------------------------------------------
-    // Queue list filters
-    // --------------------------------------------------------
+        clearTimeout(showMessage.timer);
+
+        showMessage.timer = setTimeout(() => {
+            dashboardMessage.textContent = "";
+            dashboardMessage.className = "dashboard-message";
+        }, 3500);
+    }
+
+    function isAppointment(queue) {
+        return QMS.isAppointment(queue);
+    }
+
+    function getAppointmentState(queue) {
+        return QMS.appointmentState(queue);
+    }
+
+    function isCallable(queue) {
+        if (queue.status === "HOLD") {
+            return true;
+        }
+
+        return QMS.appointmentCallable(queue);
+    }
+
+    function getBookedTime(queue) {
+        return QMS.getAppointmentTime(queue);
+    }
+
+    function formatBookedTime(queue) {
+        const value = getBookedTime(queue);
+
+        if (!value) return "Unknown time";
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return "Unknown time";
+        }
+
+        return date.toLocaleTimeString("en-MY", {
+            timeZone: "Asia/Kuala_Lumpur",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
+    }
+
+    function matchesService(queue) {
+        const selected = String(
+            serviceFilter.value || "ALL"
+        ).toUpperCase();
+
+        if (selected === "ALL") {
+            return true;
+        }
+
+        const queueType = isAppointment(queue)
+            ? "APPOINTMENT"
+            : "WALK_IN";
+
+        const normalized = selected.replace("-", "_");
+
+        return queueType === normalized;
+    }
 
     function matchesFilters(queue) {
-
-        const service =
-            serviceFilter.value;
-
-        const search =
-            searchText.toUpperCase();
-
-
-        if (
-            service !== "ALL" &&
-            queue.type !== service
-        ) {
+        if (!matchesService(queue)) {
             return false;
         }
 
-
-        // Queue history search is for one specific queue number.
         if (
-            search &&
-            String(queue.queueNumber).toUpperCase() !== search
+            searchText &&
+            String(queue.queueNumber).toUpperCase() !== searchText
         ) {
             return false;
         }
@@ -230,24 +163,41 @@ if (
         return true;
     }
 
+    // =============================================
+    // QUEUE DATA FOR EACH TAB
+    // =============================================
 
-    // --------------------------------------------------------
-    // Render current queue
-    // --------------------------------------------------------
+    function getVisibleWaitingQueues() {
+        // Use the appointment-aware sorting and
+        // 15-minute filtering from qms.js.
+        return QMS.getWaitingQueues(
+            session.department,
+            serviceFilter.value
+        ).filter(matchesFilters);
+    }
+
+    function getHeldQueues() {
+        return QMS.getDepartmentQueues(session.department)
+            .filter(queue => queue.status === "HOLD")
+            .filter(matchesFilters)
+            .sort((a, b) => {
+                return new Date(a.holdTime || a.issuedTime) -
+                    new Date(b.holdTime || b.issuedTime);
+            });
+    }
+
+    // =============================================
+    // CURRENTLY SERVING
+    // =============================================
 
     function renderCurrent() {
-
-        const current =
-            QMS.getCurrentServing(
-                session.department,
-                session.counter
-            );
+        const current = QMS.getCurrentServing(
+            session.department,
+            session.counter
+        );
 
         if (!current) {
-
-            currentNumber.textContent =
-                "—";
-
+            currentNumber.textContent = "—";
             currentType.textContent =
                 "No queue is currently being served.";
 
@@ -256,641 +206,621 @@ if (
                 '<i class="bi bi-check-circle"></i>' +
                 'Ready for next patient';
 
-            recallButton.disabled =
-                true;
-
-            completeButton.disabled =
-                true;
-
-            holdButton.disabled =
-                true;
-
+            recallButton.disabled = true;
+            completeButton.disabled = true;
+            holdButton.disabled = true;
             return;
         }
 
-
-        currentNumber.textContent =
-            current.queueNumber;
+        currentNumber.textContent = current.queueNumber;
 
         currentType.textContent =
-            `${current.type} • Called at ${QMS.formatTime(current.calledTime)}`;
+            `${current.type} • Called at ` +
+            QMS.formatTime(current.calledTime);
 
         servingStatus.innerHTML =
             '<span class="status-dot"></span>' +
             '<i class="bi bi-person-check"></i>' +
             'Serving Now';
 
-
-        recallButton.disabled =
-            false;
-
-        completeButton.disabled =
-            false;
-
-        holdButton.disabled =
-            false;
+        recallButton.disabled = actionInProgress;
+        completeButton.disabled = actionInProgress;
+        holdButton.disabled = actionInProgress;
     }
 
-
-    // --------------------------------------------------------
-    // Render queue counts
-    // --------------------------------------------------------
+    // =============================================
+    // COUNTS
+    // =============================================
 
     function renderCounts() {
+        const waiting = QMS.getWaitingQueues(
+            session.department,
+            serviceFilter.value
+        );
 
-        const departmentQueues =
-            QMS.getDepartmentQueues(
-                session.department
-            );
+        const held = QMS.getDepartmentQueues(
+            session.department
+        ).filter(queue => {
+            return queue.status === "HOLD" &&
+                matchesService(queue);
+        });
 
-        const service =
-            serviceFilter.value;
-
-        const wait =
-            departmentQueues.filter(
-                queue =>
-                    queue.status === "WAIT" &&
-                    (
-                        service === "ALL" ||
-                        queue.type === service
-                    )
-            ).length;
-
-        const hold =
-            departmentQueues.filter(
-                queue =>
-                    queue.status === "HOLD" &&
-                    (
-                        service === "ALL" ||
-                        queue.type === service
-                    )
-            ).length;
-
-        waitCount.textContent =
-            wait;
-
-        holdCount.textContent =
-            hold;
+        // Hidden future appointments are not counted
+        // as actively waiting.
+        waitCount.textContent = waiting.length;
+        holdCount.textContent = held.length;
     }
 
-
-    // --------------------------------------------------------
-    // Render queue list
-    // --------------------------------------------------------
-
-    function renderList() {
-
-        const departmentQueues =
-            QMS.getDepartmentQueues(
-                session.department
-            );
-
-        const filtered =
-            departmentQueues
-                .filter(
-                    queue =>
-                        queue.status === activeTab
-                )
-                .filter(
-                    matchesFilters
-                )
-                .sort(
-                    (a, b) =>
-                        new Date(a.issuedTime) -
-                        new Date(b.issuedTime)
-                );
-
-        queueList.innerHTML =
-            "";
-
-
-        if (!filtered.length) {
-
-            const empty =
-                document.createElement(
-                    "div"
-                );
-
-            empty.className =
-                "queue-empty";
-
-            empty.innerHTML =
-                activeTab === "WAIT"
-                    ? '<i class="bi bi-check2-circle"></i>' +
-                      '<p>No patients are waiting.</p>'
-                    : '<i class="bi bi-pause-circle"></i>' +
-                      '<p>No queues are currently on hold.</p>';
-
-            queueList.appendChild(
-                empty
-            );
-
+    // =============================================
+    // APPOINTMENT VISUAL INDICATOR
+    // =============================================
+    
+    
+    function addAppointmentIndicator(item, queue) {
+        if (
+            !isAppointment(queue) ||
+            queue.status !== "WAIT"
+        ) {
             return;
         }
 
+        const state = getAppointmentState(queue);
 
-        filtered.forEach(
-            queue => {
-
-                const item =
-                    document.createElement(
-                        "article"
-                    );
-
-                item.className =
-                    "queue-item";
-
-                item.tabIndex =
-                    0;
-
-                const actionText =
-                    activeTab === "HOLD"
-                        ? "Recall"
-                        : "Call";
-
-                const counterText =
-                    queue.counter
-                        ? `Held by ${queue.counter}`
-                        : "Waiting for counter";
-
-
-                item.innerHTML = `
-                    <div class="queue-main">
-                        <h3>${queue.queueNumber}</h3>
-
-                        <p>
-                            ${queue.type}
-                            <span>•</span>
-                            ${QMS.formatTime(queue.issuedTime)}
-                        </p>
-
-                        <small>
-                            ${counterText}
-                        </small>
-                    </div>
-
-                    <div class="queue-side">
-                        <span class="queue-age">
-                            ${QMS.formatRelativeTime(queue.lastActionTime || queue.issuedTime)}
-                        </span>
-
-                        <button
-                            type="button"
-                            class="queue-call-button"
-                        >
-                            <i class="bi ${
-                                activeTab === "HOLD"
-                                    ? "bi-arrow-repeat"
-                                    : "bi-megaphone"
-                            }"></i>
-                            ${actionText}
-                        </button>
-                    </div>
-                `;
-
-
-                const call =
-                    async function () {
-
-                        const result =
-                            await QMS.callQueue(
-                                queue.queueNumber,
-                                session.department,
-                                session.counter,
-                                session.staffID
-                            );
-
-                        showMessage(
-                            result.message,
-                            result.success
-                                ? "success"
-                                : "error"
-                        );
-
-                        render();
-                    };
-
-
-                item
-                    .querySelector(
-                        ".queue-call-button"
-                    )
-                    .addEventListener(
-                        "click",
-                        function (event) {
-
-                            event.stopPropagation();
-
-                            call();
-                        }
-                    );
-
-
-                item.addEventListener(
-                    "click",
-                    call
-                );
-
-                item.addEventListener(
-                    "keydown",
-                    function (event) {
-
-                        if (
-                            event.key === "Enter" ||
-                            event.key === " "
-                        ) {
-
-                            event.preventDefault();
-
-                            call();
-                        }
-                    }
-                );
-
-
-                queueList.appendChild(
-                    item
-                );
-            }
+        const indicator = createElement(
+            "span",
+            "appointment-indicator"
         );
+
+        if (state === "UPCOMING") {
+            item.classList.add("appointment-upcoming");
+            indicator.textContent = "UPCOMING";
+
+        } else if (state === "READY") {
+            item.classList.add("appointment-ready");
+            indicator.textContent = "READY TO CALL";
+
+        } else if (state === "OVERDUE") {
+            item.classList.add("appointment-overdue");
+            indicator.textContent = "OVERDUE";
+
+        } else {
+            return;
+        }
+
+        // Place the status on the RIGHT side.
+        const side = item.querySelector(".queue-side");
+
+        if (side) {
+            side.appendChild(indicator);
+        }
     }
 
 
-    // --------------------------------------------------------
-    // Full render
-    // --------------------------------------------------------
+    // =============================================
+    // SAFE QUEUE ACTIONS
+    // =============================================
+
+    async function runAction(action) {
+        if (actionInProgress) {
+            return null;
+        }
+
+        actionInProgress = true;
+
+        try {
+            const result = await action();
+
+            if (result && result.message) {
+                showMessage(
+                    result.message,
+                    result.success ? "success" : "error"
+                );
+            }
+
+            return result;
+
+        } catch (error) {
+            console.error("QMS action failed:", error);
+
+            showMessage(
+                error.message || "Unable to perform this action.",
+                "error"
+            );
+
+            return {
+                success: false,
+                message: error.message
+            };
+
+        } finally {
+            actionInProgress = false;
+            render();
+        }
+    }
+
+    async function callSelectedQueue(queue) {
+        if (actionInProgress) {
+            return;
+        }
+
+        // Upcoming appointments cannot be called.
+        if (
+            queue.status === "WAIT" &&
+            isAppointment(queue) &&
+            !QMS.appointmentCallable(queue)
+        ) {
+            showMessage(
+                `Appointment ${queue.queueNumber} ` +
+                `can only be called at ${formatBookedTime(queue)}.`,
+                "info"
+            );
+            return;
+        }
+
+        const current = QMS.getCurrentServing(
+            session.department,
+            session.counter
+        );
+
+        if (current) {
+            showMessage(
+                `${current.queueNumber} is still being served. ` +
+                "Complete or hold it first.",
+                "error"
+            );
+            return;
+        }
+
+        await runAction(() => QMS.callQueue(
+            queue.queueNumber,
+            session.department,
+            session.counter,
+            session.staffID
+        ));
+    }
+
+    // =============================================
+    // RENDER WAITING / HOLD QUEUE CARDS
+    // =============================================
+
+    function createQueueCard(queue) {
+        const item = createElement(
+            "article",
+            "queue-item"
+        );
+
+        const canCall = isCallable(queue);
+
+        item.tabIndex = canCall ? 0 : -1;
+
+        const main = createElement(
+            "div",
+            "queue-main"
+        );
+
+        const number = createElement(
+            "h3",
+            "",
+            queue.queueNumber
+        );
+
+        const displayTime = isAppointment(queue)
+            ? getBookedTime(queue)
+            : queue.issuedTime;
+
+        const details = createElement(
+            "p",
+            "",
+            `${queue.type} • ` +
+            QMS.formatTime(displayTime)
+        );
+
+
+        // Waiting queues must not display an
+        // assigned counter before staff calls them.
+        const counterText = queue.status === "HOLD"
+            ? (
+                queue.counter
+                    ? `Previously at ${queue.counter}`
+                    : "Queue on hold"
+            )
+            : "Counter assigned when called";
+
+        const counter = createElement(
+            "small",
+            "",
+            counterText
+        );
+
+        main.appendChild(number);
+        main.appendChild(details);
+        main.appendChild(counter);
+
+        const side = createElement(
+            "div",
+            "queue-side"
+        );
+
+        const age = createElement(
+            "span",
+            "queue-age",
+            isAppointment(queue)
+                ? ""
+                : QMS.formatRelativeTime(
+                    queue.lastActionTime ||
+                    queue.issuedTime
+                )
+        );
+
+        const button = createElement(
+            "button",
+            "queue-call-button"
+        );
+
+        button.type = "button";
+
+        if (queue.status === "HOLD") {
+            button.textContent = "↻ Recall";
+
+        } else if (!canCall) {
+            button.textContent = "";
+            button.disabled = true;
+            button.hidden = true;
+
+            item.classList.add("queue-not-callable");
+
+        } else {
+            button.textContent = "Call";
+        }
+
+        if (actionInProgress) {
+            button.disabled = true;
+        }
+
+        if (!isAppointment(queue)) {
+            side.appendChild(age);
+            side.appendChild(button);
+        }
+
+        item.appendChild(main);
+        item.appendChild(side);
+
+        // Add yellow, green or red appointment label.
+        addAppointmentIndicator(item, queue);
+
+        if (canCall) {
+            button.addEventListener("click", event => {
+                event.stopPropagation();
+                callSelectedQueue(queue);
+            });
+
+            item.addEventListener("click", event => {
+                if (event.target === button) {
+                    return;
+                }
+
+                callSelectedQueue(queue);
+            });
+
+            item.addEventListener("keydown", event => {
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
+                    event.preventDefault();
+                    callSelectedQueue(queue);
+                }
+            });
+        }
+
+        return item;
+    }
+
+    function renderList() {
+        const filtered = activeTab === "WAIT"
+            ? getVisibleWaitingQueues()
+            : getHeldQueues();
+
+        queueList.replaceChildren();
+
+        if (filtered.length === 0) {
+            const empty = createElement(
+                "div",
+                "queue-empty"
+            );
+
+            const icon = createElement(
+                "i",
+                activeTab === "WAIT"
+                    ? "bi bi-check2-circle"
+                    : "bi bi-pause-circle"
+            );
+
+            const message = createElement(
+                "p",
+                "",
+                activeTab === "WAIT"
+                    ? "No patients are currently waiting."
+                    : "No queues are currently on hold."
+            );
+
+            empty.appendChild(icon);
+            empty.appendChild(message);
+            queueList.appendChild(empty);
+            return;
+        }
+
+        filtered.forEach(queue => {
+            queueList.appendChild(
+                createQueueCard(queue)
+            );
+        });
+    }
+
+    // =============================================
+    // FULL RENDER
+    // =============================================
 
     function render() {
-
         renderCurrent();
         renderCounts();
         renderList();
     }
 
-
-    // --------------------------------------------------------
-    // Call next waiting queue
-    // --------------------------------------------------------
+    // =============================================
+    // CALL NEXT
+    // =============================================
 
     async function callNext() {
+        if (actionInProgress) return;
 
-        const current =
-            QMS.getCurrentServing(
-                session.department,
-                session.counter
-            );
+        const current = QMS.getCurrentServing(
+            session.department,
+            session.counter
+        );
 
         if (current) {
-
             showMessage(
                 `${current.queueNumber} is still being served.`,
                 "error"
             );
-
             return;
         }
 
-        const next =
-            QMS.getNextWaitingQueue(
+        const next = QMS.getNextWaitingQueue(
+            session.department,
+            serviceFilter.value
+        );
+
+        if (!next) {
+            showMessage(
+                "There are no eligible waiting queues " +
+                "for the selected service.",
+                "info"
+            );
+            return;
+        }
+
+        await callSelectedQueue(next);
+    }
+
+    // =============================================
+    // COMPLETE & NEXT / HOLD & NEXT
+    // =============================================
+
+    async function finishAndCallNext(operation) {
+        if (actionInProgress) return;
+
+        const current = QMS.getCurrentServing(
+            session.department,
+            session.counter
+        );
+
+        if (!current) {
+            showMessage(
+                "No queue is currently being served.",
+                "info"
+            );
+            return;
+        }
+
+        // Block a second action while the first
+        // backend request is being processed.
+        actionInProgress = true;
+
+        try {
+            const finished = operation === "COMPLETE"
+                ? await QMS.completeCurrent(
+                    session.department,
+                    session.counter
+                )
+                : await QMS.holdCurrent(
+                    session.department,
+                    session.counter
+                );
+
+            if (!finished.success) {
+                showMessage(
+                    finished.message,
+                    "error"
+                );
+                return;
+            }
+
+            const finishedNumber =
+                finished.queue?.queueNumber ||
+                current.queueNumber;
+
+            const next = QMS.getNextWaitingQueue(
                 session.department,
                 serviceFilter.value
             );
 
-        if (!next) {
+            if (!next) {
+                showMessage(
+                    `${finishedNumber} ${
+                        operation === "COMPLETE"
+                            ? "completed"
+                            : "placed on hold"
+                    }. No eligible waiting queues.`,
+                    "success"
+                );
+                return;
+            }
 
-            showMessage(
-                "There are no waiting queues for the selected service.",
-                "info"
-            );
-
-            return;
-        }
-
-        const result =
-            await QMS.callQueue(
+            const called = await QMS.callQueue(
                 next.queueNumber,
                 session.department,
                 session.counter,
                 session.staffID
             );
 
-        showMessage(
-            result.message,
-            result.success
-                ? "success"
-                : "error"
-        );
-
-        render();
-    }
-
-
-    // --------------------------------------------------------
-    // Recall
-    // --------------------------------------------------------
-
-    recallButton.addEventListener(
-        "click",
-        async function () {
-
-            const result =
-                await QMS.recallCurrent(
-                    session.department,
-                    session.counter
+            if (called.success) {
+                showMessage(
+                    `${finishedNumber} ${
+                        operation === "COMPLETE"
+                            ? "completed"
+                            : "placed on hold"
+                    }. ${next.queueNumber} is now serving.`,
+                    "success"
                 );
+            } else {
+                showMessage(
+                    `${finishedNumber} updated, but the next ` +
+                    `ticket was not called: ${called.message}`,
+                    "error"
+                );
+            }
+
+        } catch (error) {
+            console.error("Finish and next failed:", error);
 
             showMessage(
-                result.message,
-                result.success
-                    ? "success"
-                    : "error"
+                error.message || "Unable to update queue.",
+                "error"
             );
 
+        } finally {
+            actionInProgress = false;
             render();
         }
-    );
+    }
 
+    // =============================================
+    // CURRENT QUEUE ACTION BUTTONS
+    // =============================================
 
-    // --------------------------------------------------------
-    // Complete & Next
-    // --------------------------------------------------------
+    recallButton.addEventListener("click", () => {
+        runAction(() => QMS.recallCurrent(
+            session.department,
+            session.counter
+        ));
+    });
 
-    completeButton.addEventListener(
-        "click",
-        async function () {
+    completeButton.addEventListener("click", () => {
+        finishAndCallNext("COMPLETE");
+    });
 
-            const completed =
-                await QMS.completeCurrent(
-                    session.department,
-                    session.counter
-                );
+    holdButton.addEventListener("click", () => {
+        finishAndCallNext("HOLD");
+    });
 
-            if (!completed.success) {
+    // =============================================
+    // WAIT / HOLD TABS
+    // =============================================
 
-                showMessage(
-                    completed.message,
-                    "error"
-                );
+    waitTab.addEventListener("click", () => {
+        activeTab = "WAIT";
 
-                render();
+        waitTab.classList.add("active");
+        holdTab.classList.remove("active");
 
-                return;
-            }
+        renderList();
+    });
 
-            const next =
-                QMS.getNextWaitingQueue(
-                    session.department,
-                    serviceFilter.value
-                );
+    holdTab.addEventListener("click", () => {
+        activeTab = "HOLD";
 
-            if (next) {
+        holdTab.classList.add("active");
+        waitTab.classList.remove("active");
 
-                const called =
-                    await QMS.callQueue(
-                        next.queueNumber,
-                        session.department,
-                        session.counter,
-                        session.staffID
-                    );
+        renderList();
+    });
 
-                showMessage(
-                    called.success
-                        ? `${completed.queue.queueNumber} completed. ${next.queueNumber} is now serving.`
-                        : completed.message,
-                    called.success
-                        ? "success"
-                        : "error"
-                );
+    // =============================================
+    // SERVICE FILTER
+    // =============================================
 
-            } else {
+    serviceFilter.addEventListener("change", render);
 
-                showMessage(
-                    `${completed.queue.queueNumber} completed. No more waiting queues.`,
-                    "success"
-                );
-            }
-
-            render();
-        }
-    );
-
-
-    // --------------------------------------------------------
-    // Hold & Next
-    // --------------------------------------------------------
-
-    holdButton.addEventListener(
-        "click",
-        async function () {
-
-            const held =
-                await QMS.holdCurrent(
-                    session.department,
-                    session.counter
-                );
-
-            if (!held.success) {
-
-                showMessage(
-                    held.message,
-                    "error"
-                );
-
-                render();
-
-                return;
-            }
-
-            const next =
-                QMS.getNextWaitingQueue(
-                    session.department,
-                    serviceFilter.value
-                );
-
-            if (next) {
-
-                const called =
-                    await QMS.callQueue(
-                        next.queueNumber,
-                        session.department,
-                        session.counter,
-                        session.staffID
-                    );
-
-                showMessage(
-                    called.success
-                        ? `${held.queue.queueNumber} placed on hold. ${next.queueNumber} is now serving.`
-                        : held.message,
-                    called.success
-                        ? "success"
-                        : "error"
-                );
-
-            } else {
-
-                showMessage(
-                    `${held.queue.queueNumber} placed on hold. No more waiting queues.`,
-                    "success"
-                );
-            }
-
-            render();
-        }
-    );
-
-
-    // --------------------------------------------------------
-    // Tabs
-    // --------------------------------------------------------
-
-    waitTab.addEventListener(
-        "click",
-        function () {
-
-            activeTab =
-                "WAIT";
-
-            waitTab.classList.add(
-                "active"
-            );
-
-            holdTab.classList.remove(
-                "active"
-            );
-
-            renderList();
-        }
-    );
-
-    holdTab.addEventListener(
-        "click",
-        function () {
-
-            activeTab =
-                "HOLD";
-
-            holdTab.classList.add(
-                "active"
-            );
-
-            waitTab.classList.remove(
-                "active"
-            );
-
-            renderList();
-        }
-    );
-
-
-    // --------------------------------------------------------
-    // Filters
-    // --------------------------------------------------------
-
-    serviceFilter.addEventListener(
-        "change",
-        render
-    );
-
-
-    // --------------------------------------------------------
-    // Search
-    // --------------------------------------------------------
-
-    searchButton.addEventListener(
-        "click",
-        searchQueueHistory
-    );
-
-    searchInput.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (event.key === "Enter") {
-                searchQueueHistory();
-            }
-        }
-    );
-
-    closeTimelineButton.addEventListener(
-        "click",
-        function () {
-            renderTimeline(null);
-        }
-    );
-
-
-
-    // --------------------------------------------------------
-    // Queue history timeline
-    // --------------------------------------------------------
+    // =============================================
+    // QUEUE HISTORY
+    // =============================================
 
     function getTimelineHistory(queue) {
-
+        // Prefer actual history from PostgreSQL.
         if (
             Array.isArray(queue.history) &&
             queue.history.length
         ) {
             return queue.history
                 .slice()
-                .sort(
-                    (a, b) =>
-                        new Date(b.timestamp) -
-                        new Date(a.timestamp)
+                .sort((a, b) =>
+                    new Date(b.timestamp) -
+                    new Date(a.timestamp)
                 );
         }
 
-        // Compatibility for queues created before history was added.
+        // Fallback for older records without history.
         const fallback = [];
 
-        if (queue.issuedTime) {
-            fallback.push({
-                type: "ISSUED",
-                timestamp: queue.issuedTime,
-                counter: null,
-                staffID: null
-            });
-        }
+        const addEvent = (type, time, counter, staffID) => {
+            if (time) {
+                fallback.push({
+                    type,
+                    timestamp: time,
+                    counter: counter || null,
+                    staffID: staffID || null
+                });
+            }
+        };
 
-        if (queue.calledTime) {
-            fallback.push({
-                type: "CALLED",
-                timestamp: queue.calledTime,
-                counter: queue.counter || null,
-                staffID: queue.calledBy || null
-            });
-        }
+        addEvent(
+            "ISSUED",
+            queue.issuedTime,
+            null,
+            null
+        );
 
-        if (queue.holdTime) {
-            fallback.push({
-                type: "HOLD",
-                timestamp: queue.holdTime,
-                counter: queue.counter || null,
-                staffID: queue.calledBy || null
-            });
-        }
+        addEvent(
+            "CALLED",
+            queue.calledTime,
+            queue.counter,
+            queue.calledBy
+        );
 
-        if (queue.completedTime) {
-            fallback.push({
-                type: "COMPLETE",
-                timestamp: queue.completedTime,
-                counter: queue.counter || null,
-                staffID: queue.calledBy || null
-            });
-        }
+        addEvent(
+            "HOLD",
+            queue.holdTime,
+            queue.counter,
+            queue.calledBy
+        );
 
-        return fallback.sort(
-            (a, b) =>
-                new Date(b.timestamp) -
-                new Date(a.timestamp)
+        addEvent(
+            "COMPLETE",
+            queue.completedTime,
+            queue.counter,
+            queue.calledBy
+        );
+
+        return fallback.sort((a, b) =>
+            new Date(b.timestamp) -
+            new Date(a.timestamp)
         );
     }
 
-
     function formatTimelineTime(value) {
-
-        if (!value) {
-            return "--:--:--";
-        }
+        if (!value) return "--:--:--";
 
         const date = new Date(value);
 
@@ -898,96 +828,105 @@ if (
             return "--:--:--";
         }
 
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        const seconds = String(date.getSeconds()).padStart(2, "0");
-
-        return `${hours}:${minutes}:${seconds}`;
+        return date.toLocaleTimeString("en-MY", {
+            timeZone: "Asia/Kuala_Lumpur",
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
     }
 
-
     function renderTimeline(queue) {
-
-        const mainView =
-            document.getElementById("dashboardMainView");
-
-        const timelineView =
-            document.getElementById("queueTimelineView");
+        const mainView = $("dashboardMainView");
+        const timelineView = $("queueTimelineView");
 
         if (!mainView || !timelineView) return;
 
         if (!queue) {
+            currentTimelineNumber = null;
             mainView.style.display = "";
             timelineView.style.display = "none";
-            queueTimeline.innerHTML = "";
+
+            queueTimeline.replaceChildren();
             timelineQueueNumber.textContent = "";
             return;
         }
+
+        currentTimelineNumber = queue.queueNumber;
 
         mainView.style.display = "none";
         timelineView.style.display = "";
 
         timelineQueueNumber.textContent =
-            `${queue.queueNumber} • ${queue.department} • ${queue.type}`;
+            `${queue.queueNumber} • ` +
+            `${queue.department} • ${queue.type}`;
+
+        queueTimeline.replaceChildren();
 
         const history = getTimelineHistory(queue);
 
-        queueTimeline.innerHTML = "";
-
         if (!history.length) {
-            const empty = document.createElement("div");
-            empty.className = "timeline-empty";
-            empty.textContent = "No queue history is available.";
-            queueTimeline.appendChild(empty);
+            queueTimeline.appendChild(
+                createElement(
+                    "div",
+                    "timeline-empty",
+                    "No queue history is available."
+                )
+            );
             return;
         }
 
-        // History is rendered newest -> oldest so the newest event is always at the top.
         history.forEach(event => {
+            const item = createElement(
+                "div",
+                "timeline-item timeline-" +
+                String(event.type || "").toLowerCase()
+            );
 
-            const item = document.createElement("div");
-            const type = String(event.type || "").toLowerCase();
+            const time = createElement(
+                "time",
+                "timeline-time",
+                formatTimelineTime(event.timestamp)
+            );
 
-            item.className =
-                `timeline-item timeline-${type}`;
-
-            const time = document.createElement("time");
-            time.className = "timeline-time";
             time.dateTime = event.timestamp || "";
-            time.textContent = formatTimelineTime(event.timestamp);
 
-            const marker = document.createElement("div");
-            marker.className = "timeline-marker";
+            const marker = createElement(
+                "div",
+                "timeline-marker"
+            );
 
-            const dot = document.createElement("span");
-            marker.appendChild(dot);
+            marker.appendChild(
+                createElement("span")
+            );
 
-            const content = document.createElement("div");
-            content.className = "timeline-content";
+            const content = createElement(
+                "div",
+                "timeline-content"
+            );
 
-            const message = document.createElement("p");
-            message.className = "timeline-message";
-            message.textContent =
-                QMS.getHistoryMessage(event.type);
-
-            content.appendChild(message);
+            content.appendChild(
+                createElement(
+                    "p",
+                    "timeline-message",
+                    QMS.getHistoryMessage(event.type)
+                )
+            );
 
             if (event.counter || event.staffID) {
-                const meta = document.createElement("span");
-                meta.className = "timeline-meta";
+                const details = [
+                    event.counter,
+                    event.staffID
+                ].filter(Boolean).join(" • ");
 
-                const details = [];
-
-                if (event.counter) {
-                    details.push(event.counter);
-                }
-
-                if (event.staffID) {
-                    details.push(event.staffID);
-                }
-
-                meta.textContent = details.join(" • ");
-                content.appendChild(meta);
+                content.appendChild(
+                    createElement(
+                        "span",
+                        "timeline-meta",
+                        details
+                    )
+                );
             }
 
             item.appendChild(time);
@@ -999,11 +938,9 @@ if (
     }
 
     function searchQueueHistory() {
-
-        const value =
-            searchInput.value
-                .trim()
-                .toUpperCase();
+        const value = searchInput.value
+            .trim()
+            .toUpperCase();
 
         searchText = value;
 
@@ -1013,28 +950,22 @@ if (
             return;
         }
 
-        const queues =
-            QMS.getDepartmentQueues(
-                session.department
-            );
-
-        const queue =
-            queues.find(
-                item =>
-                    String(item.queueNumber)
-                        .toUpperCase() === value
-            );
+        const queue = QMS.getDepartmentQueues(
+            session.department
+        ).find(item =>
+            String(item.queueNumber).toUpperCase() === value
+        );
 
         if (!queue) {
             renderTimeline(null);
 
             showMessage(
-                `Queue ${value} was not found in ${session.department}.`,
+                `Queue ${value} was not found in ` +
+                `${session.department}.`,
                 "error"
             );
 
             renderList();
-
             return;
         }
 
@@ -1042,70 +973,74 @@ if (
         renderList();
     }
 
-
-    // --------------------------------------------------------
-    // Logout
-    // --------------------------------------------------------
-
-    logoutButton.addEventListener(
+    searchButton.addEventListener(
         "click",
-        function () {
-
-            QMS.clearSession();
-
-            window.location.href =
-                "login.html";
-        }
+        searchQueueHistory
     );
 
-
-    // --------------------------------------------------------
-    // Refresh when another tab changes localStorage
-    // --------------------------------------------------------
-
-    window.addEventListener(
-        "storage",
-        function (event) {
-
-            if (
-                event.key === QMS.STORAGE_KEYS.queues ||
-                event.key === QMS.STORAGE_KEYS.updatedAt
-            ) {
-
-                render();
-
-                const timelineNumber =
-                    timelineQueueNumber &&
-                    timelineQueueNumber.textContent
-                        .split(" • ")[0];
-
-                if (timelineNumber) {
-                    const updatedQueue =
-                        QMS.getDepartmentQueues(
-                            session.department
-                        ).find(
-                            queue =>
-                                queue.queueNumber === timelineNumber
-                        );
-
-                    if (updatedQueue) {
-                        renderTimeline(updatedQueue);
-                    }
-                }
+    searchInput.addEventListener(
+        "keydown",
+        event => {
+            if (event.key === "Enter") {
+                searchQueueHistory();
             }
         }
     );
 
-
-    // --------------------------------------------------------
-    // Polling is important for separate browser tabs/windows.
-    // --------------------------------------------------------
-
-    setInterval(
-        render,
-        1000
+    closeTimelineButton.addEventListener(
+        "click",
+        () => renderTimeline(null)
     );
 
+    // =============================================
+    // LOGOUT
+    // =============================================
+
+    logoutButton.addEventListener("click", () => {
+        QMS.clearSession();
+        window.location.href = "login.html";
+    });
+
+    // =============================================
+    // OTHER TAB UPDATES
+    // =============================================
+
+    window.addEventListener("storage", event => {
+        if (
+            event.key === QMS.STORAGE_KEYS.queues ||
+            event.key === QMS.STORAGE_KEYS.updatedAt
+        ) {
+            render();
+
+            if (currentTimelineNumber) {
+                const updatedQueue =
+                    QMS.getDepartmentQueues(
+                        session.department
+                    ).find(queue =>
+                        queue.queueNumber ===
+                        currentTimelineNumber
+                    );
+
+                if (updatedQueue) {
+                    renderTimeline(updatedQueue);
+                }
+            }
+        }
+    });
+
+    // =============================================
+    // REFRESH APPOINTMENT TIME STATUS
+    // =============================================
+
+    // Re-render every second to update appointment
+    // countdowns and visibility automatically.
+    // The PostgreSQL data itself is refreshed by
+    // the existing qms-api.js bridge.
+    setInterval(() => {
+        if (!actionInProgress) {
+            render();
+        }
+    }, 1000);
 
     // Initial render
     render();
