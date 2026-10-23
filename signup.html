@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Patient Account | The Care Hospital</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="style/style.css">
+</head>
+<body data-page="signup" data-root="">
+    <div id="nav"></div>
+
+    <main class="auth-shell">
+        <section class="card auth-card signup-card">
+
+            <a href="index.html" class="auth-back-card">
+                <i class="bi bi-arrow-left"></i>
+                Back to Home
+            </a>
+
+            <div class="auth-logo-container">
+                <img src="assets/logo.png" alt="The Care Hospital Logo" class="auth-logo">
+            </div>
+
+            <div class="auth-heading">
+                <h1 class="page-title">Create Patient Account</h1>
+                <p class="body-text">Register an account to book and manage your hospital appointments.</p>
+            </div>
+
+            <div id="signupMessage"></div>
+
+            <form id="signupForm">
+
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input
+                        class="form-control"
+                        id="signupName"
+                        type="text"
+                        placeholder="Enter your full name"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="signupIdentifier">Email or IC Number</label>
+                    <input
+                        class="form-control"
+                        id="signupIdentifier"
+                        type="text"
+                        placeholder="Email or IC number"
+                        required
+                    >
+                    <div class="help-text">
+                        Example: patient@email.com or 010203-14-5678
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="signupDOB">Date of Birth</label>
+                    <input
+                        class="form-control"
+                        id="signupDOB"
+                        type="date"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+
+                    <div class="password-field">
+                        <input
+                            class="form-control"
+                            id="signupPassword"
+                            type="password"
+                            placeholder="Create a password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            onclick="togglePassword('signupPassword', this)"
+                            aria-label="Show or hide password"
+                        >
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+
+                    <div class="password-rules">
+                        <div id="ruleUpper" class="password-rule">
+                            <i class="bi bi-circle"></i>
+                            At least one capital letter
+                        </div>
+
+                        <div id="ruleNumber" class="password-rule">
+                            <i class="bi bi-circle"></i>
+                            At least one number
+                        </div>
+
+                        <div id="ruleSpecial" class="password-rule">
+                            <i class="bi bi-circle"></i>
+                            At least one special character
+                        </div>
+
+                        <div id="ruleLength" class="password-rule">
+                            <i class="bi bi-circle"></i>
+                            At least 8 characters long
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+
+                    <div class="password-field">
+                        <input
+                            class="form-control"
+                            id="signupConfirmPassword"
+                            type="password"
+                            placeholder="Re-enter password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            onclick="togglePassword('signupConfirmPassword', this)"
+                            aria-label="Show or hide password"
+                        >
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <label class="terms-checkbox">
+                    <input id="signupTerms" type="checkbox">
+                    <span>
+                        I agree to The Care Hospital
+                        <a href="#">Terms & Conditions</a>.
+                    </span>
+                </label>
+
+                <button class="btn btn-primary auth-submit" type="submit">
+                    <i class="bi bi-person-check"></i>
+                    Create Account
+                </button>
+            </form>
+
+            <div class="auth-divider"><span>OR</span></div>
+
+            <p class="auth-switch-text">Already have an account?</p>
+
+            <a class="btn btn-outline auth-submit" href="login.html">
+                Back to Login
+            </a>
+        </section>
+    </main>
+
+    <div id="foot"></div>
+    <script src="js/app.js"></script>
+</body>
+</html>

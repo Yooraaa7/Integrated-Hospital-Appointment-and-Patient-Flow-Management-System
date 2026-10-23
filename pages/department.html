@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Routing | The Care Hospital</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../style/style.css">
+</head>
+<body data-page="department" data-root="../">
+    <div id="nav"></div>
+
+    <section class="page-header">
+        <div class="main-container">
+            <h1 class="page-title">Smart Department Routing</h1>
+            <p class="page-description">
+                Enter symptoms or healthcare needs to receive a rule-based department suggestion.
+            </p>
+        </div>
+    </section>
+
+    <main class="main-container">
+        <div class="grid-2">
+            <section class="card card-pad">
+                <h2 class="section-title">What can we help you with?</h2>
+                <p class="body-text">
+                    Example: chest pain, migraine, back pain, skin rash, child fever or general screening.
+                </p>
+
+                <div class="form-group">
+                    <label for="symptomInput">Symptoms / Keywords</label>
+                    <textarea id="symptomInput" class="form-control" placeholder="Describe symptoms or service needs..."></textarea>
+                </div>
+
+                <button class="btn btn-primary" id="routeButton">
+                    <i class="bi bi-search"></i>
+                    Recommend Department
+                </button>
+            </section>
+
+            <section id="routingResult" class="card card-pad routing-result">
+                <div class="empty">
+                    <i class="bi bi-signpost-split" style="font-size:28px"></i>
+                    <p>Recommendation will appear here.</p>
+                </div>
+            </section>
+        </div>
+
+        <section style="margin-top:28px">
+            <h2 class="section-title">Available Departments</h2>
+            <div id="departmentCards" class="grid-3" style="margin-top:20px"></div>
+        </section>
+    </main>
+
+    <div id="foot"></div>
+    <script src="../js/app.js"></script>
+</body>
+</html>

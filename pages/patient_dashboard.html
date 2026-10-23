@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard | The Care Hospital</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../style/style.css">
+</head>
+<body data-page="" data-root="../">
+    <div id="nav"></div>
+
+    <section class="page-header">
+        <div class="main-container">
+            <h1 class="page-title" id="dashboardWelcome">Patient Dashboard</h1>
+            <p class="page-description">Your appointment summary and quick actions.</p>
+        </div>
+    </section>
+
+    <main class="main-container">
+
+        <section class="grid-3">
+            <div class="card stat">
+                <span class="muted-text">UPCOMING APPOINTMENTS</span>
+                <b id="dashboardUpcoming">0</b>
+            </div>
+
+            <div class="card stat">
+                <span class="muted-text">REGISTERED / QUEUED</span>
+                <b id="dashboardRegistered">0</b>
+            </div>
+
+            <div class="card stat">
+                <span class="muted-text">CANCELLED</span>
+                <b id="dashboardCancelled">0</b>
+            </div>
+        </section>
+
+        <div class="grid-2" style="margin-top:20px">
+            <section class="card card-pad">
+                <h2 class="section-title">Quick Actions</h2>
+
+                <div class="doctor-actions">
+                    <a class="btn btn-primary" href="appointment.html">
+                        <i class="bi bi-calendar-plus"></i>
+                        Book Appointment
+                    </a>
+
+                    <a class="btn btn-outline" href="doctors.html">Find Doctor</a>
+                    <a class="btn btn-outline" href="department.html">Department Routing</a>
+                    <a class="btn btn-outline" href="appointment_history.html">My Appointments</a>
+                    <a class="btn btn-outline" href="patient_profile.html">Profile</a>
+                </div>
+            </section>
+
+            <section class="card card-pad">
+                <h2 class="section-title">Next Appointment</h2>
+
+                <div id="dashboardNext" class="body-text" style="margin-top:15px">
+                    No upcoming appointment.
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <div id="foot"></div>
+    <script src="../js/app.js"></script>
+</body>
+</html>
