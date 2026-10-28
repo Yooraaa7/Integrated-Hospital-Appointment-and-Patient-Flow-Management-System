@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Demand - Appointment &amp; Doctor Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="HospitalAnalytics.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <header class="top-navbar">
+        <div class="navbar-logo">
+            <img src="logo.png" alt="Hospital logo">
+        </div>
+
+        <div class="search-controls">
+            <input type="text" class="search-input" placeholder="Search patient or doctor name / ID">
+            <select class="filter-select">
+                <option value="">All records</option>
+                <option value="appointment">Appointments</option>
+                <option value="doctor">Doctors</option>
+            </select>
+            <button type="button" class="search-button">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+        </div>
+
+        <div class="staff-info">
+            <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
+            <button type="button" class="logout-button">Logout</button>
+        </div>
+    </header>
+
+    <div class="page-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-title">APPOINTMENT &amp; DOCTOR MANAGEMENT</div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="HospitalAnalytics.html">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="sidebar-group">Appointments</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Doctors</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
+                        <li><a href="DoctorProfile.html"><i class="fa-solid fa-id-card"></i> Doctor Profile</a></li>
+                        <li><a href="DoctorSchedule.html"><i class="fa-solid fa-clock"></i> Schedule &amp; Availability</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Notifications</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="NotificationCenter.html"><i class="fa-solid fa-bell"></i> Notification Center</a></li>
+                        <li><a href="NotificationLog.html"><i class="fa-solid fa-list-check"></i> Notification Log</a></li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-group">Analytics</li>
+                <li>
+                    <ul class="sidebar-sub">
+                        <li><a href="AppointmentDemand.html" class="active"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="CancellationAnalysis.html"><i class="fa-solid fa-ban"></i> Cancellations &amp; No-Shows</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
+                        <li><a href="NotificationPerformance.html"><i class="fa-solid fa-envelope-circle-check"></i> Notification Performance</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content">
+
+            <div class="page-header">
+                <div>
+                    <h1>Appointment Demand</h1>
+                    <p>Which departments and doctors patients book the most, and how demand changes over time.</p>
+                </div>
+            </div>
+
+            <section class="panel panel-full">
+                <div class="filter-bar">
+                    <div class="field">
+                        <label for="period">Period</label>
+                        <select id="period">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="dept">Department</label>
+                        <select id="dept">
+                            <option value="">All departments</option>
+                            <option>General Medicine</option>
+                            <option>Cardiology</option>
+                            <option>Orthopaedics</option>
+                            <option>Paediatrics</option>
+                            <option>Dermatology</option>
+                        </select>
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="summary-grid">
+                <div class="summary-card ">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div>
+                        <div class="summary-value" id="cTotal">-</div>
+                        <div class="summary-label" id="cTotalLabel">Total appointments</div>
+                    </div>
+                </div>
+                <div class="summary-card ">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                    <div>
+                        <div class="summary-value" id="cAvg">-</div>
+                        <div class="summary-label" id="cAvgLabel">Average per day</div>
+                    </div>
+                </div>
+                <div class="summary-card success">
+                    <div class="summary-icon"><i class="fa-solid fa-building"></i></div>
+                    <div>
+                        <div class="summary-value" id="cDept">-</div>
+                        <div class="summary-label" id="cDeptLabel">Busiest department</div>
+                    </div>
+                </div>
+                <div class="summary-card warning">
+                    <div class="summary-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                    <div>
+                        <div class="summary-value" id="cDoctor">-</div>
+                        <div class="summary-label" id="cDoctorLabel">Busiest doctor</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel-grid">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 id="trendTitle">Appointments over time</h2>
+                    </div>
+                    <div class="chart-box" id="trendChart"></div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Demand by department</h2>
+                    </div>
+                    <div id="deptBars"></div>
+                </div>
+            </section>
+
+            <section class="panel panel-full">
+                <div class="panel-header">
+                    <h2>Demand by doctor</h2>
+                    <span class="date-label" id="rangeLabel"></span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Doctor</th>
+                                <th>Department</th>
+                                <th>Appointments</th>
+                                <th>Share of demand</th>
+                                <th>Vs previous period</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorRows"></tbody>
+                    </table>
+                </div>
+
+                <p class="method-note" style="margin-top: 14px;">
+                    Demand counts every appointment that was booked and not cancelled (Completed, No-show and Booked).
+                    Cancellations are analysed on the Cancellations &amp; No-Shows page.
+                </p>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="Analytics.js"></script>
+    <script>
+        const el = id => document.getElementById(id);
+        const D = AppData;
+
+        function render() {
+            const days = Number(el("period").value);
+            const dept = el("dept").value;
+            const r = D.rangeFor(days);
+
+            const now  = D.appointmentsIn(r.from, r.to, { dept: dept });
+            const prev = D.appointmentsIn(r.prevFrom, r.prevTo, { dept: dept });
+
+            el("rangeLabel").textContent = D.shortDate(r.from) + " to " + D.shortDate(r.to);
+
+            /* ----- cards ----- */
+            const countBy = (list, key) => {
+                const m = {};
+                list.forEach(a => { m[a[key]] = (m[a[key]] || 0) + 1; });
+                return m;
+            };
+            const byDept = countBy(now, "dept");
+            const byDoc  = countBy(now, "doctorId");
+            const topOf = m => Object.keys(m).sort((a, b) => m[b] - m[a])[0];
+            const nameOf = id => D.doctors.find(d => d.id === id).name;
+
+            el("cTotal").textContent = now.length;
+            el("cTotalLabel").innerHTML = "Total appointments<br>" + Charts.change(now.length, prev.length);
+            el("cAvg").textContent = (now.length / days).toFixed(1);
+            el("cAvgLabel").textContent = "Average per day";
+
+            const td = topOf(byDept), tdoc = topOf(byDoc);
+            el("cDept").textContent = td ? td : "None";
+            el("cDeptLabel").textContent = td ? "Busiest department, " + byDept[td] + " appointments" : "Busiest department";
+            el("cDoctor").textContent = tdoc ? nameOf(tdoc) : "None";
+            el("cDoctorLabel").textContent = tdoc ? "Busiest doctor, " + byDoc[tdoc] + " appointments" : "Busiest doctor";
+
+            /* ----- trend: daily up to 30 days, weekly for 90 ----- */
+            const weekly = days > 30;
+            const labels = [], values = [];
+            let cursor = D.parseISO(r.from);
+            const end = D.parseISO(r.to);
+
+            while (cursor <= end) {
+                const startISO = D.iso(cursor);
+                const stop = weekly ? D.addDays(cursor, 6) : cursor;
+                const stopISO = D.iso(stop > end ? end : stop);
+                values.push(now.filter(a => a.date >= startISO && a.date <= stopISO).length);
+                labels.push(D.shortDate(startISO));
+                cursor = D.addDays(cursor, weekly ? 7 : 1);
+            }
+            el("trendTitle").textContent = weekly ? "Appointments per week" : "Appointments per day";
+            Charts.line(el("trendChart"), labels, values, "Appointments over time");
+
+            /* ----- department bars ----- */
+            const deptItems = Object.keys(byDept).sort((a, b) => byDept[b] - byDept[a]).map(k => ({
+                label: k, value: byDept[k], text: byDept[k] + " (" + Math.round(byDept[k] / now.length * 100) + "%)"
+            }));
+            if (deptItems.length) Charts.hbars(el("deptBars"), deptItems);
+            else el("deptBars").innerHTML = '<p class="method-note">No appointments in this period.</p>';
+
+            /* ----- doctor table ----- */
+            const prevByDoc = countBy(prev, "doctorId");
+            const docs = D.doctors.filter(d => !dept || d.dept === dept)
+                                  .sort((a, b) => (byDoc[b.id] || 0) - (byDoc[a.id] || 0));
+            const maxDoc = Math.max(1, ...docs.map(d => byDoc[d.id] || 0));
+
+            el("doctorRows").innerHTML = docs.map((d, i) => {
+                const n = byDoc[d.id] || 0;
+                const share = now.length ? Math.round(n / now.length * 100) : 0;
+                return "<tr>" +
+                    "<td>" + (i + 1) + "</td>" +
+                    "<td>" + d.name + '<span class="cell-sub">' + d.id + "</span></td>" +
+                    "<td>" + d.dept + "</td>" +
+                    "<td><strong>" + n + "</strong></td>" +
+                    '<td><div class="util-cell"><div class="progress-track"><div class="progress-fill" style="width:' + (n / maxDoc * 100).toFixed(1) + '%;"></div></div><strong>' + share + "%</strong></div></td>" +
+                    "<td>" + Charts.change(n, prevByDoc[d.id] || 0).replace(" vs previous period", "") + "</td>" +
+                    "</tr>";
+            }).join("");
+        }
+
+        el("period").addEventListener("change", render);
+        el("dept").addEventListener("change", render);
+        render();
+    </script>
+
+</body>
+</html>
