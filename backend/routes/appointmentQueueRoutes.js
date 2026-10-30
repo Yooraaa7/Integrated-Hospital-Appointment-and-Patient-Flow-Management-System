@@ -2,71 +2,100 @@ const express = require("express");
 const router = express.Router();
 
 const pool = require("../config/database");
+
 const { requireStaff } = require("../middleware/auth");
+const { requirePatientJwt } = require("../middleware/patientJwtAuth");
 
 const {
     generateAppointmentNumber
 } = require("../services/appointmentQueueService");
 
-// POST /api/appointment-queues/register
-router.post("/register", requireStaff, async (req, res) => {
+async function registerAppointmentQueue(req, res, patientOnly) {
 
-    const appointmentId = Number(req.body?.appointment_id);
+    const appointmentId = String(
+        req.body?.appointment_id ?? ""
+    ).trim();
 
-    if (
-        !Number.isSafeInteger(appointmentId) ||
-        appointmentId <= 0
-    ) {
+    if (!/^[1-9]\d*$/.test(appointmentId)) {
         return res.status(400).json({
             success: false,
-            message: "Valid appointment ID required"
+            code: "INVALID_APPOINTMENT_ID",
+            message: "A valid appointment_id is required."
         });
     }
+
+    const patientId = patientOnly
+        ? req.patient.id
+        : null;
 
     let client;
 
     try {
         client = await pool.connect();
+
         await client.query("BEGIN");
 
-        // Lock the appointment to prevent duplicate registration.
-        const appointmentResult = await client.query(
+        const appointmentQuery = patientOnly
+            ? `
+                SELECT
+                    a.id,
+                    a.patient_id,
+                    a.department_id,
+                    a.scheduled_at,
+                    a.status
+                FROM appointments a
+                WHERE a.id = $1
+                  AND a.patient_id = $2
+                FOR UPDATE OF a
             `
-            SELECT
-                a.id,
-                a.patient_id,
-                a.department_id,
-                a.scheduled_at,
-                a.status
-            FROM appointments a
-            WHERE a.id = $1
-            FOR UPDATE
-            `,
-            [appointmentId]
+            : `
+                SELECT
+                    a.id,
+                    a.patient_id,
+                    a.department_id,
+                    a.scheduled_at,
+                    a.status
+                FROM appointments a
+                WHERE a.id = $1
+                FOR UPDATE OF a
+            `;
+
+        const appointmentParams = patientOnly
+            ? [appointmentId, patientId]
+            : [appointmentId];
+
+        const appointmentResult = await client.query(
+            appointmentQuery,
+            appointmentParams
         );
 
+        // For patient requests, this also covers an
+        // appointment that belongs to somebody else.
         if (appointmentResult.rows.length === 0) {
             await client.query("ROLLBACK");
 
             return res.status(404).json({
                 success: false,
-                message: "Appointment not found"
+                code: "APPOINTMENT_NOT_FOUND",
+                message: "Appointment not found."
             });
         }
 
         const appointment = appointmentResult.rows[0];
 
-        // Return the existing ticket if already registered.
         const existingResult = await client.query(
             `
             SELECT
                 id,
                 queue_number,
                 appointment_id,
+                patient_id,
+                department_id,
                 queue_type,
                 priority,
                 status,
-                scheduled_at
+                scheduled_at,
+                issued_at
             FROM queues
             WHERE appointment_id = $1
             LIMIT 1
@@ -75,63 +104,95 @@ router.post("/register", requireStaff, async (req, res) => {
         );
 
         if (existingResult.rows.length > 0) {
+
+            const ownershipFilter = patientOnly
+                ? "AND patient_id = $2"
+                : "";
+
+            const updateParams = patientOnly
+                ? [appointmentId, patientId]
+                : [appointmentId];
+
+            const statusResult = await client.query(
+                `
+                UPDATE appointments
+                SET
+                    status = 'CHECKED_IN',
+                    updated_at = NOW()
+                WHERE id = $1
+                  ${ownershipFilter}
+                  AND status = 'CONFIRMED'
+                RETURNING id, status
+                `,
+                updateParams
+            );
+
+            const finalStatus =
+                statusResult.rows[0]?.status ??
+                appointment.status;
+
             await client.query("COMMIT");
 
-            return res.json({
+            return res.status(200).json({
                 success: true,
                 existing: true,
-                message: "Appointment already registered",
+                message: "Appointment already registered.",
+                appointment: {
+                    id: appointment.id,
+                    status: finalStatus
+                },
                 queue: existingResult.rows[0]
             });
         }
 
-        // Only confirmed appointments are eligible.
+
         if (appointment.status !== "CONFIRMED") {
             await client.query("ROLLBACK");
 
             return res.status(409).json({
                 success: false,
-                message: "Appointment is not confirmed"
+                code: "APPOINTMENT_NOT_CONFIRMED",
+                message: "Only confirmed appointments can be registered."
             });
         }
 
-        // Registration must happen on the booked date
-        // using the Malaysian calendar date.
-        const dateCheck = await client.query(
+
+        const windowResult = await client.query(
             `
             SELECT
+                NOW() >=
+                    $1::timestamptz - INTERVAL '15 minutes'
+                    AS registration_open,
+
                 (
-                    $1::timestamptz
-                    AT TIME ZONE 'Asia/Kuala_Lumpur'
-                )::date
-                =
-                (
-                    NOW()
-                    AT TIME ZONE 'Asia/Kuala_Lumpur'
-                )::date
-                AS same_day
+                    $1::timestamptz - INTERVAL '15 minutes'
+                ) AS registration_opens_at
             `,
             [appointment.scheduled_at]
         );
 
-        if (!dateCheck.rows[0].same_day) {
+
+        const registrationWindow = windowResult.rows[0];
+
+        if (!registrationWindow.registration_open) {
             await client.query("ROLLBACK");
 
             return res.status(409).json({
                 success: false,
-                message:
-                    "Appointment can only be registered " +
-                    "on its scheduled date"
+                code: "REGISTRATION_NOT_OPEN",
+                message: "Registration opens 15 minutes before the appointment time.",
+                registration_opens_at:
+                    registrationWindow.registration_opens_at
             });
         }
 
-        // Generate AP-CD01, AP-CD02, etc.
+
         const queueNumber = await generateAppointmentNumber(
             client,
             appointment.department_id
         );
 
-        // Store ticket in the existing QMS queues table.
+
         const queueResult = await client.query(
             `
             INSERT INTO queues (
@@ -163,7 +224,8 @@ router.post("/register", requireStaff, async (req, res) => {
                 queue_type,
                 priority,
                 status,
-                scheduled_at
+                scheduled_at,
+                issued_at
             `,
             [
                 appointment.patient_id,
@@ -174,29 +236,131 @@ router.post("/register", requireStaff, async (req, res) => {
             ]
         );
 
+
+        const ownershipFilter = patientOnly
+            ? "AND patient_id = $2"
+            : "";
+
+        const updateParams = patientOnly
+            ? [appointmentId, patientId]
+            : [appointmentId];
+
+        const appointmentUpdate = await client.query(
+            `
+            UPDATE appointments
+            SET
+                status = 'CHECKED_IN',
+                updated_at = NOW()
+            WHERE id = $1
+              ${ownershipFilter}
+              AND status = 'CONFIRMED'
+            RETURNING id, status
+            `,
+            updateParams
+        );
+
+        if (appointmentUpdate.rows.length === 0) {
+            throw new Error(
+                "Appointment status could not be updated to CHECKED_IN."
+            );
+        }
+
+
         await client.query("COMMIT");
 
         return res.status(201).json({
             success: true,
             existing: false,
-            message: "Appointment queue created",
+            message: "Appointment queue created successfully.",
+            appointment: appointmentUpdate.rows[0],
             queue: queueResult.rows[0]
         });
 
     } catch (error) {
+
         if (client) {
             try {
                 await client.query("ROLLBACK");
             } catch (rollbackError) {
-                console.error("Rollback failed:", rollbackError);
+                console.error(
+                    "Appointment queue rollback failed:",
+                    rollbackError.message
+                );
             }
         }
 
-        console.error("Appointment queue error:", error);
+        
+        if (error.code === "23505") {
+            try {
+                const duplicateResult = patientOnly
+                    ? await pool.query(
+                        `
+                        SELECT
+                            q.id,
+                            q.queue_number,
+                            q.appointment_id,
+                            q.patient_id,
+                            q.department_id,
+                            q.queue_type,
+                            q.priority,
+                            q.status,
+                            q.scheduled_at,
+                            q.issued_at
+                        FROM queues q
+                        JOIN appointments a
+                          ON a.id = q.appointment_id
+                        WHERE q.appointment_id = $1
+                          AND a.patient_id = $2
+                        LIMIT 1
+                        `,
+                        [appointmentId, patientId]
+                    )
+                    : await pool.query(
+                        `
+                        SELECT
+                            id,
+                            queue_number,
+                            appointment_id,
+                            patient_id,
+                            department_id,
+                            queue_type,
+                            priority,
+                            status,
+                            scheduled_at,
+                            issued_at
+                        FROM queues
+                        WHERE appointment_id = $1
+                        LIMIT 1
+                        `,
+                        [appointmentId]
+                    );
+
+                if (duplicateResult.rows.length > 0) {
+                    return res.status(200).json({
+                        success: true,
+                        existing: true,
+                        message: "Appointment already registered.",
+                        queue: duplicateResult.rows[0]
+                    });
+                }
+
+            } catch (duplicateError) {
+                console.error(
+                    "Could not retrieve existing appointment queue:",
+                    duplicateError.message
+                );
+            }
+        }
+
+        console.error(
+            "Appointment queue registration error:",
+            error.message
+        );
 
         return res.status(500).json({
             success: false,
-            message: "Unable to register appointment queue"
+            code: "REGISTRATION_FAILED",
+            message: "Unable to register appointment queue."
         });
 
     } finally {
@@ -204,6 +368,31 @@ router.post("/register", requireStaff, async (req, res) => {
             client.release();
         }
     }
+}
+
+
+// =====================================================
+// POST /api/appointment-queues/register
+//
+// Existing staff workflow.
+// Continues to require the QMS staff JWT.
+// =====================================================
+
+router.post("/register", requireStaff, (req, res) => {
+    return registerAppointmentQueue(req, res, false);
 });
+
+
+// =====================================================
+// POST /api/appointment-queues/patient-register
+//
+// New patient workflow.
+// Requires the patient JWT.
+// =====================================================
+
+router.post("/patient-register", requirePatientJwt, (req, res) => {
+    return registerAppointmentQueue(req, res, true);
+});
+
 
 module.exports = router;

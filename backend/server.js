@@ -17,8 +17,48 @@ const app = express();
 
 app.disable("x-powered-by");
 
+// Allowed browser origins.
+// Keep the QMS frontend working and add the patient frontend.
+const allowedOrigins = new Set([
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+
+    ...String(process.env.ALLOWED_ORIGIN || "").split(","),
+    ...String(
+        process.env.PATIENT_FRONTEND_ORIGIN ||
+        "http://localhost:3001"
+    ).split(",")
+]
+    .map(origin => origin.trim())
+    .filter(Boolean)
+);
+
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGIN || false
+    origin: function (origin, callback) {
+        // Requests without a browser Origin header, such as
+        // local API testing, are not browser CORS requests.
+        if (!origin || allowedOrigins.has(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(
+            new Error("Origin is not allowed by CORS")
+        );
+    },
+
+    methods: [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
+    ],
+
+    allowedHeaders: [
+        "Content-Type",
+        "Authorization"
+    ]
 }));
 
 app.use(express.json({
