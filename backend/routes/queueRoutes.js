@@ -15,7 +15,8 @@ const QUEUE_STATUS = {
     WAIT: "WAIT",
     SERVING: "SERVING",
     HOLD: "HOLD",
-    COMPLETED: "COMPLETED"
+    COMPLETED: "COMPLETED",
+    EXPIRED: "EXPIRED"
 };
 
 const QUEUE_TYPE = {
@@ -578,6 +579,7 @@ router.get("/", async (req, res) => {
                 ON u.id = q.called_by
 
             WHERE 1 = 1
+            AND q.status <> 'EXPIRED'
         `;
 
         const values = [];
@@ -848,6 +850,8 @@ async function processServingAction(req, res, action) {
                     [queueId]
                 );
 
+            
+                        
             } else if (action === "COMPLETE") {
                 result = await client.query(
                     `
@@ -863,6 +867,52 @@ async function processServingAction(req, res, action) {
                     [queueId]
                 );
 
+                // Synchronize linked appointment.
+                if (
+                    queue.queue_type === QUEUE_TYPE.APPOINTMENT &&
+                    queue.appointment_id
+                ) {
+                    const appointmentUpdate = await client.query(
+                        `
+                        UPDATE appointments
+                        SET
+                            status = 'COMPLETED',
+                            updated_at = NOW()
+                        WHERE id = $1
+                        AND status = 'CHECKED_IN'
+                        RETURNING id
+                        `,
+                        [queue.appointment_id]
+                    );
+
+                    if (appointmentUpdate.rowCount === 0) {
+                        const appointmentCheck = await client.query(
+                            `
+                            SELECT id, status
+                            FROM appointments
+                            WHERE id = $1
+                            `,
+                            [queue.appointment_id]
+                        );
+
+                        if (appointmentCheck.rowCount === 0) {
+                            throw httpError(
+                                404,
+                                "Linked appointment was not found"
+                            );
+                        }
+
+                        if (
+                            appointmentCheck.rows[0].status !== "COMPLETED"
+                        ) {
+                            throw httpError(
+                                409,
+                                "Appointment cannot be completed because its status is " +
+                                appointmentCheck.rows[0].status
+                            );
+                        }
+                    }
+                }
             } else {
                 throw httpError(
                     400,

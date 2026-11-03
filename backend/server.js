@@ -12,6 +12,9 @@ const patientRoutes = require("./routes/patientRoutes");
 const queueRoutes = require("./routes/queueRoutes");
 const trackingRoutes = require("./routes/trackingRoutes");
 const appointmentQueueRoutes = require("./routes/appointmentQueueRoutes");
+const {
+    startQueueExpirationScheduler
+} = require("./services/queueExpirationService");
 
 const app = express();
 
@@ -154,4 +157,7 @@ app.listen(PORT, () => {
     console.log(
         `QMS backend running on http://localhost:${PORT}`
     );
+
+    // Start automatic queue expiration at Malaysia midnight.
+    startQueueExpirationScheduler();
 });
