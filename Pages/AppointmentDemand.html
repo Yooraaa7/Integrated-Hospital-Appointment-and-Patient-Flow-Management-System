@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="Style.css">
     <link rel="stylesheet" href="HospitalAnalytics.css">
+    <link rel="stylesheet" href="Analytics.css">
 </head>
 <body>
 
@@ -60,16 +61,6 @@
                 <li>
                     <ul class="sidebar-sub">
                         <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
-                        <li><a href="DoctorProfile.html"><i class="fa-solid fa-id-card"></i> Doctor Profile</a></li>
-                        <li><a href="DoctorSchedule.html"><i class="fa-solid fa-clock"></i> Schedule &amp; Availability</a></li>
-                    </ul>
-                </li>
-
-                <li class="sidebar-group">Notifications</li>
-                <li>
-                    <ul class="sidebar-sub">
-                        <li><a href="NotificationCenter.html"><i class="fa-solid fa-bell"></i> Notification Center</a></li>
-                        <li><a href="NotificationLog.html"><i class="fa-solid fa-list-check"></i> Notification Log</a></li>
                     </ul>
                 </li>
 
@@ -78,9 +69,7 @@
                     <ul class="sidebar-sub">
                         <li><a href="AppointmentDemand.html" class="active"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
                         <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
-                        <li><a href="CancellationAnalysis.html"><i class="fa-solid fa-ban"></i> Cancellations &amp; No-Shows</a></li>
                         <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
-                        <li><a href="NotificationPerformance.html"><i class="fa-solid fa-envelope-circle-check"></i> Notification Performance</a></li>
                     </ul>
                 </li>
             </ul>
@@ -88,14 +77,14 @@
 
         <!-- Main content -->
         <main class="main-content">
-
+ 
             <div class="page-header">
                 <div>
                     <h1>Appointment Demand</h1>
                     <p>Which departments and doctors patients book the most, and how demand changes over time.</p>
                 </div>
             </div>
-
+ 
             <section class="panel panel-full">
                 <div class="filter-bar">
                     <div class="field">
@@ -106,7 +95,7 @@
                             <option value="90">Last 90 days</option>
                         </select>
                     </div>
-
+ 
                     <div class="field">
                         <label for="dept">Department</label>
                         <select id="dept">
@@ -118,10 +107,10 @@
                             <option>Dermatology</option>
                         </select>
                     </div>
-
+ 
                 </div>
             </section>
-
+ 
             <section class="summary-grid">
                 <div class="summary-card ">
                     <div class="summary-icon"><i class="fa-solid fa-calendar-check"></i></div>
@@ -152,7 +141,7 @@
                     </div>
                 </div>
             </section>
-
+ 
             <section class="panel-grid">
                 <div class="panel">
                     <div class="panel-header">
@@ -160,7 +149,7 @@
                     </div>
                     <div class="chart-box" id="trendChart"></div>
                 </div>
-
+ 
                 <div class="panel">
                     <div class="panel-header">
                         <h2>Demand by department</h2>
@@ -168,13 +157,13 @@
                     <div id="deptBars"></div>
                 </div>
             </section>
-
+ 
             <section class="panel panel-full">
                 <div class="panel-header">
                     <h2>Demand by doctor</h2>
                     <span class="date-label" id="rangeLabel"></span>
                 </div>
-
+ 
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -190,100 +179,124 @@
                         <tbody id="doctorRows"></tbody>
                     </table>
                 </div>
-
+ 
                 <p class="method-note" style="margin-top: 14px;">
                     Demand counts every appointment that was booked and not cancelled (Completed, No-show and Booked).
                     Cancellations are analysed on the Cancellations &amp; No-Shows page.
                 </p>
             </section>
-
+ 
         </main>
     </div>
-
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
     <script src="Analytics.js"></script>
     <script>
         const el = id => document.getElementById(id);
-        const D = AppData;
-
-        function render() {
-            const days = Number(el("period").value);
-            const dept = el("dept").value;
-            const r = D.rangeFor(days);
-
-            const now  = D.appointmentsIn(r.from, r.to, { dept: dept });
-            const prev = D.appointmentsIn(r.prevFrom, r.prevTo, { dept: dept });
-
-            el("rangeLabel").textContent = D.shortDate(r.from) + " to " + D.shortDate(r.to);
-
+ 
+        let ticket = 0;   // ignores answers that arrive after a newer request
+ 
+        function fillDepartments() {
+            el("dept").innerHTML = '<option value="">All departments</option>' +
+                AMS.getDepartments().map(d => "<option>" + AMS_UI.esc(d.name) + "</option>").join("");
+        }
+ 
+        function topOf(list, key) {
+            return list.slice().sort((a, b) => b[key] - a[key])[0];
+        }
+ 
+        function render(data, days) {
+            const total = data.total || 0;
+            const byDept = data.byDepartment || [];
+            const byDoc = data.byDoctor || [];
+            const range = AMS.getPeriodRange(days);
+ 
+            el("rangeLabel").textContent = AMS.formatDate(range.dateFrom) + " to " + AMS.formatDate(range.dateTo);
+ 
             /* ----- cards ----- */
-            const countBy = (list, key) => {
-                const m = {};
-                list.forEach(a => { m[a[key]] = (m[a[key]] || 0) + 1; });
-                return m;
-            };
-            const byDept = countBy(now, "dept");
-            const byDoc  = countBy(now, "doctorId");
-            const topOf = m => Object.keys(m).sort((a, b) => m[b] - m[a])[0];
-            const nameOf = id => D.doctors.find(d => d.id === id).name;
-
-            el("cTotal").textContent = now.length;
-            el("cTotalLabel").innerHTML = "Total appointments<br>" + Charts.change(now.length, prev.length);
-            el("cAvg").textContent = (now.length / days).toFixed(1);
+            el("cTotal").textContent = total;
+            el("cTotalLabel").innerHTML = "Total appointments<br>" + Charts.change(total, data.previousTotal || 0);
+            el("cAvg").textContent = Number(data.averagePerDay || 0).toFixed(1);
             el("cAvgLabel").textContent = "Average per day";
-
-            const td = topOf(byDept), tdoc = topOf(byDoc);
-            el("cDept").textContent = td ? td : "None";
-            el("cDeptLabel").textContent = td ? "Busiest department, " + byDept[td] + " appointments" : "Busiest department";
-            el("cDoctor").textContent = tdoc ? nameOf(tdoc) : "None";
-            el("cDoctorLabel").textContent = tdoc ? "Busiest doctor, " + byDoc[tdoc] + " appointments" : "Busiest doctor";
-
-            /* ----- trend: daily up to 30 days, weekly for 90 ----- */
-            const weekly = days > 30;
-            const labels = [], values = [];
-            let cursor = D.parseISO(r.from);
-            const end = D.parseISO(r.to);
-
-            while (cursor <= end) {
-                const startISO = D.iso(cursor);
-                const stop = weekly ? D.addDays(cursor, 6) : cursor;
-                const stopISO = D.iso(stop > end ? end : stop);
-                values.push(now.filter(a => a.date >= startISO && a.date <= stopISO).length);
-                labels.push(D.shortDate(startISO));
-                cursor = D.addDays(cursor, weekly ? 7 : 1);
-            }
-            el("trendTitle").textContent = weekly ? "Appointments per week" : "Appointments per day";
-            Charts.line(el("trendChart"), labels, values, "Appointments over time");
-
+ 
+            const topDept = byDept.length ? topOf(byDept, "count") : null;
+            const topDoc = byDoc.length ? topOf(byDoc, "count") : null;
+ 
+            el("cDept").textContent = topDept ? topDept.name : "None";
+            el("cDeptLabel").textContent = topDept ? "Busiest department, " + topDept.count + " appointments" : "Busiest department";
+            el("cDoctor").textContent = topDoc ? topDoc.doctorName : "None";
+            el("cDoctorLabel").textContent = topDoc ? "Busiest doctor, " + topDoc.count + " appointments" : "Busiest doctor";
+ 
+            /* ----- trend (daily up to 30 days, weekly for 90) ----- */
+            const trend = data.trend || [];
+            el("trendTitle").textContent = days > 30 ? "Appointments per week" : "Appointments per day";
+            Charts.line(el("trendChart"), trend.map(t => t.label || AMS.formatDate(t.date)), trend.map(t => t.count), "Appointments over time");
+ 
             /* ----- department bars ----- */
-            const deptItems = Object.keys(byDept).sort((a, b) => byDept[b] - byDept[a]).map(k => ({
-                label: k, value: byDept[k], text: byDept[k] + " (" + Math.round(byDept[k] / now.length * 100) + "%)"
+            const deptItems = byDept.slice().sort((a, b) => b.count - a.count).map(d => ({
+                label: d.name, value: d.count, text: d.count + " (" + (total ? Math.round(d.count / total * 100) : 0) + "%)"
             }));
+ 
             if (deptItems.length) Charts.hbars(el("deptBars"), deptItems);
             else el("deptBars").innerHTML = '<p class="method-note">No appointments in this period.</p>';
-
+ 
             /* ----- doctor table ----- */
-            const prevByDoc = countBy(prev, "doctorId");
-            const docs = D.doctors.filter(d => !dept || d.dept === dept)
-                                  .sort((a, b) => (byDoc[b.id] || 0) - (byDoc[a.id] || 0));
-            const maxDoc = Math.max(1, ...docs.map(d => byDoc[d.id] || 0));
-
-            el("doctorRows").innerHTML = docs.map((d, i) => {
-                const n = byDoc[d.id] || 0;
-                const share = now.length ? Math.round(n / now.length * 100) : 0;
+            const docs = byDoc.slice().sort((a, b) => b.count - a.count);
+            const maxDoc = Math.max(1, ...docs.map(d => d.count));
+            const esc = AMS_UI.esc;
+ 
+            el("doctorRows").innerHTML = docs.length ? docs.map((d, i) => {
+                const share = total ? Math.round(d.count / total * 100) : 0;
+ 
                 return "<tr>" +
                     "<td>" + (i + 1) + "</td>" +
-                    "<td>" + d.name + '<span class="cell-sub">' + d.id + "</span></td>" +
-                    "<td>" + d.dept + "</td>" +
-                    "<td><strong>" + n + "</strong></td>" +
-                    '<td><div class="util-cell"><div class="progress-track"><div class="progress-fill" style="width:' + (n / maxDoc * 100).toFixed(1) + '%;"></div></div><strong>' + share + "%</strong></div></td>" +
-                    "<td>" + Charts.change(n, prevByDoc[d.id] || 0).replace(" vs previous period", "") + "</td>" +
+                    "<td>" + esc(d.doctorName) + '<span class="cell-sub">' + esc(d.doctorId) + "</span></td>" +
+                    "<td>" + esc(d.department) + "</td>" +
+                    "<td><strong>" + esc(d.count) + "</strong></td>" +
+                    '<td><div class="util-cell"><div class="progress-track"><div class="progress-fill" style="width:' + (d.count / maxDoc * 100).toFixed(1) + '%;"></div></div><strong>' + share + "%</strong></div></td>" +
+                    "<td>" + Charts.change(d.count, d.previousCount || 0).replace(" vs previous period", "") + "</td>" +
                     "</tr>";
-            }).join("");
+            }).join("") : '<tr><td colspan="6">No appointments in this period.</td></tr>';
         }
-
-        el("period").addEventListener("change", render);
-        el("dept").addEventListener("change", render);
-        render();
+ 
+        async function load() {
+            const days = Number(el("period").value);
+            const range = AMS.getPeriodRange(days);
+            const mine = ++ticket;
+ 
+            try {
+                const data = await AMS.loadAppointmentDemand({
+                    dateFrom: range.dateFrom,
+                    dateTo: range.dateTo,
+                    department: el("dept").value,
+                    groupBy: days > 30 ? "week" : "day"
+                });
+ 
+                if (mine !== ticket) return;
+                AMS_UI.clearMessage();
+                render(data || {}, days);
+            } catch (error) {
+                if (mine === ticket) AMS_UI.showError(error);
+            }
+        }
+ 
+        el("period").addEventListener("change", load);
+        el("dept").addEventListener("change", load);
+ 
+        (async function init() {
+            if (!AMS_UI.initPage()) return;
+ 
+            try {
+                await AMS.loadDepartments();
+                fillDepartments();
+            } catch (error) {
+                AMS_UI.showError(error);
+            }
+ 
+            load();
+        })();
     </script>
 
 </body>
