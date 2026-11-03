@@ -3,352 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Follow-Up & Patient Flow</title>
-
+    <title>Dashboard - Appointment &amp; Doctor Management</title>
+ 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="Style.css">
     <link rel="stylesheet" href="HospitalAnalytics.css">
 </head>
 <body>
-
+ 
     <!-- Top navbar -->
     <header class="top-navbar">
         <div class="navbar-logo">
             <img src="logo.png" alt="Hospital logo">
         </div>
-
+ 
         <div class="search-controls">
-            <input type="text" class="search-input" placeholder="Search patient name or ID">
+            <input type="text" class="search-input" placeholder="Search patient or doctor name / ID">
             <select class="filter-select">
                 <option value="">All records</option>
-                <option value="visit">Visits</option>
-                <option value="followup">Follow-ups</option>
-                <option value="referral">Referrals</option>
+                <option value="appointment">Appointments</option>
+                <option value="doctor">Doctors</option>
             </select>
             <button type="button" class="search-button">
                 <i class="fa-solid fa-magnifying-glass"></i> Search
             </button>
         </div>
-
+ 
         <div class="staff-info">
             <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
-            <button type="button" class="logout-button">Logout</button>
+            <a href="login.html" class="logout-button">Logout</a>
         </div>
     </header>
-
+ 
     <div class="page-layout">
-
-        <!-- Sidebar: module structure -->
+ 
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-title">FOLLOW-UP &amp; PATIENT FLOW</div>
-
+            <div class="sidebar-title">APPOINTMENT &amp; DOCTOR MANAGEMENT</div>
+ 
             <ul class="sidebar-menu">
                 <li>
                     <a href="HospitalAnalytics.html" class="active">
                         <i class="fa-solid fa-gauge"></i> Dashboard
                     </a>
                 </li>
-
-                <li class="sidebar-group">Visit Records</li>
+ 
+                <li class="sidebar-group">Appointments</li>
                 <li>
                     <ul class="sidebar-sub">
-                        <li><a href="VisitRecords.html"><i class="fa-solid fa-notes-medical"></i> All Visits</a></li>
-                        <li><a href="VisitDetails.html"><i class="fa-solid fa-file-medical"></i> Visit Details</a></li>
+                        <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
+                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
                     </ul>
                 </li>
-
-                <li class="sidebar-group">Follow-Ups</li>
+ 
+                <li class="sidebar-group">Doctors</li>
                 <li>
                     <ul class="sidebar-sub">
-                        <li><a href="FollowUp.html"><i class="fa-solid fa-calendar-check"></i> Follow-Up Management</a></li>
-                        <li><a href="FollowUpDetails.html"><i class="fa-solid fa-clipboard-list"></i> Follow-Up Details</a></li>
+                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
                     </ul>
                 </li>
-
-                <li class="sidebar-group">Referrals</li>
-                <li>
-                    <ul class="sidebar-sub">
-                        <li><a href="Referrals.html"><i class="fa-solid fa-share-nodes"></i> Referral Management</a></li>
-                        <li><a href="ReferralDetails.html"><i class="fa-solid fa-file-lines"></i> Referral Details</a></li>
-                    </ul>
-                </li>
-
+ 
                 <li class="sidebar-group">Analytics</li>
                 <li>
                     <ul class="sidebar-sub">
-                        <li><a href="PatientVolume.html"><i class="fa-solid fa-users"></i> Patient Volume</a></li>
-                        <li><a href="WorkloadAnalysis.html"><i class="fa-solid fa-user-doctor"></i> Department &amp; Doctor Workload</a></li>
-                        <li><a href="FollowUpAnalysis.html"><i class="fa-solid fa-chart-pie"></i> Follow-Up Analysis</a></li>
-                        <li><a href="ReferralAnalysis.html"><i class="fa-solid fa-chart-column"></i> Referral Analysis</a></li>
+                        <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
+                        <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
+                        <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
                     </ul>
                 </li>
             </ul>
         </aside>
-
+ 
         <!-- Main content -->
         <main class="main-content">
-
+ 
             <div class="page-header">
                 <div>
                     <h1>Dashboard</h1>
-                    <p>Post-visit overview of follow-ups, referrals and patient flow.</p>
+                    <p>Today's appointments and doctor availability at a glance.</p>
                 </div>
-                <span class="date-label"><i class="fa-regular fa-calendar"></i> 12 October 2026</span>
+                <div class="header-actions">
+                    <a href="AppointmentForm.html" class="action-button"><i class="fa-solid fa-calendar-plus"></i> New appointment</a>
+                    <a href="DoctorProfile.html" class="action-button secondary"><i class="fa-solid fa-user-plus"></i> Add doctor</a>
+                </div>
             </div>
-
+ 
             <!-- Summary cards -->
             <section class="summary-grid">
                 <div class="summary-card">
-                    <div class="summary-icon"><i class="fa-solid fa-hospital-user"></i></div>
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-day"></i></div>
                     <div>
-                        <div class="summary-value">128</div>
-                        <div class="summary-label">Visits today</div>
+                        <div class="summary-value" id="cToday">-</div>
+                        <div class="summary-label">Today's appointments</div>
                     </div>
                 </div>
 
-                <div class="summary-card warning">
-                    <div class="summary-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                <div class="summary-card">
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-week"></i></div>
                     <div>
-                        <div class="summary-value">46</div>
-                        <div class="summary-label">Pending follow-ups</div>
+                        <div class="summary-value" id="cUpcoming">-</div>
+                        <div class="summary-label">Upcoming, next 7 days</div>
                     </div>
                 </div>
+
 
                 <div class="summary-card danger">
-                    <div class="summary-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="summary-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
                     <div>
-                        <div class="summary-value">9</div>
-                        <div class="summary-label">Overdue follow-ups</div>
+                        <div class="summary-value" id="cCancel">-</div>
+                        <div class="summary-label">Cancellations today</div>
                     </div>
                 </div>
 
                 <div class="summary-card success">
-                    <div class="summary-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="summary-icon"><i class="fa-solid fa-user-doctor"></i></div>
                     <div>
-                        <div class="summary-value">82%</div>
-                        <div class="summary-label">Follow-up completion rate</div>
-                    </div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="summary-icon"><i class="fa-solid fa-share-nodes"></i></div>
-                    <div>
-                        <div class="summary-value">14</div>
-                        <div class="summary-label">Active referrals</div>
+                        <div class="summary-value" id="cDuty">-</div>
+                        <div class="summary-label">Doctors on duty today</div>
                     </div>
                 </div>
             </section>
-
-            <!-- Volume chart + follow-up status -->
+ 
+                <!-- Shown only when the server sends notification figures -->
+                <div class="summary-card" id="cardNotif" style="display: none;">
+                    <div class="summary-icon"><i class="fa-solid fa-bell"></i></div>
+                    <div>
+                        <div class="summary-value" id="cNotif">-</div>
+                        <div class="summary-label" id="cNotifLabel">Notifications sent</div>
+                    </div>
+                </div>
+            </section>
+ 
+            <!-- Today's schedule + doctor availability -->
             <section class="panel-grid">
                 <div class="panel">
                     <div class="panel-header">
-                        <h2>Patient volume, last 7 days</h2>
-                        <a href="PatientVolume.html" class="panel-link">View analysis</a>
+                        <h2>Today's schedule</h2>
+                        <a href="Appointments.html" class="panel-link">View all appointments</a>
                     </div>
-
-                    <div class="bar-chart">
-                        <div class="bar-col"><span class="bar-value">104</span><div class="bar" style="height: 62%;"></div></div>
-                        <div class="bar-col"><span class="bar-value">118</span><div class="bar" style="height: 70%;"></div></div>
-                        <div class="bar-col"><span class="bar-value">97</span><div class="bar" style="height: 58%;"></div></div>
-                        <div class="bar-col"><span class="bar-value">135</span><div class="bar" style="height: 80%;"></div></div>
-                        <div class="bar-col"><span class="bar-value">142</span><div class="bar" style="height: 85%;"></div></div>
-                        <div class="bar-col"><span class="bar-value">76</span><div class="bar" style="height: 45%;"></div></div>
-                        <div class="bar-col"><span class="bar-value">128</span><div class="bar today" style="height: 76%;"></div></div>
-                    </div>
-                    <div class="bar-labels">
-                        <span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span><span>Today</span>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Follow-up status</h2>
-                        <a href="FollowUpAnalysis.html" class="panel-link">View analysis</a>
-                    </div>
-
-                    <div class="progress-row">
-                        <div class="progress-meta"><span>Completed</span><strong>231 (80%)</strong></div>
-                        <div class="progress-track"><div class="progress-fill completed" style="width: 80%;"></div></div>
-                    </div>
-                    <div class="progress-row">
-                        <div class="progress-meta"><span>Pending</span><strong>46 (16%)</strong></div>
-                        <div class="progress-track"><div class="progress-fill pending" style="width: 16%;"></div></div>
-                    </div>
-                    <div class="progress-row">
-                        <div class="progress-meta"><span>Overdue</span><strong>9 (4%)</strong></div>
-                        <div class="progress-track"><div class="progress-fill overdue" style="width: 4%;"></div></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Overdue follow-ups -->
-            <section class="panel panel-full">
-                <div class="panel-header">
-                    <h2>Overdue follow-ups</h2>
-                    <a href="FollowUpManagement.html" class="panel-link">Manage follow-ups</a>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Follow-Up ID</th>
-                                <th>Patient</th>
-                                <th>Department</th>
-                                <th>Doctor</th>
-                                <th>Due date</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>FU-1042</td>
-                                <td>Tan Mei Ling</td>
-                                <td>Cardiology</td>
-                                <td>Dr. Ahmad Faris</td>
-                                <td>03 Oct 2026</td>
-                                <td><span class="badge badge-overdue">Overdue</span></td>
-                                <td><a href="FollowUpDetails.html?id=FU-1042" class="action-link">View</a></td>
-                            </tr>
-                            <tr>
-                                <td>FU-1038</td>
-                                <td>Rajesh Kumar</td>
-                                <td>Orthopaedics</td>
-                                <td>Dr. Lee Chong Wei</td>
-                                <td>05 Oct 2026</td>
-                                <td><span class="badge badge-overdue">Overdue</span></td>
-                                <td><a href="FollowUpDetails.html?id=FU-1038" class="action-link">View</a></td>
-                            </tr>
-                            <tr>
-                                <td>FU-1031</td>
-                                <td>Nur Aisyah</td>
-                                <td>Paediatrics</td>
-                                <td>Dr. Siti Hajar</td>
-                                <td>07 Oct 2026</td>
-                                <td><span class="badge badge-overdue">Overdue</span></td>
-                                <td><a href="FollowUpDetails.html?id=FU-1031" class="action-link">View</a></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Recent visits + recent referrals -->
-            <section class="panel-grid">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Recent visits</h2>
-                        <a href="AllVisits.html" class="panel-link">View all visits</a>
-                    </div>
-
+ 
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Visit ID</th>
+                                    <th>Time</th>
                                     <th>Patient</th>
+                                    <th>Doctor</th>
                                     <th>Department</th>
-                                    <th>Follow-up</th>
+                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>V-5521</td>
-                                    <td>Wong Kah Yee</td>
-                                    <td>Dermatology</td>
-                                    <td><span class="badge badge-pending">Pending</span></td>
-                                    <td><a href="VisitDetails.html?id=V-5521" class="action-link">View</a></td>
-                                </tr>
-                                <tr>
-                                    <td>V-5520</td>
-                                    <td>Muhammad Haziq</td>
-                                    <td>General Medicine</td>
-                                    <td><span class="badge badge-completed">Completed</span></td>
-                                    <td><a href="VisitDetails.html?id=V-5520" class="action-link">View</a></td>
-                                </tr>
-                                <tr>
-                                    <td>V-5519</td>
-                                    <td>Chong Wai Hong</td>
-                                    <td>Cardiology</td>
-                                    <td><span class="badge badge-pending">Pending</span></td>
-                                    <td><a href="VisitDetails.html?id=V-5519" class="action-link">View</a></td>
-                                </tr>
+                            <tbody id="scheduleRows">
+                                <tr><td colspan="6">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-
+ 
                 <div class="panel">
                     <div class="panel-header">
-                        <h2>Recent referrals</h2>
-                        <a href="ReferralManagement.html" class="panel-link">Manage referrals</a>
+                        <h2>Doctor availability today</h2>
+                        <a href="DoctorSchedule.html" class="panel-link">Manage schedules</a>
                     </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Referral ID</th>
-                                    <th>From</th>
-                                    <th>To</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>RF-308</td>
-                                    <td>General Medicine</td>
-                                    <td>Cardiology</td>
-                                    <td><span class="badge badge-referred">Referred</span></td>
-                                </tr>
-                                <tr>
-                                    <td>RF-307</td>
-                                    <td>Paediatrics</td>
-                                    <td>ENT</td>
-                                    <td><span class="badge badge-pending">Pending</span></td>
-                                </tr>
-                                <tr>
-                                    <td>RF-306</td>
-                                    <td>Orthopaedics</td>
-                                    <td>Physiotherapy</td>
-                                    <td><span class="badge badge-completed">Completed</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+ 
+                    <ul class="availability-list" id="availabilityList"></ul>
                 </div>
             </section>
-
-            <!-- Department workload -->
+ 
+            <!-- Needs attention -->
             <section class="panel panel-full">
                 <div class="panel-header">
-                    <h2>Department workload today</h2>
-                    <a href="WorkloadAnalysis.html" class="panel-link">View workload analysis</a>
+                    <h2>Needs attention</h2>
                 </div>
-
-                <div class="progress-row">
-                    <div class="progress-meta"><span>General Medicine</span><strong>41 patients</strong></div>
-                    <div class="progress-track"><div class="progress-fill" style="width: 90%;"></div></div>
+ 
+                <ul class="attention-list" id="attentionList"></ul>
+            </section>
+ 
+            <!-- Demand by department + 7-day trend -->
+            <section class="panel-grid">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Appointments by department, this week</h2>
+                        <a href="AppointmentDemand.html" class="panel-link">View analysis</a>
+                    </div>
+ 
+                    <div id="deptBars"></div>
                 </div>
-                <div class="progress-row">
-                    <div class="progress-meta"><span>Cardiology</span><strong>28 patients</strong></div>
-                    <div class="progress-track"><div class="progress-fill" style="width: 62%;"></div></div>
-                </div>
-                <div class="progress-row">
-                    <div class="progress-meta"><span>Orthopaedics</span><strong>24 patients</strong></div>
-                    <div class="progress-track"><div class="progress-fill" style="width: 53%;"></div></div>
-                </div>
-                <div class="progress-row">
-                    <div class="progress-meta"><span>Paediatrics</span><strong>19 patients</strong></div>
-                    <div class="progress-track"><div class="progress-fill" style="width: 42%;"></div></div>
+ 
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Booked vs cancelled, last 7 days</h2>
+                        <a href="CancellationAnalysis.html" class="panel-link">View analysis</a>
+                    </div>
+ 
+                    <div id="trendChart"></div>
                 </div>
             </section>
-
+ 
         </main>
     </div>
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
+    <script src="Dashboard.js"></script>
 
 </body>
 </html>
