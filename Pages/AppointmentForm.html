@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="Style.css">
     <link rel="stylesheet" href="HospitalAnalytics.css">
+    <link rel="stylesheet" href="Appoinment.css">
 </head>
 <body>
 
@@ -60,16 +61,6 @@
                 <li>
                     <ul class="sidebar-sub">
                         <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
-                        <li><a href="DoctorProfile.html"><i class="fa-solid fa-id-card"></i> Doctor Profile</a></li>
-                        <li><a href="DoctorSchedule.html"><i class="fa-solid fa-clock"></i> Schedule &amp; Availability</a></li>
-                    </ul>
-                </li>
-
-                <li class="sidebar-group">Notifications</li>
-                <li>
-                    <ul class="sidebar-sub">
-                        <li><a href="NotificationCenter.html"><i class="fa-solid fa-bell"></i> Notification Center</a></li>
-                        <li><a href="NotificationLog.html"><i class="fa-solid fa-list-check"></i> Notification Log</a></li>
                     </ul>
                 </li>
 
@@ -78,9 +69,7 @@
                     <ul class="sidebar-sub">
                         <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
                         <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
-                        <li><a href="CancellationAnalysis.html"><i class="fa-solid fa-ban"></i> Cancellations &amp; No-Shows</a></li>
                         <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
-                        <li><a href="NotificationPerformance.html"><i class="fa-solid fa-envelope-circle-check"></i> Notification Performance</a></li>
                     </ul>
                 </li>
             </ul>
@@ -222,222 +211,187 @@
         </main>
     </div>
 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
     <script>
         const el = id => document.getElementById(id);
-
-        /* ================================================================
-           DEMO DATA - replace each block with data from your database.
-           ================================================================ */
-
-        // Doctors per department
-        const doctorsByDept = {
-            "General Medicine": ["Dr. Tan Bee Lian"],
-            "Cardiology":       ["Dr. Ahmad Faris"],
-            "Orthopaedics":     ["Dr. Lee Chong Wei"],
-            "Paediatrics":      ["Dr. Siti Hajar"],
-            "Dermatology":      ["Dr. Nadia Rahman"]
-        };
-
-        // Consultation hours (use each doctor's own hours from the Doctor schedule)
-        const consultationSlots = {
-            morning:   ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30"],
-            afternoon: ["14:00", "14:30", "15:00", "15:30", "16:00", "16:30"]
-        };
-
-        // Already booked slots, keyed by "doctor|date"
-        const bookedSlots = {
-            "Dr. Ahmad Faris|2026-10-16":    ["09:00", "11:00"],
-            "Dr. Lee Chong Wei|2026-10-16":  ["09:30"],
-            "Dr. Siti Hajar|2026-10-16":     ["10:00"],
-            "Dr. Lee Chong Wei|2026-10-20":  ["10:00", "10:30"],
-            "Dr. Tan Bee Lian|2026-10-21":   ["14:00"]
-        };
-
-        // OT blocks, keyed by "doctor|date"
-        const otSlots = {
-            "Dr. Lee Chong Wei|2026-10-16": ["14:00", "14:30", "15:00", "15:30"],
-            "Dr. Lee Chong Wei|2026-10-20": ["09:30", "10:00", "10:30", "11:00", "11:30"]
-        };
-
-        // Leave periods (inclusive dates)
-        const leaveDays = {
-            "Dr. Nadia Rahman": ["2026-10-16", "2026-10-18"]
-        };
-
-        // Existing appointments, used when the page opens as Appointment Form.html?id=A-2042
-        const appointments = {
-            "A-2041": { patientId: "P-1001", patientName: "Tan Mei Ling",       phone: "012-3456701", email: "mei.ling@example.com", department: "Cardiology",       doctor: "Dr. Ahmad Faris",   date: "2026-10-16", slot: "09:00", status: "Completed",   notes: "Routine heart check." },
-            "A-2042": { patientId: "P-1002", patientName: "Rajesh Kumar",       phone: "012-3456702", email: "rajesh@example.com",   department: "Orthopaedics",     doctor: "Dr. Lee Chong Wei", date: "2026-10-16", slot: "09:30", status: "Booked",      notes: "Knee pain follow-up." },
-            "A-2043": { patientId: "P-1003", patientName: "Nur Aisyah",         phone: "012-3456703", email: "",                     department: "Paediatrics",      doctor: "Dr. Siti Hajar",    date: "2026-10-16", slot: "10:00", status: "Rescheduled", notes: "" },
-            "A-2044": { patientId: "P-1004", patientName: "Wong Kah Yee",       phone: "012-3456704", email: "kahyee@example.com",   department: "Dermatology",      doctor: "Dr. Nadia Rahman",  date: "2026-10-16", slot: "10:30", status: "Cancelled",   notes: "" },
-            "A-2045": { patientId: "P-1005", patientName: "Muhammad Haziq",     phone: "012-3456705", email: "",                     department: "Cardiology",       doctor: "Dr. Ahmad Faris",   date: "2026-10-16", slot: "11:00", status: "No-show",     notes: "" },
-            "A-2051": { patientId: "P-1006", patientName: "Chong Wai Hong",     phone: "012-3456706", email: "waihong@example.com",  department: "Orthopaedics",     doctor: "Dr. Lee Chong Wei", date: "2026-10-20", slot: "10:00", status: "Booked",      notes: "Shoulder review." },
-            "A-2052": { patientId: "P-1007", patientName: "Lim Siew Mei",       phone: "012-3456707", email: "siewmei@example.com",  department: "Orthopaedics",     doctor: "Dr. Lee Chong Wei", date: "2026-10-20", slot: "10:30", status: "Booked",      notes: "" },
-            "A-2053": { patientId: "P-1008", patientName: "Farid Hakim",        phone: "012-3456708", email: "farid@example.com",    department: "General Medicine", doctor: "Dr. Tan Bee Lian",  date: "2026-10-21", slot: "14:00", status: "Booked",      notes: "Fever for 3 days." }
-        };
-
-        /* ================================================================
-           Page state
-        ================================================================ */
+        const esc = AMS_UI.esc;
         const params = new URLSearchParams(location.search);
         const editId = params.get("id");
-        const existing = editId ? appointments[editId] : null;
-        const isEditing = !!existing;
-        const lockedStatuses = ["Completed", "Cancelled", "No-show"];
-        const readOnly = isEditing && lockedStatuses.includes(existing.status);
 
-        function todayISO() {
-            const d = new Date();
-            const pad = n => String(n).padStart(2, "0");
-            return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+        let existing = null;     // the appointment being edited, if any
+        let isEditing = false;
+        let readOnly = false;    // Completed, Cancelled and No-show are closed
+        let slotRequest = 0;     // ignores slot responses that arrive late
+
+        const hm = value => String(value || "").slice(0, 5);
+
+        /* ---------- Dropdowns ---------- */
+        function fillDepartments(selected) {
+            el("department").innerHTML =
+                '<option value="">Select department</option>' +
+                AMS.getDepartments().map(d =>
+                    "<option>" + esc(d.name) + "</option>").join("");
+
+            if (selected) el("department").value = selected;
         }
 
-        function fillDoctors(dept, selected) {
+        function fillDoctors(department, selectedId) {
             const select = el("doctor");
-            select.innerHTML = "";
+            const doctors = AMS.getBookableDoctors(department)
+                .map(d => ({ id: d.id, name: d.name }));
 
-            if (!dept) {
+            // Keep the current doctor visible when editing, even if inactive now.
+            if (existing && selectedId === existing.doctorId &&
+                !doctors.some(d => d.id === selectedId)) {
+                doctors.push({ id: existing.doctorId, name: existing.doctorName || existing.doctorId });
+            }
+
+            if (!department) {
                 select.innerHTML = '<option value="">Select department first</option>';
                 select.disabled = true;
                 return;
             }
 
             select.disabled = false;
-            select.innerHTML = '<option value="">Select doctor</option>';
-            doctorsByDept[dept].forEach(name => {
-                const opt = document.createElement("option");
-                opt.textContent = name;
-                select.appendChild(opt);
-            });
-            if (selected) select.value = selected;
+            select.innerHTML = '<option value="">Select doctor</option>' +
+                doctors.map(d => '<option value="' + esc(d.id) + '">' + esc(d.name) + "</option>").join("");
+
+            if (selectedId) select.value = selectedId;
         }
 
-        function slotState(doctor, date, time) {
-            const key = doctor + "|" + date;
-
-            const leave = leaveDays[doctor];
-            if (leave && date >= leave[0] && date <= leave[1]) return "leave";
-
-            if ((otSlots[key] || []).includes(time)) return "ot";
-
-            const own = isEditing && existing.doctor === doctor && existing.date === date && existing.slot === time;
-            if (!own && (bookedSlots[key] || []).includes(time)) return "booked";
-
-            return "free";
+        /* ---------- Time slots ---------- */
+        function updateSlotText() {
+            const value = el("slot").value;
+            el("slotSelected").textContent = value ? "Selected time: " + value : "";
         }
 
-        function renderSlots() {
+        function selectSlot(time) {
+            el("slot").value = time;
+            document.querySelectorAll(".slot").forEach(b =>
+                b.classList.toggle("selected", b.dataset.time === time));
+            el("slotError").style.display = "none";
+            updateSlotText();
+        }
+
+        async function renderSlots() {
             const area = el("slotArea");
-            const doctor = el("doctor").value;
+            const doctorId = el("doctor").value;
             const date = el("date").value;
 
             if (readOnly) {
-                area.innerHTML = '<p class="slot-hint">This appointment is ' + existing.status.toLowerCase() +
-                                 ' and its time can no longer be changed.</p>';
-                el("slotSelected").textContent = "Time: " + existing.slot;
+                area.innerHTML = '<p class="slot-hint">This appointment is ' +
+                    esc(existing.status.toLowerCase()) + " and its time can no longer be changed.</p>";
+                el("slotSelected").textContent = "Time: " + AMS.formatTime(existing.time);
                 el("slotLegend").style.display = "none";
                 return;
             }
 
-            if (!doctor || !date) {
+            if (!doctorId || !date) {
                 area.innerHTML = '<p class="slot-hint">Choose a doctor and date to see available time slots.</p>';
                 el("slot").value = "";
-                el("slotSelected").textContent = "";
+                updateSlotText();
                 return;
             }
 
+            const ticket = ++slotRequest;
+            area.innerHTML = '<p class="slot-hint">Loading time slots...</p>';
+
+            let data;
+
+            try {
+                // The server marks each slot free, booked, ot, leave or other.
+                // The appointment's own slot is treated as free while editing.
+                data = await AMS.loadAvailability(doctorId, date, existing ? existing.id : "");
+            } catch (error) {
+                if (ticket !== slotRequest) return;
+                area.innerHTML = '<p class="slot-hint">' + esc(AMS.getErrorMessage(error)) + "</p>";
+                el("slot").value = "";
+                updateSlotText();
+                return;
+            }
+
+            if (ticket !== slotRequest) return;
+
+            const slots = (data.slots || []).map(s => ({ time: hm(s.time), state: s.state }));
+
+            if (!slots.length) {
+                area.innerHTML = '<p class="slot-hint">This doctor has no consultation hours on this date.</p>';
+                el("slot").value = "";
+                updateSlotText();
+                return;
+            }
+
+            const groups = AMS.groupSlotsBySession(slots);
             area.innerHTML = "";
 
-            [["Morning", consultationSlots.morning], ["Afternoon", consultationSlots.afternoon]].forEach(([label, times]) => {
+            [["Morning", groups.morning], ["Afternoon", groups.afternoon]].forEach(pair => {
+                if (!pair[1].length) return;
+
                 const title = document.createElement("div");
                 title.className = "slot-group-label";
-                title.textContent = label;
+                title.textContent = pair[0];
                 area.appendChild(title);
 
                 const grid = document.createElement("div");
                 grid.className = "slot-grid";
 
-                times.forEach(time => {
-                    const state = slotState(doctor, date, time);
+                pair[1].forEach(slot => {
                     const btn = document.createElement("button");
                     btn.type = "button";
-                    btn.className = "slot" + (state === "ot" || state === "leave" ? " ot" : "");
-                    btn.textContent = time;
-                    btn.dataset.time = time;
+                    btn.className = "slot" + (slot.state === "ot" || slot.state === "leave" || slot.state === "other" ? " ot" : "");
+                    btn.textContent = slot.time;
+                    btn.dataset.time = slot.time;
 
-                    if (state !== "free") {
-                        btn.disabled = true;
-                        btn.title = state === "booked" ? "Already booked" : state === "ot" ? "Doctor in OT" : "Doctor on leave";
+                    if (AMS.isSlotSelectable(slot)) {
+                        btn.addEventListener("click", () => selectSlot(slot.time));
                     } else {
-                        btn.addEventListener("click", () => selectSlot(time));
+                        btn.disabled = true;
+                        btn.title = AMS.getSlotLabel(slot);
                     }
 
-                    if (el("slot").value === time && state === "free") btn.classList.add("selected");
                     grid.appendChild(btn);
                 });
 
                 area.appendChild(grid);
             });
 
-            // Clear the selection if it is no longer available for this doctor/date
+            // Keep the selection only if that slot is still free
             const current = el("slot").value;
-            if (current && slotState(doctor, date, current) !== "free") {
-                el("slot").value = "";
-            }
-            updateSlotText();
+            const stillFree = slots.some(s => s.time === current && AMS.isSlotSelectable(s));
+
+            if (stillFree) selectSlot(current);
+            else { el("slot").value = ""; updateSlotText(); }
         }
 
-        function selectSlot(time) {
-            el("slot").value = time;
-            document.querySelectorAll(".slot").forEach(b => b.classList.toggle("selected", b.dataset.time === time));
-            el("slotError").style.display = "none";
-            updateSlotText();
+        /* ---------- Form ---------- */
+        function gatherInput() {
+            return {
+                patientId: el("patientId").value.trim(),
+                patientName: el("patientName").value.trim(),
+                phone: el("phone").value.trim(),
+                email: el("email").value.trim(),
+                department: el("department").value,
+                doctorId: el("doctor").value,
+                date: el("date").value,
+                time: el("slot").value,
+                notes: el("notes").value.trim(),
+                notifyPatient: el("notify").checked
+            };
         }
 
-        function updateSlotText() {
-            const v = el("slot").value;
-            el("slotSelected").textContent = v ? "Selected time: " + v : "";
+        function setFieldError(id, message) {
+            const field = el(id).closest(".field");
+            field.classList.toggle("invalid", Boolean(message));
+
+            const text = field.querySelector(".form-error");
+            if (message && text) text.textContent = message;
         }
 
         function showBanner(text) {
             el("bannerText").textContent = text;
             el("banner").style.display = "flex";
-        }
-
-        /* ================================================================
-           Setup
-        ================================================================ */
-        if (isEditing) {
-            el("pageTitle").textContent = (readOnly ? "Appointment " : "Edit appointment ") + editId;
-            el("pageSubtitle").textContent = readOnly
-                ? "This record is closed. You can view it but not change it."
-                : "Change the details or pick a new slot to reschedule.";
-            el("statusField").style.display = "block";
-            el("notifyLabel").textContent = "Notify the patient about this change";
-
-            el("patientId").value = existing.patientId;
-            el("patientName").value = existing.patientName;
-            el("phone").value = existing.phone;
-            el("email").value = existing.email;
-            el("department").value = existing.department;
-            fillDoctors(existing.department, existing.doctor);
-            el("date").value = existing.date;
-            el("status").value = existing.status;
-            el("notes").value = existing.notes;
-            el("slot").value = existing.slot;
-
-            // Existing appointment: patient ID stays fixed
-            el("patientId").readOnly = true;
-
-            if (readOnly) {
-                el("formFields").disabled = true;
-                el("formActions").innerHTML = '<a href="Appointments.html" class="action-button secondary">Back to appointments</a>';
-            } else if (slotState(existing.doctor, existing.date, existing.slot) === "ot") {
-                showBanner("This appointment clashes with the doctor's OT. Pick a new time slot or date, then save to reschedule and notify the patient.");
-                el("slot").value = "";
-            }
-        } else {
-            el("date").min = todayISO();
         }
 
         el("department").addEventListener("change", () => {
@@ -449,44 +403,122 @@
         el("doctor").addEventListener("change", renderSlots);
         el("date").addEventListener("change", renderSlots);
 
-        renderSlots();
-        if (isEditing && !readOnly && el("slot").value) selectSlot(el("slot").value);
+        el("appointmentForm").addEventListener("submit", async e => {
+            e.preventDefault();
 
-        /* ---------- Validation ---------- */
-        function setInvalid(id, invalid) {
-            el(id).closest(".field").classList.toggle("invalid", invalid);
-            return invalid;
-        }
+            const input = gatherInput();
+            const check = AMS.validateAppointmentInput(input, { editing: isEditing });
+            const errors = { ...check.errors };
 
-        el("appointmentForm").addEventListener("submit", e => {
-            let bad = false;
+            // Notifications need a way to reach the patient
+            if (input.notifyPatient && !input.phone && !input.email && !errors.email) {
+                errors.email = "Add a phone number or email to send notifications.";
+            }
 
-            bad = setInvalid("patientId", !el("patientId").value.trim()) || bad;
-            bad = setInvalid("patientName", !el("patientName").value.trim()) || bad;
-            bad = setInvalid("department", !el("department").value) || bad;
-            bad = setInvalid("doctor", !el("doctor").value) || bad;
-            bad = setInvalid("date", !el("date").value) || bad;
+            setFieldError("patientId", errors.patientId);
+            setFieldError("patientName", errors.patientName);
+            setFieldError("department", errors.department);
+            setFieldError("doctor", errors.doctorId);
+            setFieldError("date", errors.date);
+            setFieldError("email", errors.email);
+            el("slotError").style.display = errors.time ? "block" : "none";
 
-            const noContact = el("notify").checked && !el("phone").value.trim() && !el("email").value.trim();
-            bad = setInvalid("email", noContact) || bad;
-
-            const noSlot = !el("slot").value;
-            el("slotError").style.display = noSlot ? "block" : "none";
-            bad = noSlot || bad;
-
-            if (bad) {
-                e.preventDefault();
+            if (Object.keys(errors).length) {
+                const first = document.querySelector(".field.invalid");
+                if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
                 return;
             }
 
-            // Moving a booked appointment to a new date or time makes it Rescheduled
-            if (isEditing && el("status").value === "Booked" &&
-                (el("date").value !== existing.date || el("slot").value !== existing.slot)) {
-                el("status").value = "Rescheduled";
+            const rescheduled = isEditing && AMS.willBeRescheduled(existing, input);
+            el("saveButton").disabled = true;
+
+            const result = isEditing
+                ? await AMS.updateAppointment(existing.id, input)
+                : await AMS.createAppointment(input);
+
+            if (result.success) {
+                AMS_UI.message("success",
+                    isEditing ? (rescheduled ? "Appointment rescheduled." : "Appointment updated.")
+                              : "Appointment " + result.appointment.id + " created.");
+                setTimeout(() => { location.href = "Appointments.html"; }, 900);
+                return;
             }
 
-            // The form now posts to your backend (see the form action above).
+            el("saveButton").disabled = false;
+            AMS_UI.message("error", result.message);
+
+            // A taken or blocked slot: refresh the slots so the picker is current
+            if (result.status === 409) {
+                el("slot").value = "";
+                renderSlots();
+            }
         });
+
+        /* ---------- Start ---------- */
+        (async function init() {
+            AMS_UI.initPage();
+
+            try {
+                await Promise.all([
+                    AMS.loadDepartments(),
+                    AMS.loadDoctors({ status: "Active", pageSize: 100 })
+                ]);
+
+                if (editId) existing = await AMS.fetchAppointment(editId);
+            } catch (error) {
+                AMS_UI.showError(error);
+
+                if (editId && !existing) {
+                    el("formFields").disabled = true;
+                    el("saveButton").disabled = true;
+                    return;
+                }
+            }
+
+            fillDepartments();
+
+            if (existing) {
+                isEditing = true;
+                readOnly = AMS.isClosed(existing);
+
+                el("pageTitle").textContent = (readOnly ? "Appointment " : "Edit appointment ") + existing.id;
+                el("pageSubtitle").textContent = readOnly
+                    ? "This record is closed. You can view it but not change it."
+                    : "Change the details or pick a new slot to reschedule.";
+                el("notifyLabel").textContent = "Notify the patient about this change";
+
+                el("patientId").value = existing.patientId || "";
+                el("patientId").readOnly = true;
+                el("patientName").value = existing.patientName || "";
+                el("phone").value = existing.phone || "";
+                el("email").value = existing.email || "";
+
+                fillDepartments(existing.department);
+                fillDoctors(existing.department, existing.doctorId);
+                el("date").value = existing.date;
+                el("notes").value = existing.notes || "";
+
+                // The status changes through Cancel, Reschedule or Done / No-show, not here.
+                el("statusField").style.display = "block";
+                el("status").value = existing.status;
+                el("status").disabled = true;
+
+                el("slot").value = hm(existing.time);
+
+                if (readOnly) {
+                    el("formFields").disabled = true;
+                    el("formActions").innerHTML =
+                        '<a href="Appointments.html" class="action-button secondary">Back to appointments</a>';
+                } else if (existing.hasConflict) {
+                    showBanner("This appointment clashes with the doctor's OT, leave or other block. " +
+                               "Pick a new time slot or date, then save to reschedule.");
+                }
+            } else {
+                el("date").min = AMS.todayISO();
+            }
+
+            renderSlots();
+        })();
     </script>
 
 </body>
