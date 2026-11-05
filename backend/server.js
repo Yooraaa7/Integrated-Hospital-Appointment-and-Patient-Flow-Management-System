@@ -12,6 +12,7 @@ const patientRoutes = require("./routes/patientRoutes");
 const queueRoutes = require("./routes/queueRoutes");
 const trackingRoutes = require("./routes/trackingRoutes");
 const appointmentQueueRoutes = require("./routes/appointmentQueueRoutes");
+
 const {
     startQueueExpirationScheduler
 } = require("./services/queueExpirationService");
@@ -20,8 +21,6 @@ const app = express();
 
 app.disable("x-powered-by");
 
-// Allowed browser origins.
-// Keep the QMS frontend working and add the patient frontend.
 const allowedOrigins = new Set([
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -38,8 +37,6 @@ const allowedOrigins = new Set([
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Requests without a browser Origin header, such as
-        // local API testing, are not browser CORS requests.
         if (!origin || allowedOrigins.has(origin)) {
             return callback(null, true);
         }
@@ -68,8 +65,7 @@ app.use(express.json({
     limit: "16kb"
 }));
 
-// Serve only the frontend folders.
-// Do not expose backend files or .env.
+// Serve frontend folders only.
 const publicRoot = path.resolve(__dirname, "..");
 
 app.use(
@@ -147,17 +143,23 @@ app.use("/api/counters", counterRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/queues", queueRoutes);
 
-// New public QR tracking route
+// Public QR tracking route
 app.use("/api/tracking", trackingRoutes);
 
 // Start backend
 const PORT = process.env.PORT || 3000;
+const HOST = "0.0.0.0";
 
-app.listen(PORT, () => {
-    console.log(
-        `QMS backend running on http://localhost:${PORT}`
-    );
+app.listen(PORT, HOST, () => {
+    console.log(`QMS backend running on ${HOST}:${PORT}`);
 
-    // Start automatic queue expiration at Malaysia midnight.
-    startQueueExpirationScheduler();
+    // Start the local scheduler only when explicitly enabled.
+    if (process.env.RUN_QUEUE_EXPIRATION_SCHEDULER === "true") {
+        startQueueExpirationScheduler();
+        console.log("[Queue Expiration] Local scheduler enabled.");
+    } else {
+        console.log(
+            "[Queue Expiration] In-process scheduler disabled."
+        );
+    }
 });
