@@ -116,7 +116,7 @@ const ROUTES = [
 const q = selector => document.querySelector(selector);
 const qa = selector => [...document.querySelectorAll(selector)];
 
-const AUTH_API_URL = "http://localhost:3001/api/auth";
+const AUTH_API_URL = "https://thecare-patient-backend.onrender.com/api/auth";
 
 function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -220,7 +220,7 @@ async function patientApiRequest(path, options = {}) {
 
 // QMS backend runs on port 3000.
 // Patient appointment APIs continue using port 3001.
-const QMS_API_ROOT = "http://localhost:3000/api";
+const QMS_API_ROOT = "https://thecare-qms-backend.onrender.com/api";
 
 async function qmsPatientRequest(path, options = {}) {
     const token = localStorage.getItem("careToken");
