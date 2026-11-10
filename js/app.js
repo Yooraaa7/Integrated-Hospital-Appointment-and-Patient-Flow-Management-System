@@ -116,6 +116,8 @@ const ROUTES = [
 const q = selector => document.querySelector(selector);
 const qa = selector => [...document.querySelectorAll(selector)];
 
+const AUTH_API_URL = "http://localhost:3001/api/auth";
+
 function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
         "&": "&amp;",
@@ -160,6 +162,183 @@ function getQMSQueue() {
 
 function saveQMSQueue(value) {
     localStorage.setItem("careQMSQueue", JSON.stringify(value));
+}
+
+
+/* =========================
+   PATIENT APPOINTMENT API
+========================= */
+
+const APPOINTMENT_API_ROOT =
+    typeof AUTH_API_URL !== "undefined"
+        ? AUTH_API_URL.replace(/\/auth\/?$/, "")
+        : "http://localhost:3001/api";
+
+async function patientApiRequest(path, options = {}) {
+    const token = localStorage.getItem("careToken");
+
+    const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+    };
+
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${APPOINTMENT_API_ROOT}${path}`, {
+        ...options,
+        headers
+    });
+
+    let data;
+
+    try {
+        data = await response.json();
+    } catch {
+        data = {};
+    }
+
+    if (response.status === 401) {
+        alert("Your login session has expired. Please log in again.");
+        localStorage.removeItem("careUser");
+        localStorage.removeItem("careToken");
+        location.href = getRoot() + "login.html";
+        throw new Error("Login required.");
+    }
+
+    if (!response.ok || data.success === false) {
+        throw new Error(data.message || "The request could not be completed.");
+    }
+
+    return data;
+}
+
+/* =========================
+   QMS PATIENT QUEUE API
+========================= */
+
+// QMS backend runs on port 3000.
+// Patient appointment APIs continue using port 3001.
+const QMS_API_ROOT = "http://localhost:3000/api";
+
+async function qmsPatientRequest(path, options = {}) {
+    const token = localStorage.getItem("careToken");
+
+    if (!token) {
+        alert("Please log in to your patient account.");
+
+        localStorage.setItem(
+            "careReturnTo",
+            location.href
+        );
+
+        location.href = getRoot() + "login.html";
+
+        throw new Error("Patient login required.");
+    }
+
+    const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+        "Authorization": `Bearer ${token}`
+    };
+
+    const response = await fetch(
+        `${QMS_API_ROOT}${path}`,
+        {
+            ...options,
+            headers
+        }
+    );
+
+    let data;
+
+    try {
+        data = await response.json();
+    } catch {
+        data = {};
+    }
+
+    if (response.status === 401) {
+        alert(
+            "Your patient login session is invalid or has expired. Please log in again."
+        );
+
+        localStorage.removeItem("careUser");
+        localStorage.removeItem("careToken");
+
+        location.href = getRoot() + "login.html";
+
+        throw new Error("Patient authentication required.");
+    }
+
+    if (!response.ok || data.success === false) {
+        throw new Error(
+            data.message ||
+            data.error ||
+            `QMS request failed (${response.status}).`
+        );
+    }
+
+    return data;
+}
+
+function appointmentFromApi(row) {
+    const scheduled = new Date(row.scheduled_at);
+
+    const date =
+        `${scheduled.getFullYear()}-` +
+        `${String(scheduled.getMonth() + 1).padStart(2, "0")}-` +
+        `${String(scheduled.getDate()).padStart(2, "0")}`;
+
+    const time =
+        `${String(scheduled.getHours()).padStart(2, "0")}:` +
+        `${String(scheduled.getMinutes()).padStart(2, "0")}`;
+
+    const rawStatus = String(row.status || "").toUpperCase();
+
+    const statusMap = {
+        BOOKED: "Confirmed",
+        CONFIRMED: "Confirmed",
+        CANCELLED: "Cancelled",
+        COMPLETED: "Completed",
+        CHECKED_IN: "Checked In",
+        NO_SHOW: "No Show"
+    };
+
+    const selectedDoctor = doctorById(String(row.doctor_id || ""));
+
+    return {
+        id: String(row.id),
+        patientId: String(row.patient_id),
+        doctorId: String(row.doctor_id || ""),
+        doctorName: selectedDoctor?.name ||
+            (row.doctor_id ? `Doctor ${row.doctor_id}` : "Doctor to be assigned"),
+        specialty: row.department_name || "",
+        departmentId: row.department_id,
+        departmentCode: row.department_code || "",
+        date,
+        time,
+        status: statusMap[rawStatus] || row.status || "Confirmed",
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+
+        // The current API does not store these fields.
+        notes: row.notes || "",
+        queueNumber: null,
+        queueStatus: null,
+        registeredAt: null
+    };
+}
+
+async function fetchPatientAppointments() {
+    const data = await patientApiRequest("/appointments");
+    return (data.appointments || []).map(appointmentFromApi);
+}
+
+function getLocalAppointmentDateTime(date, time) {
+    return new Date(`${date}T${time}:00`).toISOString();
 }
 
 function doctorById(id) {
@@ -213,6 +392,8 @@ function requireLogin(returnTo = location.href) {
 
 function logoutPatient() {
     localStorage.removeItem("careUser");
+    localStorage.removeItem("careToken");
+
     location.href = getRoot() + "index.html";
 }
 
@@ -234,12 +415,19 @@ function renderShell() {
         <header class="top-navbar">
             <div class="navbar-content">
 
-                <a class="navbar-logo" href="${root}index.html">
+                <a
+                    class="navbar-logo"
+                    href="${root}${user ? "pages/patient_dashboard.html" : "index.html"}"
+                >
                     <img src="${root}assets/logo.png" alt="The Care Hospital">
                 </a>
 
                 <nav class="navbar-links">
-                    ${navLink("home", "Home", "index.html")}
+                    ${navLink(
+                        "home",
+                        "Home",
+                        user ? "pages/patient_dashboard.html" : "index.html"
+                    )}
                     ${navLink("doctors", "Find a Doctor", "pages/doctors.html")}
                     ${navLink("department", "Department Routing", "pages/department.html")}
                     ${navLink("appointments", "My Appointments", "pages/appointment_history.html", true)}
@@ -434,6 +622,7 @@ function updatePasswordRule(id, passed) {
     }
 }
 
+
 function initSignup() {
     const form = q("#signupForm");
     if (!form) return;
@@ -442,13 +631,14 @@ function initSignup() {
 
     passwordInput.addEventListener("input", () => {
         const rules = checkPasswordRules(passwordInput.value);
+
         updatePasswordRule("ruleUpper", rules.uppercase);
         updatePasswordRule("ruleNumber", rules.number);
         updatePasswordRule("ruleSpecial", rules.special);
         updatePasswordRule("ruleLength", rules.length);
     });
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", async event => {
         event.preventDefault();
 
         const fullName = q("#signupName").value.trim();
@@ -458,112 +648,222 @@ function initSignup() {
         const confirmPassword = q("#signupConfirmPassword").value;
         const terms = q("#signupTerms").checked;
         const message = q("#signupMessage");
+        const submitButton = form.querySelector(
+            'button[type="submit"], input[type="submit"]'
+        );
 
         if (!fullName) {
-            message.innerHTML = `<div class="alert alert-danger">Please enter your full name.</div>`;
+            message.innerHTML =
+                `<div class="alert alert-danger">Please enter your full name.</div>`;
             return;
         }
 
         if (!isValidEmail(identifier) && !isValidIC(identifier)) {
-            message.innerHTML = `<div class="alert alert-danger">Please enter a valid email address or 12-digit IC number.</div>`;
+            message.innerHTML =
+                `<div class="alert alert-danger">Please enter a valid email address or 12-digit IC number.</div>`;
             return;
         }
 
         if (!dateOfBirth) {
-            message.innerHTML = `<div class="alert alert-danger">Please enter your date of birth.</div>`;
+            message.innerHTML =
+                `<div class="alert alert-danger">Please enter your date of birth.</div>`;
             return;
         }
 
         if (new Date(dateOfBirth + "T00:00:00") > new Date()) {
-            message.innerHTML = `<div class="alert alert-danger">Date of birth cannot be in the future.</div>`;
+            message.innerHTML =
+                `<div class="alert alert-danger">Date of birth cannot be in the future.</div>`;
             return;
         }
 
         if (!isValidPassword(password)) {
             message.innerHTML = `
                 <div class="alert alert-danger">
-                    Password must be at least 8 characters and contain a capital letter, a number and a special character.
+                    Password must be at least 8 characters and contain
+                    a capital letter, a number and a special character.
                 </div>
             `;
             return;
         }
 
         if (password !== confirmPassword) {
-            message.innerHTML = `<div class="alert alert-danger">Password and Confirm Password do not match.</div>`;
+            message.innerHTML =
+                `<div class="alert alert-danger">Password and Confirm Password do not match.</div>`;
             return;
         }
 
         if (!terms) {
-            message.innerHTML = `<div class="alert alert-danger">Please agree to the Terms & Conditions.</div>`;
+            message.innerHTML =
+                `<div class="alert alert-danger">Please agree to the Terms & Conditions.</div>`;
             return;
         }
 
-        const users = getRegisteredUsers();
-        const key = identifierKey(identifier);
+        const normalizedIdentifier = isValidIC(identifier)
+            ? normalizeIC(identifier)
+            : identifier.toLowerCase();
 
-        if (users.some(user => user.identifierKey === key)) {
-            message.innerHTML = `<div class="alert alert-danger">An account using this email or IC already exists.</div>`;
-            return;
+        if (submitButton) submitButton.disabled = true;
+
+        message.innerHTML =
+            `<div class="alert alert-info">Creating your account...</div>`;
+
+        try {
+            const response = await fetch(`${AUTH_API_URL}/signup`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    full_name: fullName,
+                    identifier: normalizedIdentifier,
+                    date_of_birth: dateOfBirth,
+                    password
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Registration failed.");
+            }
+
+            message.innerHTML = `
+                <div class="alert alert-success">
+                    Account created successfully.
+                    Your patient number is
+                    <strong>${escapeHtml(data.patient.patient_number)}</strong>.
+                    Redirecting to login...
+                </div>
+            `;
+
+            // No password is saved in localStorage.
+            setTimeout(() => {
+                location.href = getRoot() + "login.html";
+            }, 1200);
+        } catch (error) {
+            message.innerHTML = `
+                <div class="alert alert-danger">
+                    ${escapeHtml(
+                        error.message || "Unable to register. Please try again."
+                    )}
+                </div>
+            `;
+        } finally {
+            if (submitButton) submitButton.disabled = false;
         }
-
-        const newUser = {
-            id: "PAT-" + Date.now(),
-            fullName,
-            identifier,
-            identifierKey: key,
-            identifierType: isValidIC(identifier) ? "IC" : "Email",
-            dateOfBirth,
-            password,
-            createdAt: new Date().toISOString()
-        };
-
-        users.push(newUser);
-        saveRegisteredUsers(users);
-
-        message.innerHTML = `<div class="alert alert-success">Account created successfully. Redirecting to login...</div>`;
-
-        setTimeout(() => {
-            location.href = "login.html";
-        }, 800);
     });
 }
 
+
 function initLogin() {
     const form = q("#loginForm");
+
+    if (form && isLoggedIn() && localStorage.getItem("careToken")) {
+        const returnTo = localStorage.getItem("careReturnTo");
+        localStorage.removeItem("careReturnTo");
+
+        location.replace(
+            returnTo || getRoot() + "pages/patient_dashboard.html"
+        );
+        return;
+    }
+
     if (!form) return;
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", async event => {
         event.preventDefault();
 
         const identifier = q("#loginIdentifier").value.trim();
         const password = q("#loginPassword").value;
         const message = q("#loginMessage");
-        const key = identifierKey(identifier);
-
-        const account = getRegisteredUsers().find(user =>
-            user.identifierKey === key &&
-            user.password === password
+        const submitButton = form.querySelector(
+            'button[type="submit"], input[type="submit"]'
         );
 
-        if (!account) {
-            message.innerHTML = `<div class="alert alert-danger">Incorrect email / IC number or password.</div>`;
+        if (!isValidEmail(identifier) && !isValidIC(identifier)) {
+            message.innerHTML = `
+                <div class="alert alert-danger">
+                    Please enter a valid email address or 12-digit IC number.
+                </div>
+            `;
             return;
         }
 
-        setUser({
-            id: account.id,
-            name: account.fullName,
-            identifier: account.identifier,
-            identifierType: account.identifierType,
-            dateOfBirth: account.dateOfBirth
-        });
+        if (!password) {
+            message.innerHTML = `
+                <div class="alert alert-danger">
+                    Please enter your password.
+                </div>
+            `;
+            return;
+        }
 
-        const returnTo = localStorage.getItem("careReturnTo");
-        localStorage.removeItem("careReturnTo");
+        const normalizedIdentifier = isValidIC(identifier)
+            ? normalizeIC(identifier)
+            : identifier.toLowerCase();
 
-        location.href = returnTo || "pages/patient_dashboard.html";
+        if (submitButton) submitButton.disabled = true;
+
+        message.innerHTML =
+            `<div class="alert alert-info">Signing in...</div>`;
+
+        try {
+            const response = await fetch(`${AUTH_API_URL}/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    identifier: normalizedIdentifier,
+                    password
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.message || "Unable to sign in."
+                );
+            }
+
+            // Store the token for authenticated API requests.
+            localStorage.setItem("careToken", data.token);
+
+            // Preserve the user structure used by existing pages.
+            setUser({
+                id: data.patient.id,
+                patientNumber: data.patient.patient_number,
+                name: data.patient.full_name,
+                identifier: normalizedIdentifier,
+                identifierType: isValidIC(normalizedIdentifier)
+                    ? "IC"
+                    : "Email",
+                dateOfBirth: data.patient.date_of_birth
+                    ? String(data.patient.date_of_birth).slice(0, 10)
+                    : ""
+            });
+
+            const returnTo = localStorage.getItem("careReturnTo");
+            localStorage.removeItem("careReturnTo");
+
+            location.href =
+                returnTo || getRoot() + "pages/patient_dashboard.html";
+        } catch (error) {
+            message.innerHTML = `
+                <div class="alert alert-danger">
+                    ${escapeHtml(
+                        error.message ||
+                        "Unable to sign in. Please try again."
+                    )}
+                </div>
+            `;
+        } finally {
+            if (submitButton) submitButton.disabled = false;
+        }
     });
 }
+
 
 /* =========================
    HOME
@@ -765,9 +1065,11 @@ function initDepartment() {
     });
 }
 
+
 /* =========================
-   APPOINTMENT BOOKING
+   APPOINTMENT BOOKING - DATABASE VERSION
 ========================= */
+
 function initAppointment() {
     const form = q("#appointmentForm");
     if (!form) return;
@@ -783,31 +1085,46 @@ function initAppointment() {
 
     const params = new URLSearchParams(location.search);
     const editId = params.get("edit");
+
     let editing = null;
+    let departments = [];
+    let appointments = [];
 
     const specialties = [...new Set(DOCTORS.map(item => item.specialty))];
 
     specialty.innerHTML =
         `<option value="">Select specialty</option>` +
-        specialties.map(item => `<option>${item}</option>`).join("");
+        specialties.map(item =>
+            `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`
+        ).join("");
 
     dateInput.min = localToday();
 
+    function getDepartmentForSpecialty(value) {
+        return departments.find(department =>
+            String(department.department_name).trim().toLowerCase() ===
+            String(value).trim().toLowerCase()
+        );
+    }
+
     function fillDoctors(selected = "") {
         const list = DOCTORS.filter(item =>
-            !specialty.value ||
-            item.specialty === specialty.value
+            !specialty.value || item.specialty === specialty.value
         );
 
         doctor.innerHTML =
             `<option value="">Select doctor</option>` +
-            list.map(item => `<option value="${item.id}">${item.name}</option>`).join("");
+            list.map(item =>
+                `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`
+            ).join("");
 
-        if (selected) doctor.value = selected;
+        if (selected) {
+            doctor.value = selected;
+        }
     }
 
     function weekday(date) {
-        return new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+        return new Date(`${date}T00:00:00`).toLocaleDateString("en-US", {
             weekday: "long"
         });
     }
@@ -818,15 +1135,13 @@ function initAppointment() {
         summary.innerHTML = selectedDoctor
             ? `
                 <p>
-                    <strong>${selectedDoctor.name}</strong><br>
-                    ${selectedDoctor.specialty}
+                    <strong>${escapeHtml(selectedDoctor.name)}</strong><br>
+                    ${escapeHtml(selectedDoctor.specialty)}
                 </p>
-
                 <p>
                     <i class="bi bi-calendar"></i>
                     ${dateInput.value ? formatDate(dateInput.value) : "Select date"}
                     <br>
-
                     <i class="bi bi-clock"></i>
                     ${timeInput.value || "Select time"}
                 </p>
@@ -834,31 +1149,41 @@ function initAppointment() {
             : "Select your appointment details to see a summary.";
     }
 
-    function renderSlots(selectedTime = "") {
+    async function renderSlots(selectedTime = "") {
         const selectedDoctor = doctorById(doctor.value);
 
         if (!selectedDoctor || !dateInput.value) {
-            slots.innerHTML = `<span class="muted-text">Choose a doctor and date.</span>`;
+            slots.innerHTML =
+                `<span class="muted-text">Choose a doctor and date.</span>`;
             return;
         }
 
-        const available = selectedDoctor.schedule[weekday(dateInput.value)] || [];
-        const appointments = getAppointments();
+        const available =
+            selectedDoctor.schedule?.[weekday(dateInput.value)] || [];
 
         if (!available.length) {
-            slots.innerHTML = `<span class="muted-text">Doctor has no consultation session on this day.</span>`;
+            slots.innerHTML =
+                `<span class="muted-text">Doctor has no consultation session on this day.</span>`;
             timeInput.value = "";
             updateSummary();
             return;
         }
 
+        try {
+            appointments = await fetchPatientAppointments();
+        } catch (error) {
+            slots.innerHTML =
+                `<span class="muted-text">${escapeHtml(error.message)}</span>`;
+            return;
+        }
+
         slots.innerHTML = available.map(time => {
             const taken = appointments.some(appointment =>
-                appointment.id !== editId &&
+                appointment.id !== String(editId || "") &&
                 appointment.doctorId === selectedDoctor.id &&
                 appointment.date === dateInput.value &&
                 appointment.time === time &&
-                appointment.status !== "Cancelled"
+                !["Cancelled", "Completed", "No Show"].includes(appointment.status)
             );
 
             let timePassed = false;
@@ -880,24 +1205,30 @@ function initAppointment() {
                 <button
                     type="button"
                     class="slot-btn ${selectedTime === time && !unavailable ? "selected" : ""}"
-                    data-time="${time}"
+                    data-time="${escapeHtml(time)}"
                     ${unavailable ? "disabled" : ""}
                 >
-                    ${time}${timePassed ? " (Passed)" : ""}
+                    ${escapeHtml(time)}${timePassed ? " (Passed)" : ""}
                 </button>
             `;
         }).join("");
 
         qa(".slot-btn:not(:disabled)").forEach(button => {
             button.addEventListener("click", () => {
-                qa(".slot-btn").forEach(item => item.classList.remove("selected"));
+                qa(".slot-btn").forEach(item =>
+                    item.classList.remove("selected")
+                );
+
                 button.classList.add("selected");
                 timeInput.value = button.dataset.time;
                 updateSummary();
             });
         });
 
-        if (dateInput.value === localToday() && qa(".slot-btn:not(:disabled)").length === 0) {
+        if (
+            dateInput.value === localToday() &&
+            qa(".slot-btn:not(:disabled)").length === 0
+        ) {
             slots.insertAdjacentHTML(
                 "beforeend",
                 `<p class="muted-text" style="grid-column:1/-1;margin:8px 0 0;">
@@ -926,43 +1257,69 @@ function initAppointment() {
         updateSummary();
     });
 
-    if (editId) {
-        editing = getAppointments().find(item => item.id === editId);
+    async function initializeForm() {
+        try {
+            const departmentData = await patientApiRequest("/departments");
+            departments = departmentData.departments || [];
 
-        if (editing) {
-            q("#appointmentPageTitle").textContent = "Reschedule Appointment";
-            q("#appointmentSubmitText").textContent = "Save New Schedule";
+            if (editId) {
+                appointments = await fetchPatientAppointments();
 
-            specialty.value = editing.specialty;
-            fillDoctors(editing.doctorId);
-            dateInput.value = editing.date;
-            notes.value = editing.notes || "";
-            timeInput.value = editing.time;
-            renderSlots(editing.time);
-            updateSummary();
-        }
-    }
+                editing = appointments.find(item =>
+                    item.id === String(editId)
+                );
 
-    if (!editing) {
-        const doctorId = params.get("doctor");
-        const requestedSpecialty = params.get("specialty");
+                if (!editing) {
+                    alert("Appointment not found.");
+                    location.href = "appointment_history.html";
+                    return;
+                }
 
-        if (doctorId) {
-            const selectedDoctor = doctorById(doctorId);
+                q("#appointmentPageTitle").textContent =
+                    "Reschedule Appointment";
 
-            if (selectedDoctor) {
-                specialty.value = selectedDoctor.specialty;
-                fillDoctors(doctorId);
+                q("#appointmentSubmitText").textContent =
+                    "Save New Schedule";
+
+                specialty.value = editing.specialty;
+                fillDoctors(editing.doctorId);
+
+                dateInput.value = editing.date;
+                timeInput.value = editing.time;
+
+                if (notes) notes.value = editing.notes || "";
+
+                await renderSlots(editing.time);
+                updateSummary();
+                return;
             }
-        } else if (requestedSpecialty) {
-            specialty.value = requestedSpecialty;
-            fillDoctors();
-        } else {
-            fillDoctors();
+
+            const doctorId = params.get("doctor");
+            const requestedSpecialty = params.get("specialty");
+
+            if (doctorId) {
+                const selectedDoctor = doctorById(doctorId);
+
+                if (selectedDoctor) {
+                    specialty.value = selectedDoctor.specialty;
+                    fillDoctors(doctorId);
+                } else {
+                    fillDoctors();
+                }
+            } else if (requestedSpecialty) {
+                specialty.value = requestedSpecialty;
+                fillDoctors();
+            } else {
+                fillDoctors();
+            }
+
+            updateSummary();
+        } catch (error) {
+            alert(`Unable to load appointment details: ${error.message}`);
         }
     }
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", async event => {
         event.preventDefault();
 
         if (!doctor.value || !dateInput.value || !timeInput.value) {
@@ -971,58 +1328,77 @@ function initAppointment() {
         }
 
         const selectedDoctor = doctorById(doctor.value);
-        const appointments = getAppointments();
 
-        const conflict = appointments.some(appointment =>
-            appointment.id !== editId &&
-            appointment.doctorId === selectedDoctor.id &&
-            appointment.date === dateInput.value &&
-            appointment.time === timeInput.value &&
-            appointment.status !== "Cancelled"
-        );
-
-        if (conflict) {
-            alert("That appointment slot is no longer available.");
-            renderSlots();
+        if (!selectedDoctor) {
+            alert("Please select a valid doctor.");
             return;
         }
 
-        if (editing) {
-            Object.assign(editing, {
-                doctorId: selectedDoctor.id,
-                doctorName: selectedDoctor.name,
-                specialty: selectedDoctor.specialty,
-                date: dateInput.value,
-                time: timeInput.value,
-                notes: notes.value,
-                status: "Confirmed",
-                queueNumber: null,
-                queueStatus: null,
-                registeredAt: null,
-                updatedAt: new Date().toISOString()
-            });
-        } else {
-            const user = getUser();
+        const department = getDepartmentForSpecialty(
+            selectedDoctor.specialty
+        );
 
-            appointments.push({
-                id: "APT-" + Date.now(),
-                patientId: user.id,
-                patientIdentifier: user.identifier,
-                doctorId: selectedDoctor.id,
-                doctorName: selectedDoctor.name,
-                specialty: selectedDoctor.specialty,
-                date: dateInput.value,
-                time: timeInput.value,
-                notes: notes.value,
-                status: "Confirmed",
-                createdAt: new Date().toISOString()
-            });
+        if (!department) {
+            alert(
+                `No active hospital department matches "${selectedDoctor.specialty}". ` +
+                "Please check the department names in PostgreSQL."
+            );
+            return;
         }
 
-        saveAppointments(appointments);
-        location.href = "appointment_history.html";
+        const scheduledAt = getLocalAppointmentDateTime(
+            dateInput.value,
+            timeInput.value
+        );
+
+        if (new Date(scheduledAt) <= new Date()) {
+            alert("Please choose a future appointment time.");
+            return;
+        }
+
+        const submitButton = form.querySelector('[type="submit"]');
+
+        if (submitButton) submitButton.disabled = true;
+
+        try {
+            if (editing) {
+                await patientApiRequest(
+                    `/appointments/${encodeURIComponent(editing.id)}/reschedule`,
+                    {
+                        method: "PUT",
+                        body: JSON.stringify({
+                            scheduled_at: scheduledAt,
+                            notes: notes?.value.trim() || ""
+                        })
+                    }
+                );
+
+                alert("Appointment rescheduled successfully.");
+            } else {
+              await patientApiRequest("/appointments", {
+                method: "POST",
+                body: JSON.stringify({
+                    department_id: Number(department.id),
+                    doctor_id: selectedDoctor.id,
+                    scheduled_at: scheduledAt,
+                    notes: document.getElementById("appointmentNotes")?.value.trim() || ""
+                })
+            });
+
+                alert("Appointment booked successfully.");
+            }
+
+            location.href = "appointment_history.html";
+        } catch (error) {
+            alert(`Unable to save appointment: ${error.message}`);
+        } finally {
+            if (submitButton) submitButton.disabled = false;
+        }
     });
+
+    initializeForm();
 }
+
 
 /* =========================
    APPOINTMENT HISTORY / QMS
@@ -1056,6 +1432,11 @@ function generateQueueNumber(appointment, queue) {
     return `${prefix}-${String(next).padStart(3, "0")}`;
 }
 
+
+/* =========================
+   APPOINTMENT HISTORY - DATABASE VERSION
+========================= */
+
 function initHistory() {
     const listContainer = q("#appointmentList");
     if (!listContainer) return;
@@ -1063,133 +1444,16 @@ function initHistory() {
 
     const emptyState = q("#appointmentEmpty");
     const filter = q("#appointmentFilter");
-    const modal = q("#registerModal");
 
-    function registrationState(appointment) {
-        if (appointment.status !== "Confirmed") {
-            return {
-                allowed: false,
-                reason: "Registration is only available for confirmed appointments."
-            };
-        }
-
-        if (appointment.queueNumber) {
-            return {
-                allowed: false,
-                registered: true
-            };
-        }
-
-        if (appointment.date < localToday()) {
-            return {
-                allowed: false,
-                reason: "This appointment date has already passed."
-            };
-        }
-
-        if (appointment.date > localToday()) {
-            return {
-                allowed: false,
-                reason: "Register becomes available on the appointment day."
-            };
-        }
-
-        return { allowed: true };
-    }
-
-    function showQueueModal(appointment) {
-        q("#modalQueueNumber").textContent = appointment.queueNumber || "—";
-        q("#modalDoctor").textContent = appointment.doctorName || "—";
-        q("#modalAppointmentTime").textContent =
-            `${formatDate(appointment.date)} • ${appointment.time}`;
-        q("#modalRegisteredAt").textContent =
-            formatClock(appointment.registeredAt);
-
-        modal.classList.remove("hidden");
-        document.body.classList.add("modal-open");
-    }
-
-    function closeModal() {
-        modal.classList.add("hidden");
-        document.body.classList.remove("modal-open");
-    }
-
-    function registerArrival(id) {
-        const appointments = getAppointments();
-        const user = getUser();
-
-        const appointment = appointments.find(item =>
-            item.id === id &&
-            item.patientId === user.id
-        );
-
-        if (!appointment) return;
-
-        const state = registrationState(appointment);
-
-        if (!state.allowed) {
-            alert(state.reason || "This appointment cannot be registered.");
-            render();
-            return;
-        }
-
-        const queue = getQMSQueue();
-        const existing = queue.find(item => item.appointmentId === appointment.id);
-
-        if (existing) {
-            appointment.queueNumber = existing.queueNumber;
-            appointment.queueStatus = existing.queueStatus;
-            appointment.registeredAt = existing.registeredAt;
-            saveAppointments(appointments);
-            render();
-            showQueueModal(appointment);
-            return;
-        }
-
-        const registeredAt = new Date().toISOString();
-
-        const queueEntry = {
-            queueId: "Q-" + Date.now(),
-            queueNumber: generateQueueNumber(appointment, queue),
-            appointmentId: appointment.id,
-            patientId: user.id,
-            patientName: user.name,
-            doctorId: appointment.doctorId,
-            doctorName: appointment.doctorName,
-            specialty: appointment.specialty,
-            appointmentDate: appointment.date,
-            appointmentTime: appointment.time,
-            registeredAt,
-            queueStatus: "Waiting"
-        };
-
-        queue.push(queueEntry);
-        saveQMSQueue(queue);
-
-        appointment.queueNumber = queueEntry.queueNumber;
-        appointment.queueStatus = "Waiting";
-        appointment.registeredAt = registeredAt;
-        appointment.registrationStatus = "Registered";
-        appointment.updatedAt = registeredAt;
-
-        saveAppointments(appointments);
-
-        window.dispatchEvent(new CustomEvent("care:qms-register", {
-            detail: queueEntry
-        }));
-
-        render();
-        showQueueModal(appointment);
-    }
+    let appointments = [];
 
     function render() {
-        const user = getUser();
         const selectedFilter = filter.value;
 
-        const list = getAppointments()
+        const list = appointments
             .filter(appointment =>
-                appointment.patientId === user.id &&
-                (selectedFilter === "All" || appointment.status === selectedFilter)
+                selectedFilter === "All" ||
+                appointment.status === selectedFilter
             )
             .sort((a, b) =>
                 `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`)
@@ -1199,79 +1463,44 @@ function initHistory() {
 
         listContainer.innerHTML = list.map(appointment => {
             const selectedDoctor = doctorById(appointment.doctorId);
-            const state = registrationState(appointment);
+            const doctorName = appointment.doctorName || "Doctor to be assigned";
 
-            const queueBlock = appointment.queueNumber
+            const canManage = ["Confirmed"].includes(appointment.status);
+
+            
+            const actions = canManage
                 ? `
-                    <div class="appointment-queue">
-                        <div class="appointment-queue-label">
-                            <i class="bi bi-people"></i>
-                            <span>Queue Number</span>
-                        </div>
+                    <button
+                        class="btn btn-primary"
+                        type="button"
+                        data-register="${escapeHtml(appointment.id)}"
+                    >
+                        <i class="bi bi-person-check"></i>
+                        Register
+                    </button>
 
-                        <strong>${escapeHtml(appointment.queueNumber)}</strong>
-
-                        <div class="appointment-queue-meta">
-                            <span class="status-badge status-warning">
-                                ${escapeHtml(appointment.queueStatus || "Waiting")}
-                            </span>
-
-                            <span>
-                                Registered ${formatClock(appointment.registeredAt)}
-                            </span>
-                        </div>
-                    </div>
-                `
-                : "";
-
-            let actions = `<span class="muted-text">No actions available</span>`;
-
-            if (appointment.status === "Confirmed") {
-                const registerButton = state.registered
-                    ? `
-                        <button class="btn btn-success" disabled>
-                            <i class="bi bi-check-circle"></i>
-                            Registered
-                        </button>
-                    `
-                    : state.allowed
-                        ? `
-                            <button class="btn btn-success" data-register="${appointment.id}">
-                                <i class="bi bi-person-check"></i>
-                                Register
-                            </button>
-                        `
-                        : `
-                            <button class="btn btn-light" disabled>
-                                <i class="bi bi-person-check"></i>
-                                Register
-                            </button>
-                        `;
-
-                actions = `
-                    ${registerButton}
-
-                    <a class="btn btn-outline" href="appointment.html?edit=${appointment.id}">
+                    <a
+                        class="btn btn-outline"
+                        href="appointment.html?edit=${encodeURIComponent(appointment.id)}"
+                    >
                         <i class="bi bi-calendar-event"></i>
                         Reschedule
                     </a>
 
-                    <button class="btn btn-danger" data-cancel="${appointment.id}">
+                    <button
+                        class="btn btn-danger"
+                        type="button"
+                        data-cancel="${escapeHtml(appointment.id)}"
+                    >
                         <i class="bi bi-x-circle"></i>
                         Cancel
                     </button>
+                `
+                : `<span class="muted-text">No actions available</span>`;
 
-                    ${
-                        !state.allowed && !state.registered
-                            ? `<span class="appointment-action-note">${escapeHtml(state.reason)}</span>`
-                            : ""
-                    }
-                `;
-            }
 
             return `
                 <article class="card appointment-detail-card">
-
                     <div class="appointment-card-header">
                         <div>
                             <div class="appointment-reference">
@@ -1279,8 +1508,10 @@ function initHistory() {
                                 Appointment ${escapeHtml(appointment.id)}
                             </div>
 
-                            <h2>${escapeHtml(appointment.doctorName)}</h2>
-                            <p>${escapeHtml(selectedDoctor?.position || appointment.specialty)}</p>
+                            <h2>${escapeHtml(doctorName)}</h2>
+                            <p>${escapeHtml(
+                                selectedDoctor?.position || appointment.specialty || "Hospital appointment"
+                            )}</p>
                         </div>
 
                         <span class="status-badge ${statusClass(appointment.status)}">
@@ -1289,12 +1520,11 @@ function initHistory() {
                     </div>
 
                     <div class="appointment-detail-grid">
-
                         <div class="appointment-detail-item">
                             <i class="bi bi-hospital"></i>
                             <div>
                                 <span>Department / Specialty</span>
-                                <strong>${escapeHtml(appointment.specialty)}</strong>
+                                <strong>${escapeHtml(appointment.specialty || "—")}</strong>
                             </div>
                         </div>
 
@@ -1302,7 +1532,7 @@ function initHistory() {
                             <i class="bi bi-calendar3"></i>
                             <div>
                                 <span>Appointment Date</span>
-                                <strong>${formatDate(appointment.date)}</strong>
+                                <strong>${escapeHtml(formatDate(appointment.date))}</strong>
                             </div>
                         </div>
 
@@ -1318,18 +1548,15 @@ function initHistory() {
                             <i class="bi bi-person-badge"></i>
                             <div>
                                 <span>Doctor</span>
-                                <strong>${escapeHtml(appointment.doctorName)}</strong>
+                                <strong>${escapeHtml(doctorName)}</strong>
                             </div>
                         </div>
-
                     </div>
 
                     <div class="appointment-notes">
                         <span>Reason / Notes</span>
-                        <p>${appointment.notes ? escapeHtml(appointment.notes) : "No additional notes provided."}</p>
+                        <p>${escapeHtml(appointment.notes || "No notes provided.")}</p>
                     </div>
-
-                    ${queueBlock}
 
                     <div class="appointment-card-footer">
                         <div class="appointment-booked-date">
@@ -1347,100 +1574,208 @@ function initHistory() {
                             ${actions}
                         </div>
                     </div>
-
                 </article>
             `;
         }).join("");
 
+        
+        /* =========================
+        REGISTER APPOINTMENT WITH QMS
+        ========================= */
+
         qa("[data-register]").forEach(button => {
-            button.addEventListener("click", () => {
-                registerArrival(button.dataset.register);
-            });
-        });
 
-        qa("[data-cancel]").forEach(button => {
-            button.addEventListener("click", () => {
-                if (!confirm("Cancel this appointment?")) return;
+            button.addEventListener("click", async () => {
 
-                const appointments = getAppointments();
-                const user = getUser();
+                // Keep PostgreSQL BIGINT appointment ID as a string.
+                const appointmentId = button.dataset.register;
 
-                const appointment = appointments.find(item =>
-                    item.id === button.dataset.cancel &&
-                    item.patientId === user.id
-                );
-
-                if (!appointment || appointment.status !== "Confirmed") return;
-
-                if (appointment.queueNumber) {
-                    alert("This appointment has already been registered into the queue.");
+                if (!appointmentId) {
+                    alert("Invalid appointment ID.");
                     return;
                 }
 
-                appointment.status = "Cancelled";
-                appointment.updatedAt = new Date().toISOString();
+                if (!confirm(
+                    "Register for this appointment and receive your queue number?"
+                )) {
+                    return;
+                }
 
-                saveAppointments(appointments);
-                render();
+                button.disabled = true;
+
+                const originalText = button.innerHTML;
+
+                button.innerHTML = `
+                    <span class="spinner-border spinner-border-sm"></span>
+                    Registering...
+                `;
+
+                try {
+
+                    // Send the patient's JWT directly to QMS port 3000.
+                    const data = await qmsPatientRequest(
+                        "/appointment-queues/patient-register",
+                        {
+                            method: "POST",
+
+                            body: JSON.stringify({
+                                appointment_id: appointmentId
+                            })
+                        }
+                    );
+
+                    // Support the expected QMS response structure.
+                    const queueNumber =
+                        data.queue?.queue_number ||
+                        data.queue?.queueNumber ||
+                        data.queueNumber ||
+                        data.queue_number;
+
+                    if (queueNumber) {
+
+                        alert(
+                            `Registration successful!\n\n` +
+                            `Your queue number is: ${queueNumber}`
+                        );
+
+                    } else {
+
+                        alert(
+                            data.message ||
+                            "Appointment queue registration successful!"
+                        );
+
+                    }
+
+                    // Reload appointment records from patient backend.
+                    // The QMS registration endpoint should have updated
+                    // the appointment status to CHECKED_IN.
+                    await loadAppointments();
+
+                } catch (error) {
+
+                    alert(
+                        `Unable to register appointment:\n\n${error.message}`
+                    );
+
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+
+                }
+
+            });
+
+        });
+
+
+        qa("[data-cancel]").forEach(button => {
+            button.addEventListener("click", async () => {
+                if (!confirm("Cancel this appointment?")) return;
+
+                button.disabled = true;
+
+                try {
+                    await patientApiRequest(
+                        `/appointments/${encodeURIComponent(button.dataset.cancel)}/cancel`,
+                        { method: "PATCH" }
+                    );
+
+                    alert("Appointment cancelled successfully.");
+                    await loadAppointments();
+                } catch (error) {
+                    alert(`Unable to cancel appointment: ${error.message}`);
+                    button.disabled = false;
+                }
             });
         });
     }
 
+    async function loadAppointments() {
+        listContainer.innerHTML =
+            `<p class="muted-text">Loading your appointments...</p>`;
+
+        try {
+            appointments = await fetchPatientAppointments();
+            render();
+        } catch (error) {
+            listContainer.innerHTML = `
+                <p class="muted-text">
+                    Unable to load appointments: ${escapeHtml(error.message)}
+                </p>
+            `;
+            emptyState.classList.add("hidden");
+        }
+    }
+
     filter.addEventListener("change", render);
 
-    q("#closeRegisterModal").addEventListener("click", closeModal);
-    q("#doneRegisterModal").addEventListener("click", closeModal);
-
-    modal.addEventListener("click", event => {
-        if (event.target === modal) closeModal();
-    });
-
-    render();
+    loadAppointments();
 }
 
 /* =========================
    DASHBOARD
 ========================= */
-function initDashboard() {
+
+async function initDashboard() {
     const welcome = q("#dashboardWelcome");
     if (!welcome) return;
     if (!requireLogin()) return;
 
     const user = getUser();
-    const appointments = getAppointments()
-        .filter(item => item.patientId === user.id);
 
-    welcome.textContent = "Welcome, " + user.name;
+    welcome.textContent = "Welcome, " + (user.name || "Patient");
 
-    q("#dashboardUpcoming").textContent =
-        appointments.filter(item =>
+    const upcomingElement = q("#dashboardUpcoming");
+    const registeredElement = q("#dashboardRegistered");
+    const cancelledElement = q("#dashboardCancelled");
+    const nextElement = q("#dashboardNext");
+
+    try {
+        // Load actual appointments from PostgreSQL.
+        const appointments = await fetchPatientAppointments();
+
+        const upcoming = appointments.filter(item =>
             item.status === "Confirmed" &&
             item.date >= localToday()
-        ).length;
+        );
 
-    q("#dashboardCancelled").textContent =
-        appointments.filter(item => item.status === "Cancelled").length;
+        const registered = appointments.filter(item =>
+            item.status === "Checked In"
+        );
 
-    q("#dashboardRegistered").textContent =
-        appointments.filter(item => !!item.queueNumber).length;
+        const cancelled = appointments.filter(item =>
+            item.status === "Cancelled"
+        );
 
-    const next = appointments
-        .filter(item =>
-            item.status === "Confirmed" &&
-            item.date >= localToday()
-        )
-        .sort((a, b) =>
+        upcomingElement.textContent = upcoming.length;
+        registeredElement.textContent = registered.length;
+        cancelledElement.textContent = cancelled.length;
+
+        const next = upcoming.sort((a, b) =>
             `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)
         )[0];
 
-    q("#dashboardNext").innerHTML = next
-        ? `
-            <strong>${escapeHtml(next.doctorName)}</strong><br>
-            ${escapeHtml(next.specialty)}<br>
-            ${formatDate(next.date)} at ${escapeHtml(next.time)}
-        `
-        : "No upcoming appointment.";
+        nextElement.innerHTML = next
+            ? `
+                <strong>${escapeHtml(next.doctorName)}</strong><br>
+                ${escapeHtml(next.specialty)}<br>
+                ${escapeHtml(formatDate(next.date))}
+                at ${escapeHtml(next.time)}
+            `
+            : "No upcoming appointment.";
+
+    } catch (error) {
+        console.error("Unable to load dashboard appointments:", error);
+
+        upcomingElement.textContent = "—";
+        registeredElement.textContent = "—";
+        cancelledElement.textContent = "—";
+
+        nextElement.textContent =
+            "Unable to load appointments. Please refresh the page.";
+    }
 }
+
 
 /* =========================
    PATIENT PROFILE
@@ -1461,496 +1796,293 @@ function initPatientProfile() {
         : "—";
 }
 
+
 /* =========================
-   NOTIFICATIONS
+   NOTIFICATIONS - DATABASE VERSION
 ========================= */
 
-function initNotifications() {
+async function initNotifications() {
 
-    const button =
-        document.getElementById(
-            "notificationButton"
-        );
+    const button = document.getElementById("notificationButton");
+    const dropdown = document.getElementById("notificationDropdown");
+    const list = document.getElementById("notificationList");
+    const badge = document.getElementById("notificationBadge");
+    const markReadButton = document.getElementById("markNotificationsRead");
 
-
-    const dropdown =
-        document.getElementById(
-            "notificationDropdown"
-        );
-
-
-    const list =
-        document.getElementById(
-            "notificationList"
-        );
-
-
-    const badge =
-        document.getElementById(
-            "notificationBadge"
-        );
-
-
-    const markReadButton =
-        document.getElementById(
-            "markNotificationsRead"
-        );
-
-
-    if (
-        !button ||
-        !dropdown ||
-        !list ||
-        !badge
-    ) {
-
+    if (!button || !dropdown || !list || !badge) {
         return;
-
     }
 
-
-    const user =
-        getUser();
-
+    const user = getUser();
 
     if (!user) {
-
         return;
-
     }
 
+    let notifications = [];
 
+    /* Get read notification IDs */
 
-    /* Get patient's appointments */
-
-    const appointments =
-        getAppointments()
-            .filter(
-                appointment =>
-                    appointment.patientId
-                    === user.id
+    function getReadNotifications() {
+        try {
+            return JSON.parse(
+                localStorage.getItem("careReadNotifications") || "[]"
             );
+        } catch {
+            return [];
+        }
+    }
 
+    /* Generate appointment notifications */
 
+    try {
 
-    const notifications = [];
+        // Retrieve actual appointments from PostgreSQL.
+        const appointments = await fetchPatientAppointments();
 
-
-
-    /* =========================================
-   APPOINTMENT NOTIFICATIONS
-========================================= */
+        const today = new Date(`${localToday()}T00:00:00`);
 
         appointments
-            .filter(
-                appointment =>
-                    appointment.status === "Confirmed"
+            .filter(appointment =>
+                appointment.status === "Confirmed"
             )
-            .forEach(
-                appointment => {
+            .forEach(appointment => {
 
-                    const appointmentDate =
-                        new Date(
-                            appointment.date + "T00:00:00"
-                        );
+                const appointmentDate = new Date(
+                    `${appointment.date}T00:00:00`
+                );
 
-                    const today =
-                        new Date(
-                            localToday() + "T00:00:00"
-                        );
+                const differenceInMilliseconds =
+                    appointmentDate.getTime() - today.getTime();
 
+                const daysBeforeAppointment = Math.round(
+                    differenceInMilliseconds /
+                    (1000 * 60 * 60 * 24)
+                );
 
-                    const differenceInMilliseconds =
-                        appointmentDate - today;
+                const doctorName =
+                    appointment.doctorName || "Your doctor";
 
+                const appointmentDetail =
+                    `${formatDate(appointment.date)} • ${appointment.time}`;
 
-                    const daysBeforeAppointment =
-                        Math.ceil(
-                            differenceInMilliseconds
-                            /
-                            (1000 * 60 * 60 * 24)
-                        );
-
-
-                    /* =================================
-                    APPOINTMENT CONFIRMED
-                    ================================= */
-
-                    notifications.push({
-
-                        id:
-                            "confirmed-" +
-                            appointment.id,
-
-                        icon:
-                            "bi-check-circle",
-
-                        title:
-                            "Appointment Confirmed",
-
-                        message:
-                            appointment.doctorName,
-
-                        detail:
-                            formatDate(
-                                appointment.date
-                            )
-                            +
-                            " • "
-                            +
-                            appointment.time
-
-                    });
-
-
-
-                    /* =================================
-                    1 WEEK BEFORE
-                    ================================= */
-
-                    if (
-                        daysBeforeAppointment === 7
-                    ) {
-
-                        notifications.push({
-
-                            id:
-                                "7day-" +
-                                appointment.id,
-
-                            icon:
-                                "bi-calendar-week",
-
-                            title:
-                                "Appointment in 1 Week",
-
-                            message:
-                                appointment.doctorName,
-
-                            detail:
-                                formatDate(
-                                    appointment.date
-                                )
-                                +
-                                " • "
-                                +
-                                appointment.time
-
-                        });
-
-                    }
-
-
-
-                    /* =================================
-                    1 DAY BEFORE
-                    ================================= */
-
-                    if (
-                        daysBeforeAppointment === 1
-                    ) {
-
-                        notifications.push({
-
-                            id:
-                                "1day-" +
-                                appointment.id,
-
-                            icon:
-                                "bi-alarm",
-
-                            title:
-                                "Appointment Tomorrow",
-
-                            message:
-                                appointment.doctorName,
-
-                            detail:
-                                formatDate(
-                                    appointment.date
-                                )
-                                +
-                                " • "
-                                +
-                                appointment.time
-
-                        });
-
-                    }
-
-                }
-            );
-
-    /* Queue registration notification */
-
-    appointments
-        .filter(
-            appointment =>
-                appointment.queueNumber
-        )
-        .forEach(
-            appointment => {
+                /* Appointment confirmed */
 
                 notifications.push({
 
-                    id:
-                        "queue-" +
-                        appointment.id,
+                    id: `confirmed-${appointment.id}`,
 
-                    icon:
-                        "bi-people",
+                    icon: "bi-check-circle",
 
-                    title:
-                        "Queue Registration",
+                    title: "Appointment Confirmed",
 
-                    message:
-                        "Queue "
-                        +
-                        appointment.queueNumber,
+                    message: doctorName,
 
-                    detail:
-                        appointment.queueStatus
-                        || "Waiting"
+                    detail: appointmentDetail
 
                 });
 
-            }
+                /* Seven-day reminder */
+
+                if (daysBeforeAppointment === 7) {
+
+                    notifications.push({
+
+                        id: `7day-${appointment.id}`,
+
+                        icon: "bi-calendar-week",
+
+                        title: "Appointment in 1 Week",
+
+                        message: doctorName,
+
+                        detail: appointmentDetail
+
+                    });
+
+                }
+
+                /* One-day reminder */
+
+                if (daysBeforeAppointment === 1) {
+
+                    notifications.push({
+
+                        id: `1day-${appointment.id}`,
+
+                        icon: "bi-alarm",
+
+                        title: "Appointment Tomorrow",
+
+                        message: doctorName,
+
+                        detail: appointmentDetail
+
+                    });
+
+                }
+
+            });
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load appointment notifications:",
+            error
         );
 
+        badge.classList.add("hidden");
 
+        list.innerHTML = `
+            <div class="notification-empty">
+                <i class="bi bi-exclamation-circle"></i>
+                <p>
+                    Unable to load notifications.
+                    Please refresh the page.
+                </p>
+            </div>
+        `;
 
-    /* Read notification IDs */
-
-    const readNotifications =
-        JSON.parse(
-            localStorage.getItem(
-                "careReadNotifications"
-            )
-            || "[]"
-        );
-
-
-
-    const unread =
-        notifications.filter(
-            notification =>
-                !readNotifications.includes(
-                    notification.id
-                )
-        );
-
-
-
-    /* Update badge */
-
-    if (unread.length > 0) {
-
-        badge.textContent =
-            unread.length;
-
-        badge.classList.remove(
-            "hidden"
-        );
-
+        return;
     }
-
-    else {
-
-        badge.classList.add(
-            "hidden"
-        );
-
-    }
-
-
 
     /* Display notifications */
 
-    if (
-        notifications.length
-        === 0
-    ) {
+    function renderNotifications() {
 
-        list.innerHTML = `
+        const readNotifications = getReadNotifications();
 
-            <div class="notification-empty">
+        const unread = notifications.filter(notification =>
+            !readNotifications.includes(notification.id)
+        );
 
-                <i class="bi bi-bell"></i>
+        /* Update notification badge */
 
-                <p>
-                    No notifications yet.
-                </p>
+        if (unread.length > 0) {
 
-            </div>
+            badge.textContent = unread.length;
 
-        `;
+            badge.classList.remove("hidden");
 
-    }
+        } else {
 
-    else {
+            badge.classList.add("hidden");
 
-        list.innerHTML =
-            notifications
-                .map(
-                    notification => {
+        }
 
-                        const isRead =
-                            readNotifications
-                                .includes(
-                                    notification.id
-                                );
+        /* Empty notification state */
 
+        if (notifications.length === 0) {
 
-                        return `
+            list.innerHTML = `
+                <div class="notification-empty">
 
-                            <div
-                                class="
-                                    notification-item
-                                    ${
-                                        isRead
-                                            ? ""
-                                            : "unread"
-                                    }
-                                "
-                            >
+                    <i class="bi bi-bell"></i>
 
-                                <div
-                                    class="
-                                        notification-icon
-                                    "
-                                >
+                    <p>No notifications yet.</p>
 
-                                    <i
-                                        class="
-                                            bi
-                                            ${notification.icon}
-                                        "
-                                    ></i>
+                </div>
+            `;
 
-                                </div>
+            return;
+        }
 
+        /* Notification list */
 
-                                <div
-                                    class="
-                                        notification-content
-                                    "
-                                >
+        list.innerHTML = notifications.map(notification => {
 
-                                    <strong>
-                                        ${notification.title}
-                                    </strong>
+            const isRead = readNotifications.includes(
+                notification.id
+            );
 
-                                    <p>
-                                        ${notification.message}
-                                    </p>
+            return `
+                <div class="
+                    notification-item
+                    ${isRead ? "" : "unread"}
+                ">
 
-                                    <span>
-                                        ${notification.detail}
-                                    </span>
+                    <div class="notification-icon">
 
-                                </div>
+                        <i class="
+                            bi
+                            ${escapeHtml(notification.icon)}
+                        "></i>
 
-                            </div>
+                    </div>
 
-                        `;
+                    <div class="notification-content">
 
-                    }
-                )
-                .join("");
+                        <strong>
+                            ${escapeHtml(notification.title)}
+                        </strong>
+
+                        <p>
+                            ${escapeHtml(notification.message)}
+                        </p>
+
+                        <span>
+                            ${escapeHtml(notification.detail)}
+                        </span>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
 
     }
 
-
+    renderNotifications();
 
     /* Open / close notification dropdown */
 
-    button.addEventListener(
-        "click",
-        function (event) {
+    button.addEventListener("click", function(event) {
 
-            event.stopPropagation();
+        event.stopPropagation();
 
-            dropdown.classList.toggle(
-                "hidden"
-            );
+        dropdown.classList.toggle("hidden");
 
-        }
-    );
-
-
+    });
 
     /* Click outside closes dropdown */
 
-    document.addEventListener(
-        "click",
-        function (event) {
+    document.addEventListener("click", function(event) {
 
-            if (
-                !dropdown.contains(
-                    event.target
-                )
+        if (
+            !dropdown.contains(event.target) &&
+            !button.contains(event.target)
+        ) {
 
-                &&
-
-                !button.contains(
-                    event.target
-                )
-            ) {
-
-                dropdown.classList.add(
-                    "hidden"
-                );
-
-            }
+            dropdown.classList.add("hidden");
 
         }
-    );
 
+    });
 
-
-    /* Mark everything read */
+    /* Mark everything as read */
 
     if (markReadButton) {
 
-        markReadButton.addEventListener(
-            "click",
-            function () {
+        markReadButton.addEventListener("click", function() {
 
-                const ids =
-                    notifications.map(
-                        notification =>
-                            notification.id
-                    );
+            const ids = notifications.map(notification =>
+                notification.id
+            );
 
+            localStorage.setItem(
+                "careReadNotifications",
+                JSON.stringify(ids)
+            );
 
-                localStorage.setItem(
-                    "careReadNotifications",
-                    JSON.stringify(ids)
-                );
+            renderNotifications();
 
-
-                badge.classList.add(
-                    "hidden"
-                );
-
-
-                document
-                    .querySelectorAll(
-                        ".notification-item"
-                    )
-                    .forEach(
-                        item =>
-                            item.classList.remove(
-                                "unread"
-                            )
-                    );
-
-            }
-        );
+        });
 
     }
 
 }
+
 
 /* =========================
    INITIALISE
