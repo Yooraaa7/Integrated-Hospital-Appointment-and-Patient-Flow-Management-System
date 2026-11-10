@@ -21,19 +21,25 @@ const app = express();
 
 app.disable("x-powered-by");
 
+
 const allowedOrigins = new Set([
+    // Local development
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
 
+    // Deployed Patient Website
+    "https://thecare-patient-website.onrender.com",
+
+    // Additional origins from environment variables
     ...String(process.env.ALLOWED_ORIGIN || "").split(","),
-    ...String(
-        process.env.PATIENT_FRONTEND_ORIGIN ||
-        "http://localhost:3001"
-    ).split(",")
+    ...String(process.env.PATIENT_FRONTEND_ORIGIN || "").split(",")
 ]
     .map(origin => origin.trim())
     .filter(Boolean)
 );
+
 
 app.use(cors({
     origin: function (origin, callback) {
