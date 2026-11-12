@@ -1,225 +1,242 @@
-        const el = id => document.getElementById(id);
+const el = id => document.getElementById(id);
         const esc = AMS_UI.esc;
         const enc = encodeURIComponent;
  
-        const PAGE_SIZE = 20;
-        const params = new URLSearchParams(location.search);
+        const ATTENTION = {
+            OtClash:            { cls: "warning", icon: "fa-triangle-exclamation", link: "Appointments.html?filter=conflict", text: "Review" },
+            FailedNotification: { cls: "danger",  icon: "fa-circle-exclamation",   link: "NotificationLog.html?status=failed", text: "Resend" },
+            Unconfirmed:        { cls: "info",    icon: "fa-hourglass-half",       link: "NotificationCenter.html",            text: "Send reminder" }
+        };
  
-        // ?filter=conflict (from the dashboard) lists only appointments
-        // that clash with a doctor's OT, leave or other block.
-        let conflictOnly =
-            params.get("filter") === "conflict" ||
-            params.get("conflict") === "true";
- 
-        let currentPage = 1;
-        let activeId = null;
- 
-        /* ---------- Filters ---------- */
-        function currentFilters(page) {
-            return {
-                search: el("filterSearch").value.trim(),
-                status: el("filterStatus").value,
-                department: el("filterDept").value,
-                doctorId: el("filterDoctor").value,
-                dateFrom: el("filterFrom").value,
-                dateTo: el("filterTo").value,
-                conflict: conflictOnly ? "true" : "",
-                page: page || 1,
-                pageSize: PAGE_SIZE
-            };
+        function percent(value) {
+            const n = Number(value || 0);
+            return (Math.round(n * 10) / 10) + "%";
         }
- 
-        function fillFilters() {
-            el("filterDept").innerHTML =
-                '<option value="">All departments</option>' +
-                AMS.getDepartments().map(d =>
-                    "<option>" + esc(d.name) + "</option>").join("");
- 
-            el("filterDoctor").innerHTML =
-                '<option value="">All doctors</option>' +
-                AMS.getDoctors().map(d =>
-                    '<option value="' + esc(d.id) + '">' + esc(d.name) + "</option>").join("");
-        }
- 
-        /* ---------- Table ---------- */
-        function rowHtml(a) {
-            const actions = [];
- 
-            if (AMS.canEdit(a)) {
-                actions.push(
-                    '<a href="AppointmentForm.html?id=' + enc(a.id) + '" class="table-button">' +
-                    (a.hasConflict ? "Reschedule" : "Edit") + "</a>");
- 
-                if (AMS.canMarkOutcome(a)) {
-                    actions.push('<button type="button" class="table-button" data-action="complete">Done</button>');
-                    actions.push('<button type="button" class="table-button" data-action="noshow">No-show</button>');
-                }
- 
-                actions.push('<button type="button" class="table-button danger" data-action="cancel">Cancel</button>');
-            } else {
-                actions.push(
-                    '<a href="AppointmentForm.html?id=' + enc(a.id) + '" class="table-button">View</a>');
+        const LIMIT = 5;
+        const expanded = { schedule: false, availability: false };
+        const lastData = { schedule: [], availability: [] };
+
+        // Builds "Showing 5 of 12 · [Show all]" and wires the toggle
+        function renderFooter(footerId, key, total, rerender) {
+            const footer = el(footerId);
+
+            if (total <= LIMIT) {
+                footer.innerHTML = "";
+                return;
             }
- 
-            const flag = a.hasConflict
-                ? ' <i class="fa-solid fa-triangle-exclamation conflict-flag" title="Clashes with the doctor\'s OT, leave or other block"></i>'
-                : "";
- 
-            return '<tr data-id="' + esc(a.id) + '">' +
-                "<td>" + esc(a.id) + "</td>" +
-                "<td>" + esc(a.patientName) + '<span class="cell-sub">' + esc(a.patientId) + "</span></td>" +
-                "<td>" + esc(a.department) + "</td>" +
-                "<td>" + esc(a.doctorName || a.doctorId) + "</td>" +
-                "<td>" + esc(AMS.formatDate(a.date)) + "</td>" +
-                "<td>" + esc(AMS.formatTime(a.time)) + flag + "</td>" +
-                '<td><span class="badge ' + AMS.getStatusBadge(a.status) + '">' + esc(a.status) + "</span></td>" +
-                '<td><div class="table-actions">' + actions.join("") + "</div></td>" +
-                "</tr>";
+
+            const shown = expanded[key] ? total : LIMIT;
+
+            footer.innerHTML =
+                "<span>Showing " + shown + " of " + total + "</span>" +
+                '<button type="button" class="toggle-button">' +
+                (expanded[key] ? "Show fewer" : "Show all") + "</button>";
+
+            footer.querySelector("button").addEventListener("click", () => {
+                expanded[key] = !expanded[key];
+                rerender();
+            });
         }
- 
-        function renderPagination(page) {
-            const size = page.pageSize || PAGE_SIZE;
-            const total = page.totalItems || 0;
-            const pages = Math.max(1, Math.ceil(total / size));
-            const from = total ? (page.page - 1) * size + 1 : 0;
-            const to = Math.min(total, page.page * size);
- 
-            const first = Math.max(1, page.page - 2);
-            const last = Math.min(pages, page.page + 2);
-            let buttons = '<button type="button" class="page-button" data-page="' + (page.page - 1) + '"' +
-                          (page.page <= 1 ? " disabled" : "") + ">Prev</button>";
- 
-            for (let p = first; p <= last; p++) {
-                buttons += '<button type="button" class="page-button' + (p === page.page ? " current" : "") +
-                           '" data-page="' + p + '">' + p + "</button>";
+
+        const FINISHED = ["completed", "cancelled", "no show", "noshow", "no-show"];
+
+        const requiredElements = [
+            "cToday",
+            "cUpcoming",
+            "cCancel",
+            "cDuty",
+            "cNotif",
+            "scheduleRows",
+            "availabilityList",
+            "attentionList",
+            "deptBars",
+            "trendChart"
+        ];
+
+        requiredElements.forEach(id => {
+            const element = document.getElementById(id);
+
+            if (!element) {
+                console.error("Missing HTML element:", id);
             }
- 
-            buttons += '<button type="button" class="page-button" data-page="' + (page.page + 1) + '"' +
-                       (page.page >= pages ? " disabled" : "") + ">Next</button>";
- 
-            el("pagination").innerHTML =
-                "<span>Showing " + from + " to " + to + " of " + total + "</span>" +
-                '<div class="pagination-buttons">' + buttons + "</div>";
-        }
- 
-        function renderTable(page) {
-            el("appointmentRows").innerHTML = page.items.map(rowHtml).join("");
-            el("resultCount").textContent = page.totalItems + " appointments";
-            el("emptyMessage").style.display = page.items.length ? "none" : "block";
-            renderPagination(page);
-        }
- 
-        async function load(page) {
-            currentPage = page || 1;
-            el("emptyMessage").style.display = "none";
-            el("appointmentRows").innerHTML = '<tr><td colspan="8">Loading appointments...</td></tr>';
- 
-            try {
-                renderTable(await AMS.loadAppointments(currentFilters(currentPage)));
-            } catch (error) {
-                el("appointmentRows").innerHTML = "";
-                el("resultCount").textContent = "";
-                el("pagination").innerHTML = "";
-                AMS_UI.showError(error);
-            }
-        }
- 
-        el("btnSearch").addEventListener("click", () => { AMS_UI.clearMessage(); load(1); });
-        el("filterSearch").addEventListener("keydown", e => { if (e.key === "Enter") { AMS_UI.clearMessage(); load(1); } });
- 
-        el("btnReset").addEventListener("click", () => {
-            ["filterSearch", "filterStatus", "filterDept", "filterDoctor", "filterFrom", "filterTo"]
-                .forEach(id => el(id).value = "");
- 
-            conflictOnly = false;
-            history.replaceState(null, "", location.pathname);
-            AMS_UI.clearMessage();
-            load(1);
         });
  
-        el("pagination").addEventListener("click", e => {
-            const btn = e.target.closest("button[data-page]");
-            if (btn && !btn.disabled) load(Number(btn.dataset.page));
-        });
+        /* ---------- Pieces ---------- */
+        function renderCards(s) {
+            el("cToday").textContent = s.todaysAppointments || 0;
+            el("cUpcoming").textContent = s.upcomingNext7Days || 0;
+            el("cCancel").textContent = s.cancellationsToday || 0;
+            el("cDuty").textContent = (s.doctorsOnDuty || 0) + " / " + (s.doctorsTotal || 0);
  
-        /* ---------- Row actions ---------- */
-        const modal = el("cancelModal");
+            // The notification card only shows when the server sends notification figures
+            const hasNotifications = s.notificationsSentToday !== undefined && s.notificationsSentToday !== null;
+            el("cardNotif").style.display = hasNotifications ? "" : "none";
  
-        function openModal(appointment) {
-            activeId = appointment.id;
- 
-            el("cancelSummary").textContent =
-                appointment.id + " for " + appointment.patientName +
-                " with " + (appointment.doctorName || appointment.doctorId) +
-                " on " + AMS.formatDate(appointment.date) + ", " +
-                AMS.formatTime(appointment.time) + ".";
- 
-            modal.classList.add("open");
-            el("cancelConfirm").focus();
+            if (hasNotifications) {
+                el("cNotif").textContent = s.notificationsSentToday;
+                el("cNotifLabel").textContent = "Notifications sent, " + (s.notificationsFailedToday || 0) + " failed";
+            }
         }
  
-        function closeModal() {
-            modal.classList.remove("open");
-            activeId = null;
+        function renderSchedule(list) {
+            if (list) lastData.schedule = list;
+            const all = lastData.schedule;
+
+            if (!all.length) {
+                el("scheduleRows").innerHTML = '<tr><td colspan="6">No appointments today.</td></tr>';
+                el("scheduleFooter").innerHTML = "";
+                return;
+            }
+
+            // Active appointments first (by time), finished ones last
+            const isDone = a => FINISHED.includes(String(a.status || "").toLowerCase());
+            const sorted = [...all].sort((a, b) =>
+                (isDone(a) - isDone(b)) || String(a.time).localeCompare(String(b.time)));
+
+            const rows = expanded.schedule ? sorted : sorted.slice(0, LIMIT);
+
+            el("scheduleRows").innerHTML = rows.map(a => {
+                const link = AMS.canEdit(a)
+                    ? '<a href="AppointmentForm.html?id=' + enc(a.id) + '" class="action-link">Edit</a>'
+                    : '<a href="AppointmentForm.html?id=' + enc(a.id) + '" class="action-link">View</a>';
+
+                return "<tr>" +
+                    "<td>" + esc(AMS.formatTime(a.time)) + "</td>" +
+                    "<td>" + esc(a.patientName) + "</td>" +
+                    "<td>" + esc(a.doctorName || a.doctorId) + "</td>" +
+                    "<td>" + esc(a.department) + "</td>" +
+                    '<td><span class="badge ' + AMS.getStatusBadge(a.status) + '">' + esc(a.status) + "</span></td>" +
+                    "<td>" + link + "</td></tr>";
+            }).join("");
+
+            renderFooter("scheduleFooter", "schedule", all.length, () => renderSchedule());
         }
  
-        el("appointmentRows").addEventListener("click", async e => {
-            const btn = e.target.closest("button[data-action]");
-            if (!btn) return;
+        function renderAvailability(list) {
+            if (list) lastData.availability = list;
+            const all = lastData.availability;
+
+            if (!all.length) {
+                el("availabilityList").innerHTML = '<li class="availability-row"><div class="availability-meta">No doctors to show.</div></li>';
+                el("availabilityFooter").innerHTML = "";
+                return;
+            }
+
+            const rows = expanded.availability ? all : all.slice(0, LIMIT);
+
+            el("availabilityList").innerHTML = rows.map(d =>
+                '<li class="availability-row"><div>' +
+                    '<div class="availability-name">' + esc(d.doctorName) + "</div>" +
+                    '<div class="availability-meta">' + esc(d.department) + (d.note ? ", " + esc(d.note) : "") + "</div></div>" +
+                    '<span class="badge ' + AMS.getAvailabilityBadge(d.state) + '">' + esc(d.state) + "</span></li>").join("");
+
+            renderFooter("availabilityFooter", "availability", all.length, () => renderAvailability());
+        }
+        
+        function renderAttention(list) {
+            const items = list || [];
  
-            const id = btn.closest("tr").dataset.id;
-            const appointment = AMS.getAppointmentById(id);
-            if (!appointment) return;
- 
-            if (btn.dataset.action === "cancel") {
-                openModal(appointment);
+            if (!items.length) {
+                el("attentionList").innerHTML =
+                    '<li class="attention-row info"><i class="fa-solid fa-circle-check"></i>' +
+                    '<div class="attention-text">Nothing needs attention right now.</div></li>';
                 return;
             }
  
-            const status = btn.dataset.action === "complete" ? "Completed" : "No-show";
-            if (!confirm("Mark " + id + " as " + status + "?")) return;
+            el("attentionList").innerHTML = items.map(item => {
+                const kind = ATTENTION[item.kind] || { cls: "info", icon: "fa-circle-info", link: "", text: "" };
  
-            btn.disabled = true;
-            const result = await AMS.setAppointmentStatus(id, status);
-            AMS_UI.message(result.success ? "success" : "error", result.message);
-            load(currentPage);
-        });
+                return '<li class="attention-row ' + kind.cls + '"><i class="fa-solid ' + kind.icon + '"></i>' +
+                    '<div class="attention-text">' + esc(item.message) + "</div>" +
+                    (kind.link ? '<a href="' + kind.link + '" class="action-link">' + kind.text + "</a>" : "") + "</li>";
+            }).join("");
+        }
  
-        el("cancelClose").addEventListener("click", closeModal);
-        modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
-        document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+        function renderDepartments(list) {
+            const rows = list || [];
  
-        el("cancelConfirm").addEventListener("click", async () => {
-            if (!activeId) return;
+            if (!rows.length) {
+                el("deptBars").innerHTML = '<p class="method-note">No appointments this week.</p>';
+                return;
+            }
  
-            const id = activeId;
-            el("cancelConfirm").disabled = true;
+            const max = Math.max(1, ...rows.map(r => r.count));
  
-            // The appointment is kept with status Cancelled, so the
-            // cancellation analytics keep their history.
-            const result = await AMS.cancelAppointment(id, el("cancelReason").value, {
-                notifyPatient: el("cancelNotify").checked
-            });
+            el("deptBars").innerHTML = rows.map(r =>
+                '<div class="progress-row"><div class="progress-meta"><span>' + esc(r.name) + "</span><strong>" + esc(r.count) + "</strong></div>" +
+                '<div class="progress-track"><div class="progress-fill" style="width:' + (r.count / max * 100).toFixed(1) + '%;"></div></div></div>').join("");
+        }
  
-            el("cancelConfirm").disabled = false;
-            closeModal();
-            AMS_UI.message(result.success ? "success" : "error", result.message);
-            load(currentPage);
-        });
+        function renderTrend(list) {
+            const days = list || [];
  
-        /* ---------- Start ---------- */
-        (async function init() {
-            AMS_UI.initPage();
+            if (!days.length) {
+                el("trendChart").innerHTML = '<p class="method-note">No data for the last 7 days.</p>';
+                return;
+            }
  
+            const max = Math.max(1, ...days.map(d => d.booked));
+            const today = AMS.todayISO();
+ 
+            const bars = days.map(d => {
+                const booked = Math.max(d.booked ? 2 : 0, d.booked / max * 100);
+                const cancelled = Math.max(d.cancelled ? 2 : 0, d.cancelled / max * 100);
+ 
+                return '<div class="bar-col"><div class="bar-pair">' +
+                    '<div class="bar' + (d.date === today ? " today" : "") + '" style="height:' + booked.toFixed(1) + '%;" title="Booked: ' + esc(d.booked) + '"></div>' +
+                    '<div class="bar cancelled" style="height:' + cancelled.toFixed(1) + '%;" title="Cancelled: ' + esc(d.cancelled) + '"></div></div></div>';
+            }).join("");
+ 
+            const labels = days.map(d => {
+                if (d.date === today) return "<span>Today</span>";
+ 
+                const date = new Date(d.date + "T00:00");
+                return "<span>" + date.toLocaleDateString("en-GB", { weekday: "short" }) + "</span>";
+            }).join("");
+ 
+            el("trendChart").innerHTML =
+                '<div class="bar-chart">' + bars + "</div>" +
+                '<div class="bar-labels">' + labels + "</div>" +
+                '<div class="chart-legend">' +
+                    '<span class="legend-item"><span class="legend-swatch" style="background-color: #92bdfa;"></span> Booked</span>' +
+                    '<span class="legend-item"><span class="legend-swatch" style="background-color: #f87171;"></span> Cancelled</span></div>';
+        }
+ 
+        /* ---------- Load ---------- */
+        async function load() {
             try {
-                await Promise.all([
-                    AMS.loadDepartments(),
-                    AMS.loadDoctors({ pageSize: 100 })
-                ]);
+                const summary = await AMS.loadDashboardSummary();
+
+                // routes/dashboard.js must send todaysAppointments,
+                // todaysSchedule, doctorAvailability and the other figures
+                // listed there. A reply without them means the old
+                // dashboard route (appointments / patients / queues
+                // totals) is still the one running.
+                if (!summary || summary.todaysAppointments === undefined) {
+                    AMS_UI.message(
+                        "error",
+                        "The dashboard route returned an unexpected format. " +
+                        "Replace routes/dashboard.js with the new version " +
+                        "and restart the server."
+                    );
+                    return;
+                }
+ 
+                renderCards(summary);
+                renderSchedule(summary.todaysSchedule);
+                renderAvailability(summary.doctorAvailability);
+                renderAttention(summary.needsAttention);
+                renderDepartments(summary.appointmentsByDepartment);
+                renderTrend(summary.bookedVsCancelledLast7Days);
+ 
+                AMS_UI.clearMessage();
             } catch (error) {
                 AMS_UI.showError(error);
             }
+        }
  
-            fillFilters();
-            load(1);
-        })();
+        AMS_UI.initPage();
+        load();
+ 
+        // Refresh the figures every minute while the page is open
+        setInterval(load, 60000);
