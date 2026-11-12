@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="Style.css">
     <link rel="stylesheet" href="HospitalAnalytics.css">
+    <link rel="stylesheet" href="Doctors.css">
+
 </head>
 <body>
 
@@ -17,37 +19,26 @@
             <img src="logo.png" alt="Hospital logo">
         </div>
 
-        <div class="search-controls">
-            <input type="text" class="search-input" placeholder="Search patient or doctor name / ID">
-            <select class="filter-select">
-                <option value="">All records</option>
-                <option value="appointment">Appointments</option>
-                <option value="doctor">Doctors</option>
-            </select>
-            <button type="button" class="search-button">
-                <i class="fa-solid fa-magnifying-glass"></i> Search
-            </button>
-        </div>
-
+        <h1>Appointment & Doctor Management</h1>
+ 
         <div class="staff-info">
             <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
-            <button type="button" class="logout-button">Logout</button>
+            <a href="login.html" class="logout-button">Logout</a>
         </div>
     </header>
-
+ 
     <div class="page-layout">
-
+ 
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-title">APPOINTMENT &amp; DOCTOR MANAGEMENT</div>
-
+ 
             <ul class="sidebar-menu">
                 <li>
                     <a href="HospitalAnalytics.html">
                         <i class="fa-solid fa-gauge"></i> Dashboard
                     </a>
                 </li>
-
+ 
                 <li class="sidebar-group">Appointments</li>
                 <li>
                     <ul class="sidebar-sub">
@@ -55,32 +46,20 @@
                         <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
                     </ul>
                 </li>
-
+ 
                 <li class="sidebar-group">Doctors</li>
                 <li>
                     <ul class="sidebar-sub">
-                        <li><a href="Doctors.html"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
-                        <li><a href="DoctorProfile.html"><i class="fa-solid fa-id-card"></i> Doctor Profile</a></li>
-                        <li><a href="DoctorSchedule.html" class="active"><i class="fa-solid fa-clock"></i> Schedule &amp; Availability</a></li>
+                        <li><a href="Doctors.html" class="active"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
                     </ul>
                 </li>
-
-                <li class="sidebar-group">Notifications</li>
-                <li>
-                    <ul class="sidebar-sub">
-                        <li><a href="Notifications.html"><i class="fa-solid fa-bell"></i> Notification Center</a></li>
-                        <li><a href="NotificationLog.html"><i class="fa-solid fa-list-check"></i> Notification Log</a></li>
-                    </ul>
-                </li>
-
+ 
                 <li class="sidebar-group">Analytics</li>
                 <li>
                     <ul class="sidebar-sub">
                         <li><a href="AppointmentDemand.html"><i class="fa-solid fa-chart-column"></i> Appointment Demand</a></li>
                         <li><a href="PeakPeriods.html"><i class="fa-solid fa-chart-line"></i> Peak Periods</a></li>
-                        <li><a href="CancellationAnalysis.html"><i class="fa-solid fa-ban"></i> Cancellations &amp; No-Shows</a></li>
                         <li><a href="DoctorUtilisation.html"><i class="fa-solid fa-chart-pie"></i> Doctor Utilisation</a></li>
-                        <li><a href="NotificationPerformance.html"><i class="fa-solid fa-envelope-circle-check"></i> Notification Performance</a></li>
                     </ul>
                 </li>
             </ul>
@@ -110,7 +89,7 @@
                     <div id="doctorMeta" class="date-label"></div>
                 </div>
             </section>
-
+ 
             <!-- Weekly consultation hours -->
             <section class="panel panel-full">
                 <div class="panel-header">
@@ -125,7 +104,7 @@
                         </select>
                     </div>
                 </div>
-
+ 
                 <div class="table-responsive">
                     <table class="table hours-table" id="hoursTable">
                         <thead>
@@ -139,21 +118,21 @@
                         <tbody></tbody>
                     </table>
                 </div>
-
+ 
                 <div class="message-box" id="hoursMessage"></div>
-
+ 
                 <div class="form-actions" style="margin-top: 18px;">
                     <button type="button" class="action-button" id="saveHours"><i class="fa-solid fa-floppy-disk"></i> Save consultation hours</button>
                     <button type="button" class="action-button secondary" id="resetHours">Reset changes</button>
                 </div>
             </section>
-
+ 
             <!-- Unavailability -->
             <section class="panel panel-full">
                 <div class="panel-header">
                     <h2>OT, leave and other unavailable times</h2>
                 </div>
-
+ 
                 <div class="inline-fields">
                     <div class="field">
                         <label for="blockType">Type</label>
@@ -185,15 +164,15 @@
                         <input type="text" id="blockNote" placeholder="e.g. Knee replacement, Theatre 2">
                     </div>
                 </div>
-
+ 
                 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 22px; margin-bottom: 4px;">
                     <label class="check-row"><input type="checkbox" id="allDay"> All day</label>
                     <label class="check-row"><input type="checkbox" id="notifyAffected" checked> Notify patients with affected appointments</label>
                     <button type="button" class="action-button" id="addBlock"><i class="fa-solid fa-plus"></i> Add</button>
                 </div>
-
+ 
                 <div class="message-box" id="blockMessage"></div>
-
+ 
                 <div class="table-responsive" style="margin-top: 20px;">
                     <table class="table table-hover" id="blockTable">
                         <thead>
@@ -209,321 +188,353 @@
                         <tbody></tbody>
                     </table>
                 </div>
-
+ 
                 <div class="empty-row" id="blockEmpty">No OT, leave or other unavailable times for this doctor.</div>
             </section>
-
+ 
         </main>
     </div>
-
-
+ 
+ 
+    <script src="ams.js"></script>
+    <script src="ams-api.js"></script>
+    <script src="ams-ui.js"></script>
     <script>
         const el = id => document.getElementById(id);
-
-        /* ================================================================
-           DEMO DATA - replace with data from your database.
-        ================================================================ */
-        const doctors = {
-            "D-001": { name: "Dr. Tan Bee Lian",  department: "General Medicine" },
-            "D-002": { name: "Dr. Ahmad Faris",   department: "Cardiology" },
-            "D-003": { name: "Dr. Lee Chong Wei", department: "Orthopaedics" },
-            "D-004": { name: "Dr. Siti Hajar",    department: "Paediatrics" },
-            "D-005": { name: "Dr. Nadia Rahman",  department: "Dermatology" },
-            "D-006": { name: "Dr. Kumar Selvam",  department: "General Medicine" },
-            "D-007": { name: "Dr. Chen Li Wei",   department: "Cardiology" }
-        };
-
-        // Default weekly hours. A blank start and end means no session.
-        const defaultHours = {
-            Monday:    { on: true,  m: ["09:00", "12:00"], a: ["14:00", "17:00"] },
-            Tuesday:   { on: true,  m: ["09:00", "12:00"], a: ["14:00", "17:00"] },
-            Wednesday: { on: true,  m: ["09:00", "12:00"], a: ["14:00", "17:00"] },
-            Thursday:  { on: true,  m: ["09:00", "12:00"], a: ["14:00", "17:00"] },
-            Friday:    { on: true,  m: ["09:00", "12:00"], a: ["14:00", "17:00"] },
-            Saturday:  { on: true,  m: ["09:00", "12:00"], a: ["", ""] },
-            Sunday:    { on: false, m: ["", ""],           a: ["", ""] }
-        };
-
-        // Existing OT, leave and other blocks per doctor
-        const blocksByDoctor = {
-            "D-003": [
-                { type: "OT",    from: "2026-10-16T13:00", to: "2026-10-16T16:00", note: "Hip replacement, Theatre 2" },
-                { type: "OT",    from: "2026-10-20T09:30", to: "2026-10-20T12:00", note: "Knee arthroscopy, Theatre 1" }
-            ],
-            "D-005": [
-                { type: "Leave", from: "2026-10-16T00:00", to: "2026-10-18T23:59", note: "Annual leave" }
-            ]
-        };
-
-        // Booked appointments per doctor (Booked or Rescheduled only), used to detect clashes
-        const appointmentsByDoctor = {
-            "D-002": [ { id: "A-2041", at: "2026-10-16T09:00" }, { id: "A-2045", at: "2026-10-16T11:00" } ],
-            "D-003": [ { id: "A-2042", at: "2026-10-16T09:30" }, { id: "A-2051", at: "2026-10-20T10:00" }, { id: "A-2052", at: "2026-10-20T10:30" } ],
-            "D-005": [ { id: "A-2044", at: "2026-10-17T10:30" } ]
-        };
-
-        /* ================================================================
-           Setup
-        ================================================================ */
-        const days = Object.keys(defaultHours);
+        const esc = AMS_UI.esc;
         const params = new URLSearchParams(location.search);
-        let doctorId = doctors[params.get("id")] ? params.get("id") : "D-003";
-
-        const blocks = JSON.parse(JSON.stringify(blocksByDoctor[doctorId] || []));
-        const appointments = appointmentsByDoctor[doctorId] || [];
-
-        function initials(name) {
-            const parts = name.replace(/^Dr\.?\s*/i, "").trim().split(/\s+/);
-            return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
-        }
-
-        const select = el("doctorSelect");
-        Object.keys(doctors).forEach(id => {
-            const opt = document.createElement("option");
-            opt.value = id;
-            opt.textContent = doctors[id].name + " (" + doctors[id].department + ")";
-            select.appendChild(opt);
-        });
-        select.value = doctorId;
-        select.addEventListener("change", () => { location.search = "?id=" + select.value; });
-
-        el("doctorAvatar").textContent = initials(doctors[doctorId].name);
-        el("doctorMeta").textContent = doctorId + ", " + doctors[doctorId].department;
-
-        /* ---------- Weekly hours ---------- */
-        const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
-
+ 
+        let doctorId = params.get("id");
+        let blocks = [];
+ 
+        /* ---------- Messages inside the page ---------- */
         function showMessage(id, type, html) {
             const box = el(id);
             box.className = "message-box show " + type;
             box.innerHTML = html;
         }
-
+ 
         function hideMessage(id) {
             el(id).className = "message-box";
         }
-
-        function buildHoursTable() {
-            const tbody = document.querySelector("#hoursTable tbody");
-            tbody.innerHTML = "";
-
-            days.forEach(day => {
-                const d = defaultHours[day];
-                const tr = document.createElement("tr");
-                tr.dataset.day = day;
-                tr.innerHTML =
-                    '<td><label class="day-cell"><input type="checkbox" class="day-on"' + (d.on ? " checked" : "") + '> ' + day + '</label></td>' +
-                    '<td><div class="time-range"><input type="time" class="time-input m-start" value="' + d.m[0] + '"> to <input type="time" class="time-input m-end" value="' + d.m[1] + '"></div><div class="row-error m-error"></div></td>' +
-                    '<td><div class="time-range"><input type="time" class="time-input a-start" value="' + d.a[0] + '"> to <input type="time" class="time-input a-end" value="' + d.a[1] + '"></div><div class="row-error a-error"></div></td>' +
-                    '<td class="slot-count"></td>';
-                tbody.appendChild(tr);
-
-                tr.querySelectorAll("input").forEach(inp => {
-                    inp.addEventListener("input", () => updateRow(tr));
-                    inp.addEventListener("change", () => updateRow(tr));
-                });
-                updateRow(tr);
-            });
-        }
-
-        function sessionSlots(start, end, length) {
-            if (!start || !end) return 0;
-            const diff = toMin(end) - toMin(start);
-            return diff > 0 ? Math.floor(diff / length) : 0;
-        }
-
-        function updateRow(tr) {
-            const on = tr.querySelector(".day-on").checked;
-            tr.querySelectorAll(".time-input").forEach(i => i.disabled = !on);
-
-            const length = Number(el("slotLength").value);
-            const total =
-                sessionSlots(tr.querySelector(".m-start").value, tr.querySelector(".m-end").value, length) +
-                sessionSlots(tr.querySelector(".a-start").value, tr.querySelector(".a-end").value, length);
-
-            tr.querySelector(".slot-count").textContent = on ? total + " slots" : "Not working";
-        }
-
-        function validateHours() {
-            let ok = true;
-
-            document.querySelectorAll("#hoursTable tbody tr").forEach(tr => {
-                const mErr = tr.querySelector(".m-error");
-                const aErr = tr.querySelector(".a-error");
-                mErr.textContent = "";
-                aErr.textContent = "";
-
-                if (!tr.querySelector(".day-on").checked) return;
-
-                const ms = tr.querySelector(".m-start").value, me = tr.querySelector(".m-end").value;
-                const as = tr.querySelector(".a-start").value, ae = tr.querySelector(".a-end").value;
-
-                if ((ms && !me) || (!ms && me)) { mErr.textContent = "Enter both start and end, or clear both."; ok = false; }
-                else if (ms && me && toMin(me) <= toMin(ms)) { mErr.textContent = "End must be after start."; ok = false; }
-
-                if ((as && !ae) || (!as && ae)) { aErr.textContent = "Enter both start and end, or clear both."; ok = false; }
-                else if (as && ae && toMin(ae) <= toMin(as)) { aErr.textContent = "End must be after start."; ok = false; }
-                else if (as && me && toMin(as) < toMin(me)) { aErr.textContent = "Afternoon must start after the morning ends."; ok = false; }
-
-                if (!ms && !as) { mErr.textContent = "Add at least one session, or untick this day."; ok = false; }
-            });
-
-            return ok;
-        }
-
-        el("slotLength").addEventListener("change", () => {
-            document.querySelectorAll("#hoursTable tbody tr").forEach(updateRow);
-        });
-
-        el("saveHours").addEventListener("click", () => {
-            if (!validateHours()) {
-                showMessage("hoursMessage", "error", "Fix the highlighted rows before saving.");
-                return;
-            }
-            // Demo only: save each day's sessions and the appointment length for this doctor.
-            // The Appointment Form should build its time slots from these saved hours.
-            showMessage("hoursMessage", "success", "Consultation hours saved for " + doctors[doctorId].name + ".");
-        });
-
-        el("resetHours").addEventListener("click", () => {
-            buildHoursTable();
-            hideMessage("hoursMessage");
-        });
-
-        /* ---------- OT, leave and other blocks ---------- */
-        const badgeFor = { "OT": "badge-ot", "Leave": "badge-leave", "Conference": "badge-conference", "Other": "badge-inactive" };
-
-        function fmt(iso) {
-            const d = new Date(iso);
+ 
+        // "2026-10-20T09:30" shown as local date and time
+        function fmt(value) {
+            const d = new Date(value);
+ 
+            if (Number.isNaN(d.getTime())) return "--";
+ 
             return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) + " " +
                    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
         }
-
-        // Appointments that overlap a block (appointment length comes from the dropdown above)
-        function affectedBy(block) {
-            const length = Number(el("slotLength").value);
-            const bStart = new Date(block.from).getTime();
-            const bEnd = new Date(block.to).getTime();
-
-            return appointments.filter(a => {
-                const start = new Date(a.at).getTime();
-                const end = start + length * 60000;
-                return start < bEnd && end > bStart;
+ 
+        function listAppointments(items) {
+            return items.map(a => esc(a.id) + " (" + esc(AMS.formatDate(a.date)) + " " + esc(AMS.formatTime(a.time)) + ")").join(", ");
+        }
+ 
+        /* ---------- Weekly consultation hours ---------- */
+        function buildHoursTable(hours) {
+            const tbody = document.querySelector("#hoursTable tbody");
+            tbody.innerHTML = "";
+            el("slotLength").value = String(hours.slotMinutes || AMS.DEFAULT_SLOT_MINUTES);
+ 
+            hours.days.forEach(d => {
+                const m = d.morning || { start: "", end: "" };
+                const a = d.afternoon || { start: "", end: "" };
+                const tr = document.createElement("tr");
+                tr.dataset.day = d.day;
+ 
+                tr.innerHTML =
+                    '<td><label class="day-cell"><input type="checkbox" class="day-on"' + (d.working ? " checked" : "") + "> " + esc(d.day) + "</label></td>" +
+                    '<td><div class="time-range"><input type="time" class="time-input m-start" value="' + esc(m.start || "") + '"> to <input type="time" class="time-input m-end" value="' + esc(m.end || "") + '"></div><div class="row-error m-error"></div></td>' +
+                    '<td><div class="time-range"><input type="time" class="time-input a-start" value="' + esc(a.start || "") + '"> to <input type="time" class="time-input a-end" value="' + esc(a.end || "") + '"></div><div class="row-error a-error"></div></td>' +
+                    '<td class="slot-count"></td>';
+ 
+                tbody.appendChild(tr);
+ 
+                tr.querySelectorAll("input").forEach(input => {
+                    input.addEventListener("input", () => updateRow(tr));
+                    input.addEventListener("change", () => updateRow(tr));
+                });
+ 
+                updateRow(tr);
             });
         }
-
+ 
+        function readRow(tr) {
+            const working = tr.querySelector(".day-on").checked;
+ 
+            const session = prefix => {
+                const start = tr.querySelector("." + prefix + "-start").value;
+                const end = tr.querySelector("." + prefix + "-end").value;
+                return start || end ? { start, end } : null;
+            };
+ 
+            return {
+                day: tr.dataset.day,
+                working,
+                morning: working ? session("m") : null,
+                afternoon: working ? session("a") : null
+            };
+        }
+ 
+        function updateRow(tr) {
+            const on = tr.querySelector(".day-on").checked;
+            tr.querySelectorAll(".time-input").forEach(i => i.disabled = !on);
+ 
+            const row = readRow(tr);
+            const count = AMS.countDaySlots(row, Number(el("slotLength").value));
+            tr.querySelector(".slot-count").textContent = on ? count + " slots" : "Not working";
+        }
+ 
+        function collectHours() {
+            return {
+                slotMinutes: Number(el("slotLength").value),
+                days: Array.from(document.querySelectorAll("#hoursTable tbody tr")).map(readRow)
+            };
+        }
+ 
+        async function loadHours() {
+            let hours;
+            let usedDefaults = false;
+ 
+            try {
+                hours = await AMS.loadConsultationHours(doctorId);
+            } catch (error) {
+                if (error.status !== 404) throw error;
+                hours = null;
+            }
+ 
+            if (!hours || !Array.isArray(hours.days) || !hours.days.length) {
+                hours = AMS.getDefaultConsultationHours();
+                usedDefaults = true;
+            }
+ 
+            buildHoursTable(hours);
+ 
+            if (usedDefaults) {
+                showMessage("hoursMessage", "warning", "No consultation hours are saved for this doctor yet. These are the default hours. Save to keep them.");
+            } else {
+                hideMessage("hoursMessage");
+            }
+        }
+ 
+        el("slotLength").addEventListener("change", () => {
+            document.querySelectorAll("#hoursTable tbody tr").forEach(updateRow);
+        });
+ 
+        el("saveHours").addEventListener("click", async () => {
+            const hours = collectHours();
+            const check = AMS.validateConsultationHours(hours);
+ 
+            document.querySelectorAll("#hoursTable .row-error").forEach(n => n.textContent = "");
+ 
+            if (!check.valid) {
+                check.errors.forEach(err => {
+                    if (!err.day) return;
+                    const tr = document.querySelector('#hoursTable tr[data-day="' + err.day + '"]');
+                    if (tr) tr.querySelector(err.session === "afternoon" ? ".a-error" : ".m-error").textContent = err.message;
+                });
+ 
+                const general = check.errors.filter(err => !err.day).map(err => esc(err.message)).join(" ");
+                showMessage("hoursMessage", "error", general || "Fix the highlighted rows before saving.");
+                return;
+            }
+ 
+            el("saveHours").disabled = true;
+            const result = await AMS.saveConsultationHours(doctorId, hours);
+            el("saveHours").disabled = false;
+ 
+            if (!result.success) {
+                showMessage("hoursMessage", "error", esc(result.message));
+                return;
+            }
+ 
+            if (result.affectedAppointments.length) {
+                showMessage("hoursMessage", "warning",
+                    "<strong>Hours saved.</strong> " + result.affectedAppointments.length +
+                    " booked appointment(s) now fall outside these hours: " + listAppointments(result.affectedAppointments) +
+                    '. <a href="Appointments.html?filter=conflict">Reschedule them</a>.');
+            } else {
+                showMessage("hoursMessage", "success", "Consultation hours saved.");
+            }
+        });
+ 
+        el("resetHours").addEventListener("click", async () => {
+            try {
+                await loadHours();
+            } catch (error) {
+                showMessage("hoursMessage", "error", esc(AMS.getErrorMessage(error)));
+            }
+        });
+ 
+        /* ---------- OT, leave and other blocks ---------- */
         function renderBlocks() {
             const tbody = document.querySelector("#blockTable tbody");
-            tbody.innerHTML = "";
-
-            blocks.forEach((b, i) => {
-                const hits = affectedBy(b);
-                const tr = document.createElement("tr");
-                tr.innerHTML =
-                    '<td><span class="badge ' + badgeFor[b.type] + '">' + b.type + '</span></td>' +
-                    '<td>' + fmt(b.from) + '</td>' +
-                    '<td>' + fmt(b.to) + '</td>' +
-                    '<td>' + (b.note || "-") + '</td>' +
-                    '<td>' + (hits.length
-                        ? '<a href="Appointments.html?filter=conflict" class="action-link">' + hits.length + ' to reschedule</a>'
-                        : "None") + '</td>' +
-                    '<td><button type="button" class="table-button danger" data-index="' + i + '">Remove</button></td>';
-                tbody.appendChild(tr);
-            });
-
-            tbody.querySelectorAll("button").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    // Demo only: delete the block from the database. Removing it frees those slots again.
-                    blocks.splice(Number(btn.dataset.index), 1);
-                    hideMessage("blockMessage");
-                    renderBlocks();
-                });
-            });
-
+ 
+            tbody.innerHTML = blocks.map(b => {
+                const hits = Number(b.affectedAppointments || 0);
+ 
+                return "<tr>" +
+                    '<td><span class="badge ' + AMS.getBlockBadge(b.type) + '">' + esc(b.type) + "</span></td>" +
+                    "<td>" + esc(fmt(b.from)) + "</td>" +
+                    "<td>" + esc(fmt(b.to)) + "</td>" +
+                    "<td>" + (esc(b.note) || "-") + "</td>" +
+                    "<td>" + (hits
+                        ? '<a href="Appointments.html?filter=conflict" class="action-link">' + hits + " to reschedule</a>"
+                        : "None") + "</td>" +
+                    '<td><button type="button" class="table-button danger" data-id="' + esc(b.id) + '">Remove</button></td>' +
+                    "</tr>";
+            }).join("");
+ 
             el("blockEmpty").style.display = blocks.length ? "none" : "block";
         }
-
-        function today() {
-            const d = new Date();
-            const pad = n => String(n).padStart(2, "0");
-            return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+ 
+        async function loadBlocks() {
+            const data = await AMS.loadUnavailability(doctorId, { from: AMS.todayISO() });
+            blocks = Array.isArray(data) ? data : (data && data.items) || [];
+            blocks.sort((a, b) => new Date(a.from) - new Date(b.from));
+            renderBlocks();
         }
-
-        el("startDate").min = today();
-        el("endDate").min = today();
-
+ 
+        el("blockTable").addEventListener("click", async e => {
+            const btn = e.target.closest("button[data-id]");
+            if (!btn) return;
+ 
+            btn.disabled = true;
+ 
+            // Removing a block frees those slots for booking again
+            const result = await AMS.removeUnavailability(doctorId, btn.dataset.id);
+ 
+            if (result.success) {
+                hideMessage("blockMessage");
+                try { await loadBlocks(); } catch (error) { showMessage("blockMessage", "error", esc(AMS.getErrorMessage(error))); }
+            } else {
+                btn.disabled = false;
+                showMessage("blockMessage", "error", esc(result.message));
+            }
+        });
+ 
+        el("startDate").min = AMS.todayISO();
+        el("endDate").min = AMS.todayISO();
+ 
         el("startDate").addEventListener("change", () => {
             if (!el("endDate").value || el("endDate").value < el("startDate").value) {
                 el("endDate").value = el("startDate").value;
             }
             el("endDate").min = el("startDate").value;
         });
-
+ 
         function syncAllDay() {
-            const all = el("allDay").checked || el("blockType").value === "Leave" && el("allDay").checked;
+            const all = el("allDay").checked;
             el("startTime").disabled = all;
             el("endTime").disabled = all;
         }
-
+ 
         el("allDay").addEventListener("change", syncAllDay);
+ 
         el("blockType").addEventListener("change", () => {
             if (el("blockType").value === "Leave") el("allDay").checked = true;
             syncAllDay();
         });
-
-        el("addBlock").addEventListener("click", () => {
-            const sd = el("startDate").value, ed = el("endDate").value;
+ 
+        el("addBlock").addEventListener("click", async () => {
             const all = el("allDay").checked;
-            const st = all ? "00:00" : el("startTime").value;
-            const et = all ? "23:59" : el("endTime").value;
-
-            if (!sd || !ed || !st || !et) {
-                showMessage("blockMessage", "error", "Enter the from and to date and time.");
-                return;
-            }
-
-            const block = {
+            const sd = el("startDate").value, ed = el("endDate").value;
+ 
+            const input = {
                 type: el("blockType").value,
-                from: sd + "T" + st,
-                to: ed + "T" + et,
-                note: el("blockNote").value.trim()
+                from: sd && sd + "T" + (all ? "00:00" : el("startTime").value),
+                to: ed && ed + "T" + (all ? "23:59" : el("endTime").value),
+                note: el("blockNote").value.trim(),
+                notifyAffected: el("notifyAffected").checked
             };
-
-            if (new Date(block.to) <= new Date(block.from)) {
-                showMessage("blockMessage", "error", "The end must be after the start.");
+ 
+            const check = AMS.validateUnavailabilityInput(input);
+ 
+            if (!check.valid) {
+                showMessage("blockMessage", "error", esc(check.errors.range || check.errors.type));
                 return;
             }
-
-            const overlap = blocks.some(b => new Date(block.from) < new Date(b.to) && new Date(block.to) > new Date(b.from));
-            if (overlap) {
+ 
+            if (blocks.some(b => AMS.blocksOverlap(input, b))) {
                 showMessage("blockMessage", "error", "This overlaps an existing block for this doctor.");
                 return;
             }
-
-            // Demo only: save the block to the database.
-            blocks.push(block);
-            blocks.sort((a, b) => new Date(a.from) - new Date(b.from));
-
-            const hits = affectedBy(block);
+ 
+            el("addBlock").disabled = true;
+            const result = await AMS.addUnavailability(doctorId, input);
+            el("addBlock").disabled = false;
+ 
+            if (!result.success) {
+                showMessage("blockMessage", "error", esc(result.message));
+                return;
+            }
+ 
+            const hits = result.affectedAppointments;
+ 
             if (hits.length) {
-                const list = hits.map(a => a.id + " (" + fmt(a.at) + ")").join(", ");
-                const notify = el("notifyAffected").checked
-                    ? " The patients will be notified."
-                    : " The patients will not be notified.";
                 showMessage("blockMessage", "warning",
-                    "<strong>" + hits.length + " booked appointment" + (hits.length > 1 ? "s" : "") + " overlap this block:</strong> " + list + "." +
-                    notify + ' <a href="Appointments.html?filter=conflict">Reschedule them</a>.');
+                    "<strong>" + hits.length + " booked appointment" + (hits.length > 1 ? "s" : "") +
+                    " overlap this block:</strong> " + listAppointments(hits) + ". " +
+                    '<a href="Appointments.html?filter=conflict">Reschedule them</a>.');
             } else {
                 showMessage("blockMessage", "success", "Block added. No booked appointments are affected.");
             }
-
+ 
             el("blockNote").value = "";
-            renderBlocks();
+ 
+            try { await loadBlocks(); } catch (error) { showMessage("blockMessage", "error", esc(AMS.getErrorMessage(error))); }
         });
-
-        buildHoursTable();
-        renderBlocks();
+ 
+        /* ---------- Doctor selector ---------- */
+        function initials(name) {
+            return AMS.getDoctorInitials(name);
+        }
+ 
+        async function loadDoctorData() {
+            try {
+                await Promise.all([loadHours(), loadBlocks()]);
+            } catch (error) {
+                AMS_UI.showError(error);
+            }
+        }
+ 
+        /* ---------- Start ---------- */
+        (async function init() {
+            AMS_UI.initPage();
+ 
+            let doctors = [];
+ 
+            try {
+                doctors = (await AMS.loadDoctors({ pageSize: 100 })).items;
+            } catch (error) {
+                AMS_UI.showError(error);
+                return;
+            }
+ 
+            if (!doctors.length) {
+                AMS_UI.message("warning", "There are no doctors yet. Add a doctor first.");
+                return;
+            }
+ 
+            if (!doctors.some(d => d.id === doctorId)) doctorId = doctors[0].id;
+ 
+            el("doctorSelect").innerHTML = doctors.map(d =>
+                '<option value="' + esc(d.id) + '">' + esc(d.name) + " (" + esc(d.department) + ")</option>").join("");
+            el("doctorSelect").value = doctorId;
+            el("doctorSelect").addEventListener("change", () => {
+                location.search = "?id=" + encodeURIComponent(el("doctorSelect").value);
+            });
+ 
+            const doctor = AMS.getDoctorById(doctorId);
+            el("doctorAvatar").textContent = initials(doctor.name);
+            el("doctorMeta").textContent = doctor.id + ", " + doctor.department + ", " + doctor.status;
+ 
+            loadDoctorData();
+        })();
     </script>
+
 
 </body>
 </html>

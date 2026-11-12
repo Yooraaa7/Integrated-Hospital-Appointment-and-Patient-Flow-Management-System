@@ -17,52 +17,40 @@
             <img src="logo.png" alt="Hospital logo">
         </div>
 
-        <div class="search-controls">
-            <input type="text" class="search-input" placeholder="Search patient or doctor name / ID">
-            <select class="filter-select">
-                <option value="">All records</option>
-                <option value="appointment">Appointments</option>
-                <option value="doctor">Doctors</option>
-            </select>
-            <button type="button" class="search-button">
-                <i class="fa-solid fa-magnifying-glass"></i> Search
-            </button>
-        </div>
-
+        <h1>Appointment & Doctor Management</h1>
+ 
         <div class="staff-info">
             <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
-            <button type="button" class="logout-button">Logout</button>
+            <a href="login.html" class="logout-button">Logout</a>
         </div>
     </header>
-
+ 
     <div class="page-layout">
-
+ 
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-title">APPOINTMENT &amp; DOCTOR MANAGEMENT</div>
-
+ 
             <ul class="sidebar-menu">
                 <li>
                     <a href="HospitalAnalytics.html">
                         <i class="fa-solid fa-gauge"></i> Dashboard
                     </a>
                 </li>
-
+ 
                 <li class="sidebar-group">Appointments</li>
                 <li>
                     <ul class="sidebar-sub">
                         <li><a href="Appointments.html"><i class="fa-solid fa-calendar-days"></i> All Appointments</a></li>
-                        <li><a href="AppointmentForm.html"><i class="fa-solid fa-calendar-plus"></i> Appointment Form</a></li>
                     </ul>
                 </li>
-
+ 
                 <li class="sidebar-group">Doctors</li>
                 <li>
                     <ul class="sidebar-sub">
                         <li><a href="Doctors.html" class="active"><i class="fa-solid fa-user-doctor"></i> Doctor Management</a></li>
                     </ul>
                 </li>
-
+ 
                 <li class="sidebar-group">Analytics</li>
                 <li>
                     <ul class="sidebar-sub">
@@ -149,6 +137,8 @@
                 </div>
  
                 <div class="empty-row" id="emptyMessage">No doctors match your filters.</div>
+
+                <div class="pagination" id="pagination"></div>
             </section>
 
             <!-- Doctor schedule and availability -->
@@ -272,6 +262,21 @@
  
                 <div class="empty-row" id="blockEmpty">No OT, leave or other unavailable times for this doctor.</div>
             </section>
+
+    <!-- Deactivate doctor modal -->
+    <div class="modal-backdrop" id="statusModal" role="dialog" aria-modal="true" aria-labelledby="statusTitle">
+        <div class="modal">
+            <h2 id="statusTitle">Deactivate doctor</h2>
+            <p id="statusSummary"></p>
+
+            <div class="message-box warning" id="statusWarning"></div>
+
+            <div class="modal-actions">
+                <button type="button" class="action-button secondary" id="statusClose">Keep active</button>
+                <button type="button" class="action-button danger" id="statusConfirm">Deactivate doctor</button>
+            </div>
+        </div>
+    </div>
  
         </main>
     </div>

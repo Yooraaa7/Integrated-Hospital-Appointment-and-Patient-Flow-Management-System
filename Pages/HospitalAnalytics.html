@@ -16,18 +16,8 @@
         <div class="navbar-logo">
             <img src="logo.png" alt="Hospital logo">
         </div>
- 
-        <div class="search-controls">
-            <input type="text" class="search-input" placeholder="Search patient or doctor name / ID">
-            <select class="filter-select">
-                <option value="">All records</option>
-                <option value="appointment">Appointments</option>
-                <option value="doctor">Doctors</option>
-            </select>
-            <button type="button" class="search-button">
-                <i class="fa-solid fa-magnifying-glass"></i> Search
-            </button>
-        </div>
+
+        <h1>Appointment & Doctor Management</h1>
  
         <div class="staff-info">
             <span class="staff-id">Staff ID: ST-0001 <i class="fa-solid fa-user"></i></span>
@@ -39,7 +29,6 @@
  
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-title">APPOINTMENT &amp; DOCTOR MANAGEMENT</div>
  
             <ul class="sidebar-menu">
                 <li>
@@ -83,8 +72,7 @@
                     <p>Today's appointments and doctor availability at a glance.</p>
                 </div>
                 <div class="header-actions">
-                    <a href="AppointmentForm.html" class="action-button"><i class="fa-solid fa-calendar-plus"></i> New appointment</a>
-                    <a href="DoctorProfile.html" class="action-button secondary"><i class="fa-solid fa-user-plus"></i> Add doctor</a>
+                    <a href="DoctorProfile.html" class="action-button"><i class="fa-solid fa-user-plus"></i> Add doctor</a>
                 </div>
             </div>
  
@@ -122,7 +110,6 @@
                         <div class="summary-label">Doctors on duty today</div>
                     </div>
                 </div>
-            </section>
  
                 <!-- Shown only when the server sends notification figures -->
                 <div class="summary-card" id="cardNotif" style="display: none;">
@@ -159,6 +146,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="panel-footer" id="scheduleFooter"></div> 
                 </div>
  
                 <div class="panel">
@@ -168,6 +156,7 @@
                     </div>
  
                     <ul class="availability-list" id="availabilityList"></ul>
+                    <div class="panel-footer" id="availabilityFooter"></div> 
                 </div>
             </section>
  
