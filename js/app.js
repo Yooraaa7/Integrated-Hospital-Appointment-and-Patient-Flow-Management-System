@@ -137,7 +137,7 @@ async function loadHospitalData() {
 const q = selector => document.querySelector(selector);
 const qa = selector => [...document.querySelectorAll(selector)];
 
-const AUTH_API_URL = "https://thecare-patient-backend.onrender.com/api/auth";
+const AUTH_API_URL = "https://thecare-patient-backend-api.onrender.com/api/auth";
 
 function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
