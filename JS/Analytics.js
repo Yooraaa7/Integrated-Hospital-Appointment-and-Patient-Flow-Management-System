@@ -2,8 +2,7 @@
    Analytics.js - chart helpers only
    Shared by AppointmentDemand.html, PeakPeriods.html and DoctorUtilisation.html
 
-   The sample data generator that used to be here (AppData) has been
-   removed. The pages now load their figures from the backend through
+   The pages now load their figures from the backend through
    AMS (ams.js + ams-api.js), already totalled by PostgreSQL.
 
    Labels and texts passed to these helpers are escaped here, so
