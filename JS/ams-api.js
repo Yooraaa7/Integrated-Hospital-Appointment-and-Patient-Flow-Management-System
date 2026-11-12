@@ -17,7 +17,23 @@
         and { success: false, message } for errors
       - snake_case keys from PostgreSQL rows become camelCase
         (patient_name -> patientName), so routes may return raw rows
-      - date values sent as full timestamps become "YYYY-MM-DD"
+      - DATE and timestamp values are turned into the plain values
+        ams.js uses, always in Asia/Kuala_Lumpur time, so the result
+        does not depend on the server or browser time zone:
+            "date" / "dateOfBirth" / "...Date" keys  -> "YYYY-MM-DD"
+            appointments with scheduledAt but no
+            date/time                                -> date + "HH:MM"
+      - raw rows from the Neon tables get the field names ams.js reads
+        (only when that field is missing, so a route that already
+        returns the final shape is never changed):
+            departments   departmentName      -> name
+            doctors       doctorId            -> id
+                          fullName            -> name
+                          isActive            -> status (Active / Inactive)
+            joined rows   departmentName      -> department
+        Joins that raw rows cannot carry (the department name on a
+        doctor, the patient name and email on an appointment) must
+        still be done in the route's SQL.
       - 401 clears the session and redirects to login.html
         (change it with window.AMS_LOGIN_PAGE, or set "" to switch it off)
 */
@@ -32,8 +48,57 @@
 
     const base = AMS.API_BASE;
 
+    const TIME_ZONE =
+        AMS.TIME_ZONE ||
+        window.AMS_TIME_ZONE ||
+        "Asia/Kuala_Lumpur";
+
     const token = () =>
         sessionStorage.getItem("amsToken");
+
+    // ============================================
+    // TIME ZONE HELPERS
+    // ============================================
+
+    // hourCycle h23 keeps midnight as "00" instead of "24".
+    const zonedFormatter = new Intl.DateTimeFormat(
+        "en-GB",
+        {
+            timeZone: TIME_ZONE,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hourCycle: "h23"
+        }
+    );
+
+    function zonedParts(date) {
+        const parts = {};
+
+        zonedFormatter
+            .formatToParts(date)
+            .forEach(part => {
+                parts[part.type] = part.value;
+            });
+
+        return parts;
+    }
+
+    // "YYYY-MM-DD" as seen in TIME_ZONE
+    function zonedDate(date) {
+        const parts = zonedParts(date);
+
+        return `${parts.year}-${parts.month}-${parts.day}`;
+    }
+
+    // "HH:MM" (24-hour) as seen in TIME_ZONE
+    function zonedTime(date) {
+        const parts = zonedParts(date);
+
+        return `${parts.hour}:${parts.minute}`;
+    }
 
     // ============================================
     // RESPONSE MAPPING
@@ -47,8 +112,20 @@
 
     const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 
-    // PostgreSQL DATE columns can arrive as a timestamp
-    // ("2026-10-19T16:00:00.000Z"). Show them as a local date.
+    // Keys that hold a calendar date (a PostgreSQL DATE column).
+    // Real timestamps such as scheduledAt or createdAt are kept as
+    // they are, because ams.js formats those itself.
+    function isDateKey(key) {
+        return (
+            key === "date" ||
+            key === "dateOfBirth" ||
+            /[a-z]Date$/.test(key || "")
+        );
+    }
+
+    // node-postgres turns a DATE column into a JavaScript Date, which
+    // reaches the browser as a timestamp ("2026-10-19T16:00:00.000Z").
+    // Read it back as a calendar date in the clinic's time zone.
     function fixDate(value) {
         if (
             typeof value === "string" &&
@@ -57,11 +134,86 @@
             const date = new Date(value);
 
             if (!Number.isNaN(date.getTime())) {
-                return AMS.toISODate(date);
+                return zonedDate(date);
             }
         }
 
         return value;
+    }
+
+    const has = (record, key) =>
+        record[key] !== undefined && record[key] !== null;
+
+    // Gives a raw Neon row the field names ams.js reads.
+    // Nothing that is already present is overwritten.
+    function adaptRecord(record) {
+        // departments: id, departmentCode, departmentName, ...
+        const isDepartment =
+            has(record, "departmentName") &&
+            has(record, "departmentCode") &&
+            !has(record, "departmentId") &&
+            !has(record, "doctorId") &&
+            !has(record, "scheduledAt");
+
+        if (isDepartment) {
+            if (!has(record, "name")) {
+                record.name = record.departmentName;
+            }
+        } else if (
+            has(record, "departmentName") &&
+            !has(record, "department")
+        ) {
+            // A row joined to departments (doctor, appointment).
+            record.department = record.departmentName;
+        }
+
+        // doctors: doctorId, fullName, specialty, isActive, ...
+        const isDoctor =
+            has(record, "doctorId") &&
+            has(record, "fullName") &&
+            has(record, "specialty");
+
+        if (isDoctor) {
+            if (!has(record, "id")) {
+                record.id = record.doctorId;
+            }
+
+            if (!has(record, "name")) {
+                record.name = record.fullName;
+            }
+
+            // "On leave" is not stored on the doctors table.
+            // The route has to send status itself when it applies.
+            if (
+                !has(record, "status") &&
+                typeof record.isActive === "boolean"
+            ) {
+                record.status = record.isActive
+                    ? "Active"
+                    : "Inactive";
+            }
+        }
+
+        // appointments: one timestamp (scheduledAt) in the table,
+        // separate date and time in ams.js.
+        if (
+            typeof record.scheduledAt === "string" &&
+            ISO_TIMESTAMP.test(record.scheduledAt)
+        ) {
+            const scheduled = new Date(record.scheduledAt);
+
+            if (!Number.isNaN(scheduled.getTime())) {
+                if (!has(record, "date")) {
+                    record.date = zonedDate(scheduled);
+                }
+
+                if (!has(record, "time")) {
+                    record.time = zonedTime(scheduled);
+                }
+            }
+        }
+
+        return record;
     }
 
     function camelize(value, key) {
@@ -81,10 +233,10 @@
                 );
             });
 
-            return result;
+            return adaptRecord(result);
         }
 
-        return key === "date"
+        return isDateKey(key)
             ? fixDate(value)
             : value;
     }
@@ -106,13 +258,19 @@
         delete rest.success;
         delete rest.message;
 
+        // Keep authentication session information intact.
+        if ("session" in rest) {
+            return rest;
+        }
+
         if ("data" in rest) {
             return rest.data;
         }
 
         const keys = Object.keys(rest);
 
-        // { success, doctors: [...] } or { success, appointment: {...} }
+        // { success, doctors: [...] }
+        // { success, appointment: {...} }
         if (
             keys.length === 1 &&
             rest[keys[0]] !== null &&
