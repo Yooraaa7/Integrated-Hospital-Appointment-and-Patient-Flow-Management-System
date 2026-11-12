@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Page shown after a successful admin login.
     // Change this if your dashboard file has a different name.
-    const HOME_PAGE = window.AMS_HOME_PAGE || "Dashboard.html";
+    const HOME_PAGE = window.AMS_HOME_PAGE || "HospitalAnalytics.html";
 
     // Only administrators may use this system
     const ALLOWED_ROLE = "admin";
