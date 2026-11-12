@@ -1,16 +1,55 @@
         const el = id => document.getElementById(id);
         const esc = AMS_UI.esc;
         const enc = encodeURIComponent;
+        const PAGE_SIZE = 10;
+        let currentPage = 1;
  
         let activeId = null;
  
         /* ---------- Filters ---------- */
+        el("btnSearch").addEventListener("click", () => {
+            currentPage = 1;
+            AMS_UI.clearMessage();
+            load();
+        });
+
+        el("filterSearch").addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+                currentPage = 1;
+                AMS_UI.clearMessage();
+                load();
+            }
+        });
+
+        el("btnReset").addEventListener("click", () => {
+
+            ["filterSearch", "filterDept", "filterStatus"]
+                .forEach(id => el(id).value = "");
+
+            currentPage = 1;
+
+            AMS_UI.clearMessage();
+            load();
+        });
+
+        el("pagination").addEventListener("click", e => {
+
+            const btn = e.target.closest("button[data-page]");
+
+            if (!btn || btn.disabled) return;
+
+            currentPage = Number(btn.dataset.page);
+
+            load();
+        });
+
         function currentFilters() {
-            return {
+        return {
                 search: el("filterSearch").value.trim(),
                 department: el("filterDept").value,
                 status: el("filterStatus").value,
-                pageSize: 100
+                page: currentPage,
+                pageSize: PAGE_SIZE
             };
         }
  
@@ -49,32 +88,61 @@
                     toggle +
                 "</div></td></tr>";
         }
+
+        function renderPagination(page) {
+            const size = page.pageSize || PAGE_SIZE;
+            const total = page.totalItems || 0;
+            const pages = Math.max(1, Math.ceil(total / size));
+            const from = total ? (page.page - 1) * size + 1 : 0;
+            const to = Math.min(total, page.page * size);
+ 
+            const first = Math.max(1, page.page - 2);
+            const last = Math.min(pages, page.page + 2);
+            let buttons = '<button type="button" class="page-button" data-page="' + (page.page - 1) + '"' +
+                          (page.page <= 1 ? " disabled" : "") + ">Prev</button>";
+ 
+            for (let p = first; p <= last; p++) {
+                buttons += '<button type="button" class="page-button' + (p === page.page ? " current" : "") +
+                           '" data-page="' + p + '">' + p + "</button>";
+            }
+ 
+            buttons += '<button type="button" class="page-button" data-page="' + (page.page + 1) + '"' +
+                       (page.page >= pages ? " disabled" : "") + ">Next</button>";
+ 
+            el("pagination").innerHTML =
+                "<span>Showing " + from + " to " + to + " of " + total + "</span>" +
+                '<div class="pagination-buttons">' + buttons + "</div>";
+        }
+
  
         async function load() {
             el("emptyMessage").style.display = "none";
-            el("doctorRows").innerHTML = '<tr><td colspan="7">Loading doctors...</td></tr>';
- 
+
+            el("doctorRows").innerHTML =
+                '<tr><td colspan="7">Loading doctors...</td></tr>';
+
             try {
                 const page = await AMS.loadDoctors(currentFilters());
- 
-                el("doctorRows").innerHTML = page.items.map(rowHtml).join("");
-                el("resultCount").textContent = page.totalItems + " doctors";
-                el("emptyMessage").style.display = page.items.length ? "none" : "block";
+
+                el("doctorRows").innerHTML =
+                    page.items.map(rowHtml).join("");
+
+                el("resultCount").textContent =
+                    page.totalItems + " doctors";
+
+                el("emptyMessage").style.display =
+                    page.items.length ? "none" : "block";
+
+                renderPagination(page);
+
             } catch (error) {
                 el("doctorRows").innerHTML = "";
                 el("resultCount").textContent = "";
+                el("pagination").innerHTML = "";
+
                 AMS_UI.showError(error);
             }
         }
- 
-        el("btnSearch").addEventListener("click", () => { AMS_UI.clearMessage(); load(); });
-        el("filterSearch").addEventListener("keydown", e => { if (e.key === "Enter") { AMS_UI.clearMessage(); load(); } });
- 
-        el("btnReset").addEventListener("click", () => {
-            ["filterSearch", "filterDept", "filterStatus"].forEach(id => el(id).value = "");
-            AMS_UI.clearMessage();
-            load();
-        });
  
         /* ---------- Activate and deactivate ---------- */
         const modal = el("statusModal");
@@ -175,8 +243,6 @@
         })();
 
 /*---Doctor Schedule---*/
-        const el = id => document.getElementById(id);
-        const esc = AMS_UI.esc;
         const params = new URLSearchParams(location.search);
  
         let doctorId = params.get("id");
