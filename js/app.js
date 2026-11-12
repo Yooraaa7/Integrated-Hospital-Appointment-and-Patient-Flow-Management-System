@@ -1,117 +1,138 @@
 
-const DOCTORS = [
-    {
-        id: "sarah",
-        name: "Dr. Sarah Lee",
-        initials: "SL",
-        specialty: "Cardiology",
-        position: "Consultant Cardiologist",
-        languages: "English, Malay, Mandarin",
-        qualifications: "MBBS, MRCP",
-        experience: "12 Years",
-        about: "Dr. Sarah Lee provides cardiovascular assessment, cardiac screening and follow-up care.",
-        interests: ["Heart Health", "Hypertension", "Cardiac Screening", "Preventive Cardiology"],
-        schedule: {
-            Monday: ["09:00", "10:00", "11:00"],
-            Wednesday: ["14:00", "15:00", "16:00"],
-            Friday: ["09:00", "10:00", "11:00", "12:00"]
-        }
-    },
-    {
-        id: "daniel",
-        name: "Dr. Daniel Wong",
-        initials: "DW",
-        specialty: "Neurology",
-        position: "Consultant Neurologist",
-        languages: "English, Malay",
-        qualifications: "MBBS, MRCP",
-        experience: "10 Years",
-        about: "Dr. Daniel Wong provides neurological assessment and management for common neurological conditions.",
-        interests: ["Headache", "Migraine", "Stroke Care", "Neurological Assessment"],
-        schedule: {
-            Tuesday: ["09:00", "10:00", "11:00"],
-            Thursday: ["14:00", "15:00", "16:00"],
-            Saturday: ["09:00", "10:00", "11:00"]
-        }
-    },
-    {
-        id: "ahmad",
-        name: "Dr. Ahmad Rahman",
-        initials: "AR",
-        specialty: "Orthopaedics",
-        position: "Consultant Orthopaedic Surgeon",
-        languages: "English, Malay",
-        qualifications: "MBBS, MS Orthopaedics",
-        experience: "15 Years",
-        about: "Dr. Ahmad Rahman assesses and treats musculoskeletal and orthopaedic conditions.",
-        interests: ["Joint Pain", "Sports Injuries", "Back Pain", "Bone Health"],
-        schedule: {
-            Monday: ["14:00", "15:00", "16:00"],
-            Wednesday: ["09:00", "10:00", "11:00"],
-            Friday: ["14:00", "15:00", "16:00"]
-        }
-    },
-    {
-        id: "michelle",
-        name: "Dr. Michelle Tan",
-        initials: "MT",
-        specialty: "Paediatrics",
-        position: "Consultant Paediatrician",
-        languages: "English, Malay, Mandarin",
-        qualifications: "MBBS, MRCPCH",
-        experience: "9 Years",
-        about: "Dr. Michelle Tan provides healthcare consultation for infants, children and adolescents.",
-        interests: ["Child Health", "Growth & Development", "General Paediatrics", "Childhood Illness"],
-        schedule: {
-            Tuesday: ["09:00", "10:00", "11:00"],
-            Thursday: ["09:00", "10:00", "11:00", "12:00"],
-            Saturday: ["10:00", "11:00", "12:00"]
-        }
-    },
-    {
-        id: "priya",
-        name: "Dr. Priya Kumar",
-        initials: "PK",
-        specialty: "Dermatology",
-        position: "Consultant Dermatologist",
-        languages: "English, Malay, Tamil",
-        qualifications: "MBBS, MRCP",
-        experience: "11 Years",
-        about: "Dr. Priya Kumar provides consultation for a range of skin-related conditions.",
-        interests: ["Skin Conditions", "Acne", "Eczema", "General Dermatology"],
-        schedule: {
-            Monday: ["10:00", "11:00", "12:00"],
-            Wednesday: ["14:00", "15:00", "16:00", "17:00"],
-            Saturday: ["09:00", "10:00", "11:00"]
-        }
-    },
-    {
-        id: "lim",
-        name: "Dr. Lim Wei Jian",
-        initials: "LW",
-        specialty: "General Medicine",
-        position: "Consultant Physician",
-        languages: "English, Malay, Mandarin",
-        qualifications: "MBBS, MRCP",
-        experience: "13 Years",
-        about: "Dr. Lim Wei Jian provides general medical assessment and continuing adult care.",
-        interests: ["General Medicine", "Health Screening", "Chronic Disease", "Preventive Healthcare"],
-        schedule: {
-            Monday: ["09:00", "10:00", "11:00"],
-            Tuesday: ["14:00", "15:00", "16:00"],
-            Thursday: ["09:00", "10:00", "11:00", "12:00"]
-        }
-    }
+
+// Hospital data is loaded dynamically from PostgreSQL.
+let DOCTORS = [];
+let DEPARTMENTS = [];
+let ROUTES = [];
+
+const ROUTING_KEYWORDS = {
+    "General Medicine": [
+        "fever", "cough", "flu", "tired", "fatigue",
+        "checkup", "general", "screening"
+    ],
+    "Cardiology": [
+        "chest pain", "heart", "palpitation",
+        "shortness of breath", "high blood pressure",
+        "hypertension"
+    ],
+    "Orthopaedics": [
+        "joint pain", "back pain", "bone", "fracture",
+        "knee", "shoulder", "sports injury"
+    ],
+    "Dermatology": [
+        "skin", "rash", "acne", "eczema", "itch", "mole"
+    ],
+    "Paediatrics": [
+        "child", "children", "baby", "infant",
+        "fever child", "growth"
+    ],
+    "Ophthalmology": [
+        "eye", "eyes", "vision", "blurred vision",
+        "cataract", "retina"
+    ]
+};
+
+const WEEKDAYS = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
 ];
 
-const ROUTES = [
-    { department: "Cardiology", keywords: ["chest pain", "heart", "palpitation", "shortness of breath", "high blood pressure", "hypertension"] },
-    { department: "Neurology", keywords: ["headache", "migraine", "dizziness", "seizure", "numbness", "stroke"] },
-    { department: "Orthopaedics", keywords: ["joint pain", "back pain", "bone", "fracture", "knee", "shoulder", "sports injury"] },
-    { department: "Paediatrics", keywords: ["child", "children", "baby", "infant", "fever child", "growth"] },
-    { department: "Dermatology", keywords: ["skin", "rash", "acne", "eczema", "itch", "mole"] },
-    { department: "General Medicine", keywords: ["fever", "cough", "flu", "tired", "fatigue", "checkup", "general", "screening"] }
-];
+function generateScheduleSlots(schedule) {
+    const slots = {};
+
+    (schedule || []).forEach(day => {
+        const dayName = WEEKDAYS[day.day_of_week % 7];
+
+        if (!day.is_working) {
+            slots[dayName] = [];
+            return;
+        }
+
+        const times = [];
+
+        function addSession(start, end) {
+            if (!start || !end) return;
+
+            const [startHour, startMinute] =
+                start.split(":").map(Number);
+
+            const [endHour, endMinute] =
+                end.split(":").map(Number);
+
+            let current = startHour * 60 + startMinute;
+            const finish = endHour * 60 + endMinute;
+
+            while (current + day.slot_minutes <= finish) {
+                const hours = Math.floor(current / 60);
+                const minutes = current % 60;
+
+                times.push(
+                    String(hours).padStart(2, "0") +
+                    ":" +
+                    String(minutes).padStart(2, "0")
+                );
+
+                current += day.slot_minutes;
+            }
+        }
+
+        addSession(day.morning_start, day.morning_end);
+        addSession(day.afternoon_start, day.afternoon_end);
+
+        slots[dayName] = times;
+    });
+
+    return slots;
+}
+
+async function loadHospitalData() {
+    const [departmentData, doctorData] = await Promise.all([
+        patientApiRequest("/departments"),
+        patientApiRequest("/doctors")
+    ]);
+
+    DEPARTMENTS = departmentData.departments || [];
+
+    DOCTORS = (doctorData.doctors || []).map(item => ({
+        id: String(item.doctor_id),
+        name: item.full_name,
+        initials: item.full_name
+            .replace(/^Dr\.?\s*/i, "")
+            .split(/\s+/)
+            .map(part => part[0])
+            .join("")
+            .toUpperCase(),
+        departmentId: String(item.department_id),
+        departmentCode: item.department_code,
+        department: item.department_name,
+        specialty: item.specialty || item.department_name,
+        position: item.specialty || "Medical Doctor",
+        languages: item.languages || "Not specified",
+        qualifications: item.qualifications || "Not specified",
+        experience: item.years_of_experience
+            ? `${item.years_of_experience} Years`
+            : "Not specified",
+        about: item.bio || `${item.full_name} provides consultation in ${item.specialty || item.department_name}.`,
+        interests: [],
+        photoUrl: item.photo_url || "",
+        consultationRoom: item.consultation_room || "",
+        schedule: generateScheduleSlots(item.schedules)
+    }));
+
+    ROUTES = DEPARTMENTS.map(department => ({
+        department: department.department_name,
+        departmentId: String(department.id),
+        keywords: ROUTING_KEYWORDS[department.department_name] || []
+    }));
+
+    console.log("Hospital departments loaded:", DEPARTMENTS.length);
+    console.log("Hospital doctors loaded:", DOCTORS.length);
+}
 
 const q = selector => document.querySelector(selector);
 const qa = selector => [...document.querySelectorAll(selector)];
@@ -2084,11 +2105,16 @@ async function initNotifications() {
 }
 
 
-/* =========================
-   INITIALISE
-========================= */
-document.addEventListener("DOMContentLoaded", () => {
+
+document.addEventListener("DOMContentLoaded", async () => {
     renderShell();
+
+    try {
+        await loadHospitalData();
+    } catch (error) {
+        console.error("Unable to load hospital data:", error);
+    }
+
     initNotifications();
     initHome();
     initSignup();
@@ -2101,3 +2127,4 @@ document.addEventListener("DOMContentLoaded", () => {
     initDashboard();
     initPatientProfile();
 });
+

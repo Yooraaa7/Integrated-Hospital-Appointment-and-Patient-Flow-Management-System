@@ -6,6 +6,7 @@ const pool = require("./db");
 
 const authRoutes = require("./routes/auth");
 const appointmentRoutes = require("./routes/appointments");
+const doctorRoutes = require("./routes/doctors");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -77,6 +78,7 @@ app.get("/api/departments", async (req, res) => {
 });
 
 // Patient appointment management.
+app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
 
 app.listen(PORT, () => {
