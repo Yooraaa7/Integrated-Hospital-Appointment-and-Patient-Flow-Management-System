@@ -39,7 +39,7 @@ const AMS = (() => {
     function defaultApiBase() {
         const opened =
             window.location.protocol === "file:" ||
-            window.location.port === "5500";
+            ["5500", "5501"].includes(window.location.port);
 
         return opened
             ? "http://localhost:3000/api"
@@ -67,11 +67,13 @@ const AMS = (() => {
         "No-show"
     ];
 
-    // Closed appointments cannot be edited or cancelled.
+    // Closed appointments cannot be edited or cancelled. "Checked In"
+    // (set by the queue module when the patient arrives) is locked too.
     const CLOSED_STATUSES = [
         "Completed",
         "Cancelled",
-        "No-show"
+        "No-show",
+        "Checked In"
     ];
 
     const DOCTOR_STATUSES = [
@@ -204,8 +206,40 @@ const AMS = (() => {
         };
     }
 
+    // Reads the expiry time from the token. The server still checks the
+    // signature on every request; this only stops the pages from opening
+    // with a token that has already expired (or is not a real token).
+    function tokenExpired(token) {
+        try {
+            const payload = JSON.parse(
+                atob(
+                    token
+                        .split(".")[1]
+                        .replace(/-/g, "+")
+                        .replace(/_/g, "/")
+                )
+            );
+
+            return (
+                typeof payload.exp === "number" &&
+                payload.exp * 1000 <= Date.now()
+            );
+        } catch {
+            return true;
+        }
+    }
+
     function isLoggedIn() {
-        return Boolean(getToken());
+        const token = getToken();
+
+        if (!token) return false;
+
+        if (tokenExpired(token)) {
+            clearSession();
+            return false;
+        }
+
+        return true;
     }
 
     function clearSession() {
@@ -320,37 +354,44 @@ const AMS = (() => {
     // AUTH
     // ============================================
 
-    async function login(staffId, password) {
+    async function login(adminID, password) {
         return attempt(
             async () => {
-                // The shared auth route expects staff_id,
-                // the same as the other modules' login.
                 const data = await request(
                     "POST",
                     "/auth/login",
-                    { staff_id: staffId, password }
+                    {
+                        adminID: adminID,
+                        password: password
+                    }
                 );
 
-                if (!data || !data.token) {
+                if (
+                    !data ||
+                    !data.session ||
+                    !data.session.staff ||
+                    !data.session.token
+                ) {
                     throw new AmsError(
-                        "Login failed. The server did not " +
-                        "return an authentication token.",
+                        "Invalid login response from server.",
                         0,
-                        "NO_TOKEN"
+                        "INVALID_RESPONSE"
                     );
                 }
 
                 sessionStorage.setItem(
-                    SESSION_KEYS.token,
-                    data.token
+                    SESSION_KEYS.staffID,
+                    data.session.staff.staffId ||
+                    data.session.staff.staff_id ||
+                    adminID
                 );
 
-                // ams-api.js converts staff_id to staffId
+                // The signed token from the server (sent as a Bearer
+                // token by ams-api.js). It is kept in sessionStorage, so
+                // closing the tab ends the session.
                 sessionStorage.setItem(
-                    SESSION_KEYS.staffID,
-                    data.staffId ||
-                        (data.staff && data.staff.staffId) ||
-                        staffId
+                    SESSION_KEYS.token,
+                    data.session.token
                 );
 
                 return data;
@@ -359,7 +400,6 @@ const AMS = (() => {
             "Logged in."
         );
     }
-
     function logout() {
         clearSession();
     }
@@ -1515,6 +1555,7 @@ const AMS = (() => {
     return {
         // Constants
         API_BASE,
+        TIME_ZONE,
         APPOINTMENT_STATUSES,
         CLOSED_STATUSES,
         DOCTOR_STATUSES,
