@@ -187,18 +187,21 @@ body {
 .serving-ticket {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 3px;
-    background: white;
-    border: 1px solid #d8e5ee;
-    border-radius: 8px;
-    padding: 7px 9px;
-    font-size: 13px;
-    color: #27445e;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    font-size: 25px;
+    font-weight: normal;
+    color: #1b3753;
 }
 
 .serving-ticket small {
-    font-size: 10px;
-    color: #64748b;
+    font-size: 11px;
+    color: #74859a;
+    font-weight: normal;
 }
 
 .next-number {

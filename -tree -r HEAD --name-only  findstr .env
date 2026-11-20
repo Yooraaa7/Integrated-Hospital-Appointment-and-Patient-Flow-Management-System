@@ -1,0 +1,40 @@
+[33mcommit f1c02b372308ab4f2bccac0115f4c78fe0964e26[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mQueue-Management-System[m[33m, [m[1;31morigin/Queue-Management-System[m[33m)[m
+Author: Yooraaa7 <yooraaa0407@gmail.com>
+Date:   Thu Nov 5 18:52:13 2026 +0800
+
+    Add automated daily queue expiration
+
+backend/.env
+
+[33mcommit a8aa2cb7a29938f517b89eb7d3338166fe2f7c6c[m
+Author: Yooraaa7 <yooraaa0407@gmail.com>
+Date:   Fri Oct 30 15:47:07 2026 +0800
+
+    Enhance appointment registration with patient JWT authentication and CORS support
+
+backend/.env
+
+[33mcommit 7881ef9beef227ad111bcac83f1f3b6e9b773b6e[m
+Author: Yooraaa7 <yooraaa0407@gmail.com>
+Date:   Wed Oct 14 14:14:38 2026 +0800
+
+    Implement real-time QR queue tracking with PostgreSQL integration and live status updates
+
+backend/.env
+
+[33mcommit 6df1a6cb4aff02586f6a4d58ad4b7805fdd5eb81[m
+Author: Yooraaa7 <yooraaa0407@gmail.com>
+Date:   Sat Oct 10 21:26:27 2026 +0800
+
+    Implement authentication and authorization with JWT; refactor queue handling and integrate PostgreSQL for data management
+
+backend/.env
+
+[33mcommit 70583e131dd7a77d0b3122ee420d044da31cd8a0[m
+Author: Yooraaa7 <yooraaa0407@gmail.com>
+Date:   Mon Oct 5 17:36:51 2026 +0800
+
+    Initialise Express API with PostgreSQL connection and department/counter routes - feat(backend)
+
+backend/.env
+backend/node_modules/.env
