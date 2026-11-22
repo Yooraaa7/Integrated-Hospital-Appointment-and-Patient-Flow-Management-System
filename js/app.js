@@ -1015,6 +1015,7 @@ function initHome() {
 }
 
 
+
 function initDoctors() {
     const grid = q("#doctorGrid");
     if (!grid) return;
@@ -1024,21 +1025,19 @@ function initDoctors() {
     const count = q("#doctorCount");
     const noResults = q("#doctorNoResults");
 
-    // Keep the specialty filter available.
-    specialty.innerHTML =
-        `<option value="">All Areas of Expertise</option>` +
-        [...new Set(DOCTORS.map(doctor => doctor.specialty))]
-            .map(value =>
+    // Populate specialty filter using database values.
+    [...new Set(DOCTORS.map(doctor => doctor.specialty))]
+        .forEach(value => {
+            specialty.insertAdjacentHTML(
+                "beforeend",
                 `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
-            ).join("");
+            );
+        });
 
     const params = new URLSearchParams(location.search);
 
-    // Department filter passed from the department routing page.
+    // Read the selected department ID from the URL.
     const departmentId = params.get("department_id");
-
-    specialty.value = params.get("specialty") || "";
-    nameInput.value = params.get("name") || "";
 
     function render() {
         const selectedSpecialty = specialty.value;
@@ -1052,7 +1051,9 @@ function initDoctors() {
 
         grid.innerHTML = list.map(doctor => `
             <article class="card doctor-card">
-                <div class="doctor-avatar">${escapeHtml(doctor.initials)}</div>
+                <div class="doctor-avatar">
+                    ${escapeHtml(doctor.initials)}
+                </div>
 
                 <div class="doctor-info">
                     <span class="status-badge status-info">
@@ -1062,7 +1063,7 @@ function initDoctors() {
                     <h3>${escapeHtml(doctor.name)}</h3>
 
                     <p class="body-text">
-                        ${escapeHtml(doctor.department)}
+                        ${escapeHtml(doctor.position)}
                     </p>
 
                     <p class="muted-text">
@@ -1091,6 +1092,10 @@ function initDoctors() {
         noResults.classList.toggle("hidden", list.length > 0);
     }
 
+    // Preserve the specialty filter if one was supplied.
+    specialty.value = params.get("specialty") || "";
+    nameInput.value = params.get("name") || "";
+
     q("#doctorSearchButton").addEventListener("click", render);
 
     q("#doctorShowAll").addEventListener("click", () => {
@@ -1099,14 +1104,13 @@ function initDoctors() {
         render();
     });
 
-    specialty.addEventListener("change", render);
-
     nameInput.addEventListener("keydown", event => {
         if (event.key === "Enter") render();
     });
 
     render();
 }
+
 
 /* =========================
    DOCTOR PROFILE
@@ -1149,10 +1153,12 @@ function initDoctorProfile() {
 }
 
 
+
 function initDepartment() {
     const result = q("#routingResult");
     if (!result) return;
 
+    // Display all six departments.
     q("#departmentCards").innerHTML = ROUTES.map(route => `
         <div class="card card-pad">
             <span class="icon-box">
@@ -1164,7 +1170,7 @@ function initDepartment() {
             </h3>
 
             <p class="muted-text">
-                ${escapeHtml(route.keywords.slice(0, 4).join(" • "))}
+                ${route.keywords.slice(0, 4).map(escapeHtml).join(" • ")}
             </p>
 
             <a class="btn btn-outline"
@@ -1211,7 +1217,7 @@ function initDepartment() {
         if (!best) {
             result.innerHTML = `
                 <div class="alert alert-danger">
-                    No suitable department is currently available.
+                    No department is currently available.
                 </div>
             `;
             return;
@@ -1225,9 +1231,9 @@ function initDepartment() {
             </h2>
 
             <p class="body-text">
-                Based on the keywords entered, this is the closest matching
-                department in this prototype. This routing does not provide
-                a medical diagnosis.
+                Based on the keywords entered, this is the closest
+                matching department in this prototype.
+                This routing does not provide a medical diagnosis.
             </p>
 
             <div class="doctor-actions">
@@ -1235,10 +1241,16 @@ function initDepartment() {
                    href="doctors.html?department_id=${encodeURIComponent(best.departmentId)}">
                     View ${escapeHtml(best.department)} Doctors
                 </a>
+
+                <a class="btn btn-outline"
+                   href="appointment.html?department_id=${encodeURIComponent(best.departmentId)}">
+                    Book Appointment
+                </a>
             </div>
         `;
     });
 }
+
 
 /* =========================
    APPOINTMENT BOOKING - DATABASE VERSION
