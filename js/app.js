@@ -1,4 +1,113 @@
+function getDoctorExpertise(doctorId, department) {
+    const expertise = {
+        "DOC-GM-001": [
+            "General Health Checkups",
+            "Preventive Healthcare",
+            "Chronic Disease Management"
+        ],
+        "DOC-GM-002": [
+            "Diabetes Management",
+            "Hypertension",
+            "General Internal Medicine"
+        ],
+        "DOC-GM-003": [
+            "Infectious Diseases",
+            "Respiratory Conditions",
+            "Primary Healthcare"
+        ],
 
+        "DOC-CD-001": [
+            "Heart Failure",
+            "Coronary Artery Disease",
+            "Cardiac Risk Assessment"
+        ],
+        "DOC-CD-002": [
+            "Cardiac Arrhythmia",
+            "Electrocardiography",
+            "Hypertension"
+        ],
+        "DOC-CD-003": [
+            "Preventive Cardiology",
+            "Cholesterol Management",
+            "Heart Disease"
+        ],
+
+        "DOC-OR-001": [
+            "Joint Replacement",
+            "Knee Surgery",
+            "Hip Conditions"
+        ],
+        "DOC-OR-002": [
+            "Sports Injuries",
+            "Fracture Management",
+            "Arthroscopy"
+        ],
+        "DOC-OR-003": [
+            "Spinal Conditions",
+            "Back Pain",
+            "Musculoskeletal Disorders"
+        ],
+
+        "DOC-DR-001": [
+            "Acne Treatment",
+            "Eczema",
+            "General Skin Conditions"
+        ],
+        "DOC-DR-002": [
+            "Skin Cancer Screening",
+            "Mole Assessment",
+            "Pigmentation Disorders"
+        ],
+        "DOC-DR-003": [
+            "Psoriasis",
+            "Allergic Skin Conditions",
+            "Dermatological Procedures"
+        ],
+
+        "DOC-PD-001": [
+            "Child Health Checkups",
+            "Childhood Immunisation",
+            "Growth and Development"
+        ],
+        "DOC-PD-002": [
+            "Neonatal Care",
+            "Newborn Health",
+            "Infant Development"
+        ],
+        "DOC-PD-003": [
+            "Childhood Infections",
+            "Paediatric Respiratory Conditions",
+            "General Paediatrics"
+        ],
+        "DOC-CD-004": [
+            "Neonatal Medicine",
+            "Premature Infant Care",
+            "Newborn Health"
+        ],
+
+        "DOC-OP-001": [
+            "Cataract Assessment",
+            "Eye Surgery",
+            "General Eye Conditions"
+        ],
+        "DOC-OP-002": [
+            "Retinal Disorders",
+            "Diabetic Eye Disease",
+            "Vision Assessment"
+        ],
+        "DOC-OP-003": [
+            "Glaucoma",
+            "Eye Pressure Management",
+            "Comprehensive Eye Examinations"
+        ]
+    };
+
+    return expertise[doctorId] || [
+        `${department} Consultation`,
+        "Diagnosis and Assessment",
+        "Treatment and Follow-up"
+    ];
+}
 
 // Hospital data is loaded dynamically from PostgreSQL.
 let DOCTORS = [];
@@ -118,7 +227,7 @@ async function loadHospitalData() {
             ? `${item.years_of_experience} Years`
             : "Not specified",
         about: item.bio || `${item.full_name} provides consultation in ${item.specialty || item.department_name}.`,
-        interests: [],
+        interests: getDoctorExpertise(item.doctor_id, item.department_name),
         photoUrl: item.photo_url || "",
         consultationRoom: item.consultation_room || "",
         schedule: generateScheduleSlots(item.schedules)
@@ -905,9 +1014,7 @@ function initHome() {
     });
 }
 
-/* =========================
-   DOCTORS
-========================= */
+
 function initDoctors() {
     const grid = q("#doctorGrid");
     if (!grid) return;
@@ -917,39 +1024,60 @@ function initDoctors() {
     const count = q("#doctorCount");
     const noResults = q("#doctorNoResults");
 
-    [...new Set(DOCTORS.map(doctor => doctor.specialty))]
-        .forEach(value => {
-            specialty.insertAdjacentHTML("beforeend", `<option>${value}</option>`);
-        });
+    // Keep the specialty filter available.
+    specialty.innerHTML =
+        `<option value="">All Areas of Expertise</option>` +
+        [...new Set(DOCTORS.map(doctor => doctor.specialty))]
+            .map(value =>
+                `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+            ).join("");
+
+    const params = new URLSearchParams(location.search);
+
+    // Department filter passed from the department routing page.
+    const departmentId = params.get("department_id");
+
+    specialty.value = params.get("specialty") || "";
+    nameInput.value = params.get("name") || "";
 
     function render() {
-        const selected = specialty.value;
+        const selectedSpecialty = specialty.value;
         const name = nameInput.value.toLowerCase().trim();
 
         const list = DOCTORS.filter(doctor =>
-            (!selected || doctor.specialty === selected) &&
+            (!departmentId || doctor.departmentId === String(departmentId)) &&
+            (!selectedSpecialty || doctor.specialty === selectedSpecialty) &&
             (!name || doctor.name.toLowerCase().includes(name))
         );
 
         grid.innerHTML = list.map(doctor => `
             <article class="card doctor-card">
-                <div class="doctor-avatar">${doctor.initials}</div>
+                <div class="doctor-avatar">${escapeHtml(doctor.initials)}</div>
 
                 <div class="doctor-info">
-                    <span class="status-badge status-info">${doctor.specialty}</span>
-                    <h3>${doctor.name}</h3>
-                    <p class="body-text">${doctor.position}</p>
+                    <span class="status-badge status-info">
+                        ${escapeHtml(doctor.specialty)}
+                    </span>
+
+                    <h3>${escapeHtml(doctor.name)}</h3>
+
+                    <p class="body-text">
+                        ${escapeHtml(doctor.department)}
+                    </p>
+
                     <p class="muted-text">
                         <i class="bi bi-translate"></i>
-                        ${doctor.languages}
+                        ${escapeHtml(doctor.languages)}
                     </p>
 
                     <div class="doctor-actions">
-                        <a class="btn btn-outline" href="doctor_profile.html?doctor=${doctor.id}">
+                        <a class="btn btn-outline"
+                           href="doctor_profile.html?doctor=${encodeURIComponent(doctor.id)}">
                             View Profile
                         </a>
 
-                        <a class="btn btn-primary" href="appointment.html?doctor=${doctor.id}">
+                        <a class="btn btn-primary"
+                           href="appointment.html?doctor=${encodeURIComponent(doctor.id)}">
                             Start Appointment
                         </a>
                     </div>
@@ -957,20 +1085,21 @@ function initDoctors() {
             </article>
         `).join("");
 
-        count.textContent = `Showing ${list.length} doctor${list.length === 1 ? "" : "s"}`;
+        count.textContent =
+            `Showing ${list.length} doctor${list.length === 1 ? "" : "s"}`;
+
         noResults.classList.toggle("hidden", list.length > 0);
     }
 
-    const params = new URLSearchParams(location.search);
-    specialty.value = params.get("specialty") || "";
-    nameInput.value = params.get("name") || "";
-
     q("#doctorSearchButton").addEventListener("click", render);
+
     q("#doctorShowAll").addEventListener("click", () => {
         specialty.value = "";
         nameInput.value = "";
         render();
     });
+
+    specialty.addEventListener("change", render);
 
     nameInput.addEventListener("keydown", event => {
         if (event.key === "Enter") render();
@@ -1019,19 +1148,27 @@ function initDoctorProfile() {
         `).join("");
 }
 
-/* =========================
-   DEPARTMENT ROUTING
-========================= */
+
 function initDepartment() {
     const result = q("#routingResult");
     if (!result) return;
 
     q("#departmentCards").innerHTML = ROUTES.map(route => `
         <div class="card card-pad">
-            <span class="icon-box"><i class="bi bi-hospital"></i></span>
-            <h3 class="section-title" style="margin-top:12px">${route.department}</h3>
-            <p class="muted-text">${route.keywords.slice(0, 4).join(" • ")}</p>
-            <a class="btn btn-outline" href="doctors.html?specialty=${encodeURIComponent(route.department)}">
+            <span class="icon-box">
+                <i class="bi bi-hospital"></i>
+            </span>
+
+            <h3 class="section-title" style="margin-top:12px">
+                ${escapeHtml(route.department)}
+            </h3>
+
+            <p class="muted-text">
+                ${escapeHtml(route.keywords.slice(0, 4).join(" • "))}
+            </p>
+
+            <a class="btn btn-outline"
+               href="doctors.html?department_id=${encodeURIComponent(route.departmentId)}">
                 View Doctors
             </a>
         </div>
@@ -1041,7 +1178,11 @@ function initDepartment() {
         const text = q("#symptomInput").value.toLowerCase().trim();
 
         if (!text) {
-            result.innerHTML = `<div class="alert alert-danger">Please enter at least one symptom or service need.</div>`;
+            result.innerHTML = `
+                <div class="alert alert-danger">
+                    Please enter at least one symptom or service need.
+                </div>
+            `;
             return;
         }
 
@@ -1050,7 +1191,8 @@ function initDepartment() {
 
         ROUTES.forEach(route => {
             const currentScore = route.keywords.reduce(
-                (total, keyword) => total + (text.includes(keyword) ? 1 : 0),
+                (total, keyword) =>
+                    total + (text.includes(keyword) ? 1 : 0),
                 0
             );
 
@@ -1061,31 +1203,42 @@ function initDepartment() {
         });
 
         if (!best) {
-            best = ROUTES.find(route => route.department === "General Medicine");
+            best = ROUTES.find(
+                route => route.department === "General Medicine"
+            );
+        }
+
+        if (!best) {
+            result.innerHTML = `
+                <div class="alert alert-danger">
+                    No suitable department is currently available.
+                </div>
+            `;
+            return;
         }
 
         result.innerHTML = `
             <span class="status-badge status-info">RECOMMENDED</span>
-            <h2 class="page-title" style="margin-top:12px">${best.department}</h2>
+
+            <h2 class="page-title" style="margin-top:12px">
+                ${escapeHtml(best.department)}
+            </h2>
 
             <p class="body-text">
-                Based on the keywords entered, this is the closest matching department in this prototype.
-                This routing does not provide a medical diagnosis.
+                Based on the keywords entered, this is the closest matching
+                department in this prototype. This routing does not provide
+                a medical diagnosis.
             </p>
 
             <div class="doctor-actions">
-                <a class="btn btn-primary" href="doctors.html?specialty=${encodeURIComponent(best.department)}">
-                    View ${best.department} Doctors
-                </a>
-
-                <a class="btn btn-outline" href="appointment.html?specialty=${encodeURIComponent(best.department)}">
-                    Book Appointment
+                <a class="btn btn-primary"
+                   href="doctors.html?department_id=${encodeURIComponent(best.departmentId)}">
+                    View ${escapeHtml(best.department)} Doctors
                 </a>
             </div>
         `;
     });
 }
-
 
 /* =========================
    APPOINTMENT BOOKING - DATABASE VERSION
