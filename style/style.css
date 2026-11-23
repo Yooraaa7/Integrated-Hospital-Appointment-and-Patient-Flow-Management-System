@@ -1649,3 +1649,22 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     object-fit: cover;
     border-radius: 50%;
 }
+
+.doctor-avatar {
+    overflow: hidden;
+    position: relative;
+}
+
+.doctor-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.doctor-avatar span {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}

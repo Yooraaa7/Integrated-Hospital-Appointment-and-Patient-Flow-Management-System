@@ -206,16 +206,9 @@ router.post("/", async (req, res) => {
 });
 
 
+
 router.put("/:id/reschedule", async (req, res) => {
     const appointmentId = Number(req.params.id);
-    const scheduledAt = parseFutureDate(req.body?.scheduled_at);
-
-    const notes =
-        req.body?.notes === undefined || req.body?.notes === null
-            ? ""
-            : typeof req.body.notes === "string"
-                ? req.body.notes.trim()
-                : null;
 
     if (!Number.isSafeInteger(appointmentId) || appointmentId <= 0) {
         return res.status(400).json({
@@ -224,30 +217,28 @@ router.put("/:id/reschedule", async (req, res) => {
         });
     }
 
-    if (!scheduledAt) {
-        return res.status(400).json({
-            success: false,
-            message: "Please select a valid future appointment date and time."
-        });
-    }
+    const notes =
+        req.body?.notes === undefined || req.body?.notes === null
+            ? ""
+            : typeof req.body.notes === "string"
+                ? req.body.notes.trim()
+                : null;
 
-    if (notes === null) {
+    if (notes === null || notes.length > 2000) {
         return res.status(400).json({
             success: false,
-            message: "Appointment notes must be valid text."
-        });
-    }
-
-    if (notes.length > 2000) {
-        return res.status(400).json({
-            success: false,
-            message: "Appointment notes cannot exceed 2000 characters."
+            message: "Appointment notes must be valid text and cannot exceed 2000 characters."
         });
     }
 
     try {
         const appointmentResult = await pool.query(
-            `SELECT id, status
+            `SELECT
+                id,
+                status,
+                scheduled_at,
+                department_id,
+                doctor_id
              FROM appointments
              WHERE id = $1 AND patient_id = $2`,
             [appointmentId, req.patient.id]
@@ -262,14 +253,72 @@ router.put("/:id/reschedule", async (req, res) => {
 
         const appointment = appointmentResult.rows[0];
 
-        if (!["BOOKED", "CONFIRMED"].includes(appointment.status)) {
-            return res.status(409).json({
+        if (!["BOOKED", "CONFIRMED", "RESCHEDULED"].includes(appointment.status)) {
+            return res.status(400).json({
                 success: false,
                 message: "This appointment cannot be rescheduled."
             });
         }
 
-        // Do not silently change an appointment that already has a QMS ticket.
+        // Keep existing values when the patient does not submit new ones.
+        const scheduledAt =
+            req.body?.scheduled_at === undefined
+                ? new Date(appointment.scheduled_at)
+                : parseFutureDate(req.body.scheduled_at);
+
+        if (!scheduledAt || Number.isNaN(scheduledAt.getTime())) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select a valid future appointment date and time."
+            });
+        }
+
+        let departmentId = appointment.department_id;
+
+        if (req.body?.department_id !== undefined) {
+            departmentId = Number(req.body.department_id);
+
+            if (!Number.isSafeInteger(departmentId) || departmentId <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "A valid department is required."
+                });
+            }
+        }
+
+        let doctorId = appointment.doctor_id;
+
+        if (req.body?.doctor_id !== undefined) {
+            doctorId =
+                req.body.doctor_id === null ||
+                String(req.body.doctor_id).trim() === ""
+                    ? null
+                    : String(req.body.doctor_id).trim();
+
+            if (doctorId && doctorId.length > 100) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid doctor ID."
+                });
+            }
+        }
+
+        // Check whether the selected department is active.
+        const departmentResult = await pool.query(
+            `SELECT id
+             FROM departments
+             WHERE id = $1 AND is_active = TRUE`,
+            [departmentId]
+        );
+
+        if (departmentResult.rows.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "The selected department is unavailable."
+            });
+        }
+
+        // Do not change an appointment that already has a QMS ticket.
         const queueResult = await pool.query(
             `SELECT id
              FROM queues
@@ -285,12 +334,31 @@ router.put("/:id/reschedule", async (req, res) => {
             });
         }
 
+        // Detect changes to the actual appointment arrangement.
+        const scheduleChanged =
+            scheduledAt.getTime() !== new Date(appointment.scheduled_at).getTime();
+
+        const departmentChanged =
+            Number(departmentId) !== Number(appointment.department_id);
+
+        const doctorChanged =
+            doctorId !== appointment.doctor_id;
+
+        const arrangementChanged =
+            scheduleChanged || departmentChanged || doctorChanged;
+
+        // Preserve the existing status for note-only edits.
+        const newStatus = arrangementChanged
+            ? "RESCHEDULED"
+            : appointment.status;
+
+        // Prevent duplicate appointments at the same time.
         const duplicateResult = await pool.query(
             `SELECT id
              FROM appointments
              WHERE patient_id = $1
                AND scheduled_at = $2
-               AND status IN ('BOOKED', 'CONFIRMED')
+               AND status IN ('BOOKED', 'CONFIRMED', 'RESCHEDULED')
                AND id <> $3
              LIMIT 1`,
             [req.patient.id, scheduledAt, appointmentId]
@@ -306,9 +374,12 @@ router.put("/:id/reschedule", async (req, res) => {
         const result = await pool.query(
             `UPDATE appointments
              SET scheduled_at = $1,
-                 notes = $2,
+                 department_id = $2,
+                 doctor_id = $3,
+                 notes = $4,
+                 status = $5,
                  updated_at = CURRENT_TIMESTAMP
-             WHERE id = $3 AND patient_id = $4
+             WHERE id = $6 AND patient_id = $7
              RETURNING
                 id,
                 patient_id,
@@ -318,23 +389,35 @@ router.put("/:id/reschedule", async (req, res) => {
                 notes,
                 status,
                 updated_at`,
-            [scheduledAt, notes, appointmentId, req.patient.id]
+            [
+                scheduledAt,
+                departmentId,
+                doctorId,
+                notes,
+                newStatus,
+                appointmentId,
+                req.patient.id
+            ]
         );
 
         return res.json({
             success: true,
-            message: "Appointment rescheduled successfully.",
+            message: arrangementChanged
+                ? "Appointment rescheduled successfully."
+                : "Appointment details updated successfully.",
             appointment: result.rows[0]
         });
+
     } catch (error) {
         console.error("Reschedule appointment failed:", error.message);
 
         return res.status(500).json({
             success: false,
-            message: "Unable to reschedule appointment."
+            message: "Unable to update appointment."
         });
     }
 });
+
 
 
 
@@ -442,7 +525,7 @@ router.post("/:id/register", async (req, res) => {
             });
         }
 
-        if (!["CONFIRMED", "BOOKED"].includes(appointment.status)) {
+        if (!["CONFIRMED", "BOOKED", "RESCHEDULED"].includes(appointment.status)) {
             await client.query("ROLLBACK");
             transactionStarted = false;
 

@@ -246,7 +246,11 @@ async function loadHospitalData() {
 const q = selector => document.querySelector(selector);
 const qa = selector => [...document.querySelectorAll(selector)];
 
-const AUTH_API_URL = "https://thecare-patient-backend-api.onrender.com/api/auth";
+const AUTH_API_URL =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+        ? "http://localhost:3001/api/auth"
+        : "https://thecare-patient-backend-api.onrender.com/api/auth";
 
 function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -431,12 +435,12 @@ function appointmentFromApi(row) {
     const statusMap = {
         BOOKED: "Confirmed",
         CONFIRMED: "Confirmed",
+        RESCHEDULED: "Rescheduled",
         CANCELLED: "Cancelled",
         COMPLETED: "Completed",
         CHECKED_IN: "Checked In",
         NO_SHOW: "No Show"
     };
-
     const selectedDoctor = doctorById(String(row.doctor_id || ""));
 
     return {
@@ -768,6 +772,25 @@ function initSignup() {
         updatePasswordRule("ruleLength", rules.length);
     });
 
+    // Enter saves the appointment from the Notes textarea.
+    // Shift + Enter inserts a new line.
+    if (notes) {
+        notes.addEventListener("keydown", event => {
+            if (event.key !== "Enter") return;
+
+            if (event.shiftKey) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (form.dataset.saving === "true") return;
+
+            form.requestSubmit();
+        }, true);
+    }
+
     form.addEventListener("submit", async event => {
         event.preventDefault();
 
@@ -1052,7 +1075,19 @@ function initDoctors() {
         grid.innerHTML = list.map(doctor => `
             <article class="card doctor-card">
                 <div class="doctor-avatar">
-                    ${escapeHtml(doctor.initials)}
+                    ${
+                        doctor.photoUrl
+                            ? `<img
+                                    src="${escapeHtml(doctor.photoUrl)}"
+                                    alt="Photo of ${escapeHtml(doctor.name)}"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                            >`
+                            : ""
+                    }
+
+                    <span style="display:${doctor.photoUrl ? "none" : "flex"}">
+                        ${escapeHtml(doctor.initials)}
+                    </span>
                 </div>
 
                 <div class="doctor-info">
@@ -1154,6 +1189,8 @@ function initDoctorProfile() {
 
 
 
+
+
 function initDepartment() {
     const result = q("#routingResult");
     if (!result) return;
@@ -1180,9 +1217,13 @@ function initDepartment() {
         </div>
     `).join("");
 
-    q("#routeButton").addEventListener("click", () => {
-        const text = q("#symptomInput").value.toLowerCase().trim();
+    // Shared recommendation function.
+    const recommendDepartment = () => {
+        const text = q("#symptomInput").value
+            .toLowerCase()
+            .trim();
 
+        // Check for empty input.
         if (!text) {
             result.innerHTML = `
                 <div class="alert alert-danger">
@@ -1192,13 +1233,28 @@ function initDepartment() {
             return;
         }
 
+        // Split the patient's input into individual words.
+        const inputWords = new Set(
+            text.split(/[^a-z0-9]+/).filter(Boolean)
+        );
+
         let best = null;
         let score = 0;
 
+        // Find the department with the highest keyword match.
         ROUTES.forEach(route => {
             const currentScore = route.keywords.reduce(
-                (total, keyword) =>
-                    total + (text.includes(keyword) ? 1 : 0),
+                (total, keyword) => {
+                    const keywordWords = keyword
+                        .toLowerCase()
+                        .split(/\s+/);
+
+                    const keywordMatches = keywordWords.some(
+                        word => inputWords.has(word)
+                    );
+
+                    return total + (keywordMatches ? 1 : 0);
+                },
                 0
             );
 
@@ -1208,21 +1264,27 @@ function initDepartment() {
             }
         });
 
-        if (!best) {
-            best = ROUTES.find(
-                route => route.department === "General Medicine"
-            );
-        }
-
+        // Display message if no suitable department is found.
         if (!best) {
             result.innerHTML = `
-                <div class="alert alert-danger">
-                    No department is currently available.
+                <div class="alert alert-warning">
+                    <h3>No Suitable Department Found</h3>
+
+                    <p>
+                        Sorry, we couldn't find a suitable department
+                        based on the symptoms you entered.
+                    </p>
+
+                    <p>
+                        Please try describing your symptoms differently
+                        or contact the hospital for assistance.
+                    </p>
                 </div>
             `;
             return;
         }
 
+        // Display the recommended department.
         result.innerHTML = `
             <span class="status-badge status-info">RECOMMENDED</span>
 
@@ -1248,8 +1310,23 @@ function initDepartment() {
                 </a>
             </div>
         `;
+    };
+
+    // Recommend department when the button is clicked.
+    q("#routeButton").addEventListener(
+        "click",
+        recommendDepartment
+    );
+
+    // Recommend department when Enter is pressed.
+    q("#symptomInput").addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            recommendDepartment();
+        }
     });
 }
+
 
 
 /* =========================
@@ -1542,6 +1619,10 @@ function initAppointment() {
             return;
         }
 
+        if (form.dataset.saving === "true") return;
+
+        form.dataset.saving = "true";
+
         const submitButton = form.querySelector('[type="submit"]');
 
         if (submitButton) submitButton.disabled = true;
@@ -1578,6 +1659,8 @@ function initAppointment() {
         } catch (error) {
             alert(`Unable to save appointment: ${error.message}`);
         } finally {
+            form.dataset.saving = "false";
+
             if (submitButton) submitButton.disabled = false;
         }
     });
@@ -1651,7 +1734,9 @@ function initHistory() {
             const selectedDoctor = doctorById(appointment.doctorId);
             const doctorName = appointment.doctorName || "Doctor to be assigned";
 
-            const canManage = ["Confirmed"].includes(appointment.status);
+            const canManage = ["Confirmed", "Rescheduled"].includes(
+                appointment.status
+            );
 
             
             const actions = canManage
