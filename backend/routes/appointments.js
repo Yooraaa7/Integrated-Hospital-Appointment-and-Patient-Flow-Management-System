@@ -28,6 +28,7 @@ router.get("/", async (req, res) => {
         const result = await pool.query(
             `SELECT
                 a.id,
+                a.patient_appointment_number,
                 a.external_appointment_id,
                 a.patient_id,
                 a.department_id,
@@ -60,9 +61,14 @@ router.get("/", async (req, res) => {
     }
 });
 
+
 // POST /api/appointments
-// Create a confirmed appointment in PostgreSQL.
+// Create a confirmed appointment with a patient-specific number.
+
 router.post("/", async (req, res) => {
+    const client = await pool.connect();
+    let transactionStarted = false;
+
     try {
         const {
             department_id,
@@ -123,7 +129,7 @@ router.post("/", async (req, res) => {
             });
         }
 
-        const departmentResult = await pool.query(
+        const departmentResult = await client.query(
             `SELECT id, department_code, department_name
              FROM departments
              WHERE id = $1 AND is_active = TRUE`,
@@ -137,8 +143,28 @@ router.post("/", async (req, res) => {
             });
         }
 
-        // Prevent the same patient from booking the exact same time twice.
-        const duplicateResult = await pool.query(
+        await client.query("BEGIN");
+        transactionStarted = true;
+
+        const patientResult = await client.query(
+            `SELECT id
+             FROM patients
+             WHERE id = $1
+             FOR UPDATE`,
+            [req.patient.id]
+        );
+
+        if (patientResult.rows.length === 0) {
+            await client.query("ROLLBACK");
+            transactionStarted = false;
+
+            return res.status(404).json({
+                success: false,
+                message: "Patient account not found."
+            });
+        }
+
+        const duplicateResult = await client.query(
             `SELECT id
              FROM appointments
              WHERE patient_id = $1
@@ -149,25 +175,43 @@ router.post("/", async (req, res) => {
         );
 
         if (duplicateResult.rows.length > 0) {
+            await client.query("ROLLBACK");
+            transactionStarted = false;
+
             return res.status(409).json({
                 success: false,
                 message: "You already have an appointment at this time."
             });
         }
 
-        const result = await pool.query(
+        const numberResult = await client.query(
+            `SELECT COALESCE(
+                MAX(patient_appointment_number), 0
+             ) + 1 AS next_number
+             FROM appointments
+             WHERE patient_id = $1`,
+            [req.patient.id]
+        );
+
+        const nextAppointmentNumber = Number(
+            numberResult.rows[0].next_number
+        );
+
+        const result = await client.query(
             `INSERT INTO appointments (
                 patient_id,
+                patient_appointment_number,
                 department_id,
                 doctor_id,
                 scheduled_at,
                 notes,
                 status
             )
-            VALUES ($1, $2, $3, $4, $5, 'CONFIRMED')
+            VALUES ($1, $2, $3, $4, $5, $6, 'CONFIRMED')
             RETURNING
                 id,
                 patient_id,
+                patient_appointment_number,
                 department_id,
                 doctor_id,
                 scheduled_at,
@@ -177,6 +221,7 @@ router.post("/", async (req, res) => {
                 updated_at`,
             [
                 req.patient.id,
+                nextAppointmentNumber,
                 departmentId,
                 doctorId,
                 scheduledAt,
@@ -184,27 +229,64 @@ router.post("/", async (req, res) => {
             ]
         );
 
+        const appointment = result.rows[0];
+
+        // Save the confirmation notification.
+        await client.query(
+            `INSERT INTO patient_notifications (
+                patient_id,
+                appointment_id,
+                notification_type,
+                title,
+                message,
+                detail
+             )
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                req.patient.id,
+                appointment.id,
+                "APPOINTMENT_CONFIRMED",
+                "Appointment Confirmed",
+                `Your appointment with ${doctorId || "your selected doctor"} has been confirmed.`,
+                `${scheduledAt.toLocaleString("en-MY", {
+                    timeZone: "Asia/Kuala_Lumpur",
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                })} • ${departmentResult.rows[0].department_name}`
+            ]
+        );
+
+        await client.query("COMMIT");
+        transactionStarted = false;
+
         return res.status(201).json({
             success: true,
             message: "Appointment created successfully.",
             appointment: {
-                ...result.rows[0],
+                ...appointment,
                 department_code:
                     departmentResult.rows[0].department_code,
                 department_name:
                     departmentResult.rows[0].department_name
             }
         });
+
     } catch (error) {
+        if (transactionStarted) {
+            await client.query("ROLLBACK");
+        }
+
         console.error("Create appointment failed:", error.message);
 
         return res.status(500).json({
             success: false,
             message: "Unable to create appointment."
         });
+
+    } finally {
+        client.release();
     }
 });
-
 
 
 router.put("/:id/reschedule", async (req, res) => {
@@ -231,20 +313,31 @@ router.put("/:id/reschedule", async (req, res) => {
         });
     }
 
+    const client = await pool.connect();
+    let transactionStarted = false;
+
     try {
-        const appointmentResult = await pool.query(
+        await client.query("BEGIN");
+        transactionStarted = true;
+
+        const appointmentResult = await client.query(
             `SELECT
                 id,
+                patient_id,
                 status,
                 scheduled_at,
                 department_id,
                 doctor_id
              FROM appointments
-             WHERE id = $1 AND patient_id = $2`,
+             WHERE id = $1 AND patient_id = $2
+             FOR UPDATE`,
             [appointmentId, req.patient.id]
         );
 
         if (appointmentResult.rows.length === 0) {
+            await client.query("ROLLBACK");
+            transactionStarted = false;
+
             return res.status(404).json({
                 success: false,
                 message: "Appointment not found."
@@ -254,19 +347,24 @@ router.put("/:id/reschedule", async (req, res) => {
         const appointment = appointmentResult.rows[0];
 
         if (!["BOOKED", "CONFIRMED", "RESCHEDULED"].includes(appointment.status)) {
+            await client.query("ROLLBACK");
+            transactionStarted = false;
+
             return res.status(400).json({
                 success: false,
                 message: "This appointment cannot be rescheduled."
             });
         }
 
-        // Keep existing values when the patient does not submit new ones.
         const scheduledAt =
             req.body?.scheduled_at === undefined
                 ? new Date(appointment.scheduled_at)
                 : parseFutureDate(req.body.scheduled_at);
 
         if (!scheduledAt || Number.isNaN(scheduledAt.getTime())) {
+            await client.query("ROLLBACK");
+            transactionStarted = false;
+
             return res.status(400).json({
                 success: false,
                 message: "Please select a valid future appointment date and time."
@@ -279,6 +377,9 @@ router.put("/:id/reschedule", async (req, res) => {
             departmentId = Number(req.body.department_id);
 
             if (!Number.isSafeInteger(departmentId) || departmentId <= 0) {
+                await client.query("ROLLBACK");
+                transactionStarted = false;
+
                 return res.status(400).json({
                     success: false,
                     message: "A valid department is required."
@@ -296,6 +397,9 @@ router.put("/:id/reschedule", async (req, res) => {
                     : String(req.body.doctor_id).trim();
 
             if (doctorId && doctorId.length > 100) {
+                await client.query("ROLLBACK");
+                transactionStarted = false;
+
                 return res.status(400).json({
                     success: false,
                     message: "Invalid doctor ID."
@@ -303,23 +407,24 @@ router.put("/:id/reschedule", async (req, res) => {
             }
         }
 
-        // Check whether the selected department is active.
-        const departmentResult = await pool.query(
-            `SELECT id
+        const departmentResult = await client.query(
+            `SELECT id, department_name
              FROM departments
              WHERE id = $1 AND is_active = TRUE`,
             [departmentId]
         );
 
         if (departmentResult.rows.length === 0) {
+            await client.query("ROLLBACK");
+            transactionStarted = false;
+
             return res.status(400).json({
                 success: false,
                 message: "The selected department is unavailable."
             });
         }
 
-        // Do not change an appointment that already has a QMS ticket.
-        const queueResult = await pool.query(
+        const queueResult = await client.query(
             `SELECT id
              FROM queues
              WHERE appointment_id = $1
@@ -328,13 +433,15 @@ router.put("/:id/reschedule", async (req, res) => {
         );
 
         if (queueResult.rows.length > 0) {
+            await client.query("ROLLBACK");
+            transactionStarted = false;
+
             return res.status(409).json({
                 success: false,
                 message: "This appointment already has a queue ticket. Please contact staff before rescheduling."
             });
         }
 
-        // Detect changes to the actual appointment arrangement.
         const scheduleChanged =
             scheduledAt.getTime() !== new Date(appointment.scheduled_at).getTime();
 
@@ -347,13 +454,11 @@ router.put("/:id/reschedule", async (req, res) => {
         const arrangementChanged =
             scheduleChanged || departmentChanged || doctorChanged;
 
-        // Preserve the existing status for note-only edits.
         const newStatus = arrangementChanged
             ? "RESCHEDULED"
             : appointment.status;
 
-        // Prevent duplicate appointments at the same time.
-        const duplicateResult = await pool.query(
+        const duplicateResult = await client.query(
             `SELECT id
              FROM appointments
              WHERE patient_id = $1
@@ -365,13 +470,16 @@ router.put("/:id/reschedule", async (req, res) => {
         );
 
         if (duplicateResult.rows.length > 0) {
+            await client.query("ROLLBACK");
+            transactionStarted = false;
+
             return res.status(409).json({
                 success: false,
                 message: "You already have an appointment at this time."
             });
         }
 
-        const result = await pool.query(
+        const result = await client.query(
             `UPDATE appointments
              SET scheduled_at = $1,
                  department_id = $2,
@@ -400,6 +508,36 @@ router.put("/:id/reschedule", async (req, res) => {
             ]
         );
 
+        // Create a new notification only when the arrangement changes.
+        if (arrangementChanged) {
+            await client.query(
+                `INSERT INTO patient_notifications (
+                    patient_id,
+                    appointment_id,
+                    notification_type,
+                    title,
+                    message,
+                    detail
+                 )
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                [
+                    req.patient.id,
+                    appointmentId,
+                    "APPOINTMENT_RESCHEDULED",
+                    "Appointment Rescheduled",
+                    "Your appointment arrangements have been updated successfully.",
+                    `${scheduledAt.toLocaleString("en-MY", {
+                        timeZone: "Asia/Kuala_Lumpur",
+                        dateStyle: "medium",
+                        timeStyle: "short"
+                    })} • ${departmentResult.rows[0].department_name}`
+                ]
+            );
+        }
+
+        await client.query("COMMIT");
+        transactionStarted = false;
+
         return res.json({
             success: true,
             message: arrangementChanged
@@ -409,17 +547,21 @@ router.put("/:id/reschedule", async (req, res) => {
         });
 
     } catch (error) {
+        if (transactionStarted) {
+            await client.query("ROLLBACK");
+        }
+
         console.error("Reschedule appointment failed:", error.message);
 
         return res.status(500).json({
             success: false,
             message: "Unable to update appointment."
         });
+
+    } finally {
+        client.release();
     }
 });
-
-
-
 
 
 /* =========================

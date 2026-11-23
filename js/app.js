@@ -445,11 +445,15 @@ function appointmentFromApi(row) {
 
     return {
         id: String(row.id),
+
+        // Patient-facing appointment number (separate from database ID).
+        patientAppointmentNumber: String(row.patient_appointment_number),
+
         patientId: String(row.patient_id),
         doctorId: String(row.doctor_id || ""),
         doctorName: selectedDoctor?.name ||
             (row.doctor_id ? `Doctor ${row.doctor_id}` : "Doctor to be assigned"),
-        specialty: row.department_name || "",
+        specialty: selectedDoctor?.specialty || row.department_name || "",
         departmentId: row.department_id,
         departmentCode: row.department_code || "",
         date,
@@ -1363,10 +1367,9 @@ function initAppointment() {
 
     dateInput.min = localToday();
 
-    function getDepartmentForSpecialty(value) {
+    function getDepartmentForDoctor(doctor) {
         return departments.find(department =>
-            String(department.department_name).trim().toLowerCase() ===
-            String(value).trim().toLowerCase()
+            Number(department.id) === Number(doctor.departmentId)
         );
     }
 
@@ -1462,6 +1465,7 @@ function initAppointment() {
                 timePassed = slotTime <= cutoff;
             }
 
+            
             const unavailable = taken || timePassed;
 
             return `
@@ -1471,9 +1475,10 @@ function initAppointment() {
                     data-time="${escapeHtml(time)}"
                     ${unavailable ? "disabled" : ""}
                 >
-                    ${escapeHtml(time)}${timePassed ? " (Passed)" : ""}
+                    ${escapeHtml(time)}
                 </button>
             `;
+
         }).join("");
 
         qa(".slot-btn:not(:disabled)").forEach(button => {
@@ -1597,9 +1602,7 @@ function initAppointment() {
             return;
         }
 
-        const department = getDepartmentForSpecialty(
-            selectedDoctor.specialty
-        );
+        const department = getDepartmentForDoctor(selectedDoctor);
 
         if (!department) {
             alert(
@@ -1776,7 +1779,7 @@ function initHistory() {
                         <div>
                             <div class="appointment-reference">
                                 <i class="bi bi-receipt"></i>
-                                Appointment ${escapeHtml(appointment.id)}
+                               Appointment ${escapeHtml(appointment.patientAppointmentNumber)}
                             </div>
 
                             <h2>${escapeHtml(doctorName)}</h2>
@@ -2068,6 +2071,7 @@ function initPatientProfile() {
 }
 
 
+
 /* =========================
    NOTIFICATIONS - DATABASE VERSION
 ========================= */
@@ -2092,146 +2096,65 @@ async function initNotifications() {
 
     let notifications = [];
 
-    /* Get read notification IDs */
+    /* Load notifications from PostgreSQL */
 
-    function getReadNotifications() {
+    async function loadNotifications() {
+
         try {
-            return JSON.parse(
-                localStorage.getItem("careReadNotifications") || "[]"
-            );
-        } catch {
-            return [];
+
+            const response = await patientApiRequest("/notifications");
+
+            notifications = response.notifications || [];
+
+            renderNotifications();
+
+        } catch (error) {
+
+            console.error("Unable to load notifications:", error);
+
+            badge.classList.add("hidden");
+
+            list.innerHTML = `
+                <div class="notification-empty">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <p>
+                        Unable to load notifications.
+                        Please refresh the page.
+                    </p>
+                </div>
+            `;
+
         }
     }
 
-    /* Generate appointment notifications */
+    /* Select notification icon */
 
-    try {
+    function getNotificationIcon(type) {
 
-        // Retrieve actual appointments from PostgreSQL.
-        const appointments = await fetchPatientAppointments();
+        const icons = {
+            APPOINTMENT_CONFIRMED: "bi-check-circle",
+            APPOINTMENT_RESCHEDULED: "bi-calendar-event",
+            APPOINTMENT_REMINDER_7_DAYS: "bi-calendar-week",
+            APPOINTMENT_REMINDER_1_DAY: "bi-alarm"
+        };
 
-        const today = new Date(`${localToday()}T00:00:00`);
+        return icons[type] || "bi-bell";
 
-        appointments
-            .filter(appointment =>
-                appointment.status === "Confirmed"
-            )
-            .forEach(appointment => {
-
-                const appointmentDate = new Date(
-                    `${appointment.date}T00:00:00`
-                );
-
-                const differenceInMilliseconds =
-                    appointmentDate.getTime() - today.getTime();
-
-                const daysBeforeAppointment = Math.round(
-                    differenceInMilliseconds /
-                    (1000 * 60 * 60 * 24)
-                );
-
-                const doctorName =
-                    appointment.doctorName || "Your doctor";
-
-                const appointmentDetail =
-                    `${formatDate(appointment.date)} • ${appointment.time}`;
-
-                /* Appointment confirmed */
-
-                notifications.push({
-
-                    id: `confirmed-${appointment.id}`,
-
-                    icon: "bi-check-circle",
-
-                    title: "Appointment Confirmed",
-
-                    message: doctorName,
-
-                    detail: appointmentDetail
-
-                });
-
-                /* Seven-day reminder */
-
-                if (daysBeforeAppointment === 7) {
-
-                    notifications.push({
-
-                        id: `7day-${appointment.id}`,
-
-                        icon: "bi-calendar-week",
-
-                        title: "Appointment in 1 Week",
-
-                        message: doctorName,
-
-                        detail: appointmentDetail
-
-                    });
-
-                }
-
-                /* One-day reminder */
-
-                if (daysBeforeAppointment === 1) {
-
-                    notifications.push({
-
-                        id: `1day-${appointment.id}`,
-
-                        icon: "bi-alarm",
-
-                        title: "Appointment Tomorrow",
-
-                        message: doctorName,
-
-                        detail: appointmentDetail
-
-                    });
-
-                }
-
-            });
-
-    } catch (error) {
-
-        console.error(
-            "Unable to load appointment notifications:",
-            error
-        );
-
-        badge.classList.add("hidden");
-
-        list.innerHTML = `
-            <div class="notification-empty">
-                <i class="bi bi-exclamation-circle"></i>
-                <p>
-                    Unable to load notifications.
-                    Please refresh the page.
-                </p>
-            </div>
-        `;
-
-        return;
     }
 
     /* Display notifications */
 
     function renderNotifications() {
 
-        const readNotifications = getReadNotifications();
-
-        const unread = notifications.filter(notification =>
-            !readNotifications.includes(notification.id)
-        );
+        const unreadCount = notifications.filter(
+            notification => !notification.is_read
+        ).length;
 
         /* Update notification badge */
 
-        if (unread.length > 0) {
+        if (unreadCount > 0) {
 
-            badge.textContent = unread.length;
+            badge.textContent = unreadCount;
 
             badge.classList.remove("hidden");
 
@@ -2247,38 +2170,30 @@ async function initNotifications() {
 
             list.innerHTML = `
                 <div class="notification-empty">
-
                     <i class="bi bi-bell"></i>
-
                     <p>No notifications yet.</p>
-
                 </div>
             `;
 
             return;
         }
 
-        /* Notification list */
+        /* Render notification history */
 
         list.innerHTML = notifications.map(notification => {
 
-            const isRead = readNotifications.includes(
-                notification.id
+            const icon = getNotificationIcon(
+                notification.notification_type
             );
 
             return `
                 <div class="
                     notification-item
-                    ${isRead ? "" : "unread"}
+                    ${notification.is_read ? "" : "unread"}
                 ">
 
                     <div class="notification-icon">
-
-                        <i class="
-                            bi
-                            ${escapeHtml(notification.icon)}
-                        "></i>
-
+                        <i class="bi ${icon}"></i>
                     </div>
 
                     <div class="notification-content">
@@ -2288,11 +2203,11 @@ async function initNotifications() {
                         </strong>
 
                         <p>
-                            ${escapeHtml(notification.message)}
+                            ${escapeHtml(notification.message || "")}
                         </p>
 
                         <span>
-                            ${escapeHtml(notification.detail)}
+                            ${escapeHtml(notification.detail || "")}
                         </span>
 
                     </div>
@@ -2304,7 +2219,9 @@ async function initNotifications() {
 
     }
 
-    renderNotifications();
+    /* Initial notification loading */
+
+    await loadNotifications();
 
     /* Open / close notification dropdown */
 
@@ -2331,28 +2248,42 @@ async function initNotifications() {
 
     });
 
-    /* Mark everything as read */
+    /* Mark all notifications as read */
 
     if (markReadButton) {
 
-        markReadButton.addEventListener("click", function() {
+        markReadButton.addEventListener("click", async function() {
 
-            const ids = notifications.map(notification =>
-                notification.id
-            );
+            try {
 
-            localStorage.setItem(
-                "careReadNotifications",
-                JSON.stringify(ids)
-            );
+                await patientApiRequest("/notifications/read-all", {
+                    method: "PATCH"
+                });
 
-            renderNotifications();
+                notifications = notifications.map(notification => ({
+                    ...notification,
+                    is_read: true
+                }));
+
+                renderNotifications();
+
+            } catch (error) {
+
+                console.error(
+                    "Unable to mark notifications as read:",
+                    error
+                );
+
+                alert("Unable to mark notifications as read. Please try again.");
+
+            }
 
         });
 
     }
 
 }
+
 
 
 

@@ -8,6 +8,14 @@ const authRoutes = require("./routes/auth");
 const appointmentRoutes = require("./routes/appointments");
 const doctorRoutes = require("./routes/doctors");
 
+const startAppointmentNoShowScheduler =
+    require("./jobs/appointmentNoShowScheduler");
+
+const startAppointmentReminderScheduler =
+    require("./jobs/appointmentReminderScheduler");
+
+const notificationRoutes = require("./routes/notifications");
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -80,7 +88,11 @@ app.get("/api/departments", async (req, res) => {
 // Patient appointment management.
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.listen(PORT, () => {
     console.log(`Backend running at http://localhost:${PORT}`);
+
+    startAppointmentNoShowScheduler(pool);
+    startAppointmentReminderScheduler(pool);
 });
