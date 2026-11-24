@@ -529,7 +529,17 @@ function formatDate(value) {
 
     const [year, month, day] = parts;
 
-    return `${day}/${month}/${year}`;
+    const date = new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day)
+    );
+
+    return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+    });
 }
 
 
