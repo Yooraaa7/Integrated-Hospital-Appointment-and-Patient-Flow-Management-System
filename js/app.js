@@ -583,6 +583,7 @@ function renderShell() {
 
     const root = getRoot();
     const active = document.body.dataset.page || "";
+    const isLoginPage = active === "login";
     const user = getUser();
 
     function navLink(key, label, path, loginRequired = false) {
@@ -590,7 +591,7 @@ function renderShell() {
         return `<a href="${root}${path}" class="${active === key ? "active" : ""}"${extra}>${label}</a>`;
     }
 
-    nav.innerHTML = `
+    nav.innerHTML = isLoginPage ? "" : `
         <header class="top-navbar">
             <div class="navbar-content">
 
@@ -602,11 +603,7 @@ function renderShell() {
                 </a>
 
                 <nav class="navbar-links">
-                    ${navLink(
-                        "home",
-                        "Home",
-                        user ? "pages/patient_dashboard.html" : "index.html"
-                    )}
+                    ${navLink("home", "Home", user ? "pages/patient_dashboard.html" : "index.html")}
                     ${navLink("doctors", "Find a Doctor", "pages/doctors.html")}
                     ${navLink("department", "Department Routing", "pages/department.html")}
                     ${navLink("appointments", "My Appointments", "pages/appointment_history.html", true)}
@@ -617,88 +614,38 @@ function renderShell() {
                         user
                             ? `
                                 <div class="notification-wrapper">
-
-                                    <button
-                                        class="notification-button"
-                                        type="button"
-                                        id="notificationButton"
-                                        title="Notifications"
-                                    >
+                                    <button class="notification-button" type="button" id="notificationButton" title="Notifications">
                                         <i class="bi bi-bell"></i>
-
-                                        <span
-                                            class="notification-badge hidden"
-                                            id="notificationBadge"
-                                        >
-                                            0
-                                        </span>
+                                        <span class="notification-badge hidden" id="notificationBadge">0</span>
                                     </button>
 
-
-                                    <div
-                                        class="notification-dropdown hidden"
-                                        id="notificationDropdown"
-                                    >
-
+                                    <div class="notification-dropdown hidden" id="notificationDropdown">
                                         <div class="notification-header">
-
-                                            <strong>
-                                                Notifications
-                                            </strong>
-
-                                            <button
-                                                type="button"
-                                                id="markNotificationsRead"
-                                            >
-                                                Mark all as read
-                                            </button>
-
+                                            <strong>Notifications</strong>
+                                            <button type="button" id="markNotificationsRead">Mark all as read</button>
                                         </div>
-
-
-                                        <div
-                                            class="notification-list"
-                                            id="notificationList"
-                                        >
-                                        </div>
-
+                                        <div class="notification-list" id="notificationList"></div>
                                     </div>
-
                                 </div>
 
-
-                                <a
-                                    class="btn btn-outline"
-                                    href="${root}pages/patient_profile.html"
-                                >
-                                    <i class="bi bi-person"></i>
-
-                                    Profile
+                                <a class="btn btn-outline" href="${root}pages/patient_profile.html">
+                                    <i class="bi bi-person"></i> Profile
                                 </a>
 
-
-                                <button
-                                    class="btn btn-danger"
-                                    type="button"
-                                    id="logoutButton"
-                                >
-                                    <i class="bi bi-box-arrow-right"></i>
-
-                                    Logout
+                                <button class="btn btn-danger" type="button" id="logoutButton">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
                                 </button>
                             `
                             : `
                                 <a class="btn btn-outline" href="${root}login.html">
-                                    <i class="bi bi-box-arrow-in-right"></i>
-                                    Login
+                                    <i class="bi bi-box-arrow-in-right"></i> Login
                                 </a>
                             `
                     }
                 </div>
 
                 <a class="btn btn-primary" href="${root}pages/appointment.html" id="startAppointmentNav">
-                    <i class="bi bi-calendar-plus"></i>
-                    Start Appointment
+                    <i class="bi bi-calendar-plus"></i> Start Appointment
                 </a>
 
             </div>
