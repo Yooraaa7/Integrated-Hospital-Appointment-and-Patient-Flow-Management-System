@@ -121,7 +121,7 @@ async function registerAppointmentQueue(req, res, patientOnly) {
                     updated_at = NOW()
                 WHERE id = $1
                   ${ownershipFilter}
-                  AND status = 'CONFIRMED'
+                  AND status IN ('CONFIRMED', 'RESCHEDULED')
                 RETURNING id, status
                 `,
                 updateParams
@@ -146,13 +146,13 @@ async function registerAppointmentQueue(req, res, patientOnly) {
         }
 
 
-        if (appointment.status !== "CONFIRMED") {
+        if (!["CONFIRMED", "RESCHEDULED"].includes(appointment.status)) {
             await client.query("ROLLBACK");
 
             return res.status(409).json({
                 success: false,
                 code: "APPOINTMENT_NOT_CONFIRMED",
-                message: "Only confirmed appointments can be registered."
+                message: "Only confirmed or rescheduled appointments can be registered."
             });
         }
 
@@ -253,7 +253,7 @@ async function registerAppointmentQueue(req, res, patientOnly) {
                 updated_at = NOW()
             WHERE id = $1
               ${ownershipFilter}
-              AND status = 'CONFIRMED'
+              AND status IN ('CONFIRMED', 'RESCHEDULED')
             RETURNING id, status
             `,
             updateParams
