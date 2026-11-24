@@ -394,5 +394,52 @@ router.post("/patient-register", requirePatientJwt, (req, res) => {
     return registerAppointmentQueue(req, res, true);
 });
 
+// =====================================================
+// GET /api/appointment-queues/my-queues
+//
+// Retrieve appointment queues belonging to the
+// currently logged-in patient.
+// =====================================================
+
+router.get("/my-queues", requirePatientJwt, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `
+            SELECT
+                id,
+                appointment_id,
+                patient_id,
+                department_id,
+                queue_number,
+                queue_type,
+                priority,
+                status,
+                scheduled_at,
+                issued_at
+            FROM queues
+            WHERE patient_id = $1
+              AND queue_type = 'APPOINTMENT'
+            ORDER BY issued_at DESC
+            `,
+            [req.patient.id]
+        );
+
+        return res.status(200).json({
+            success: true,
+            queues: result.rows
+        });
+
+    } catch (error) {
+        console.error(
+            "Unable to retrieve patient appointment queues:",
+            error.message
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to retrieve appointment queues."
+        });
+    }
+});
 
 module.exports = router;
