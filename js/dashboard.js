@@ -996,9 +996,20 @@ if (
     // LOGOUT
     // =============================================
 
-    logoutButton.addEventListener("click", () => {
-        QMS.clearSession();
-        window.location.href = "login.html";
+    logoutButton.addEventListener("click", async () => {
+        logoutButton.disabled = true;
+
+        try {
+            await QMS_API.logout();
+        } catch (error) {
+            console.error("Backend logout failed:", error);
+        } finally {
+            // Clear local session even if the network
+            // is unavailable. The reservation will
+            // expire automatically after two minutes.
+            QMS.clearSession();
+            window.location.replace("login.html");
+        }
     });
 
     // =============================================
@@ -1045,3 +1056,33 @@ if (
     // Initial render
     render();
 }
+
+    // =============================================
+    // COUNTER SESSION HEARTBEAT
+    // =============================================
+
+    async function renewCounterSession() {
+        try {
+            await QMS_API.heartbeat();
+
+        } catch (error) {
+            console.error(
+                "Counter session renewal failed:",
+                error
+            );
+        }
+    }
+
+    // Renew immediately after dashboard initialization.
+    renewCounterSession();
+
+    // Renew every 60 seconds.
+    const heartbeatInterval = setInterval(
+        renewCounterSession,
+        60 * 1000
+    );
+
+    // Stop heartbeat when leaving the dashboard.
+    window.addEventListener("pagehide", () => {
+        clearInterval(heartbeatInterval);
+    });

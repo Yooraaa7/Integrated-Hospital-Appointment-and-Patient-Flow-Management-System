@@ -311,7 +311,13 @@
         metadata,
         refresh,
         departments,
-        counters
+        counters,
+
+        // Renew the active counter reservation
+        heartbeat: () => post("/auth/heartbeat", {}),
+
+        // Release the counter when staff logs out
+        logout: () => post("/auth/logout", {})
     };
 
     metadata()
