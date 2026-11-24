@@ -776,25 +776,6 @@ function initSignup() {
         updatePasswordRule("ruleLength", rules.length);
     });
 
-    // Enter saves the appointment from the Notes textarea.
-    // Shift + Enter inserts a new line.
-    if (notes) {
-        notes.addEventListener("keydown", event => {
-            if (event.key !== "Enter") return;
-
-            if (event.shiftKey) {
-                return;
-            }
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (form.dataset.saving === "true") return;
-
-            form.requestSubmit();
-        }, true);
-    }
-
     form.addEventListener("submit", async event => {
         event.preventDefault();
 
