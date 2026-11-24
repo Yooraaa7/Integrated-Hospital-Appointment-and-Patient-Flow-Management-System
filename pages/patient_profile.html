@@ -13,7 +13,7 @@
     <section class="page-header">
         <div class="main-container">
             <h1 class="page-title">Patient Profile</h1>
-            <p class="page-description">View the account information saved in this frontend prototype.</p>
+            <p class="page-description">View your patient account information.</p>
         </div>
     </section>
 
@@ -38,13 +38,13 @@
                 </div>
 
                 <div class="profile-data-item">
-                    <span>Login Type</span>
-                    <strong id="patientProfileIdentifierType">—</strong>
+                    <span>Email Address</span>
+                    <strong id="patientProfileEmail">—</strong>
                 </div>
 
                 <div class="profile-data-item">
-                    <span>Email / IC</span>
-                    <strong id="patientProfileIdentifier">—</strong>
+                    <span>IC Number</span>
+                    <strong id="patientProfileIC">—</strong>
                 </div>
 
                 <div class="profile-data-item">
@@ -53,12 +53,72 @@
                 </div>
             </div>
 
-            <div class="notice" style="margin-top:20px">
-                This is still the pre-database frontend version.
-                After PostgreSQL integration, patient information will come from the patients table.
+            <div style="margin-top: 24px;">
+                <button type="button" class="btn btn-primary" id="editProfileBtn">
+                    <i class="bi bi-pencil"></i> Edit Profile
+                </button>
             </div>
+
+            <form id="profileEditForm" hidden style="margin-top: 24px;">
+
+                <h3>Edit Patient Profile</h3>
+
+                <div class="form-group">
+                    <label for="editProfileName">Full Name</label>
+                    <input
+                        type="text"
+                        id="editProfileName"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="editProfileEmail">Email Address (Optional)</label>
+                    <input
+                        type="email"
+                        id="editProfileEmail"
+                        placeholder="Enter your email address"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="editProfileIC">IC Number (Optional)</label>
+                    <input
+                        type="text"
+                        id="editProfileIC"
+                        maxlength="12"
+                        inputmode="numeric"
+                        placeholder="Enter your 12-digit IC number"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="editProfileDOB">Date of Birth</label>
+                    <input
+                        type="date"
+                        id="editProfileDOB"
+                    >
+                </div>
+
+                <p class="muted-text">
+                    At least one login identifier (email address or IC number) is required.
+                </p>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-primary">
+                        Save Changes
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" id="cancelEditProfileBtn">
+                        Cancel
+                    </button>
+                </div>
+
+            </form>
+
         </section>
     </main>
+
 
     <div id="foot"></div>
     <script src="../js/app.js"></script>

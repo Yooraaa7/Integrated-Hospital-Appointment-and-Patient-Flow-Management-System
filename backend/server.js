@@ -14,6 +14,8 @@ const startAppointmentNoShowScheduler =
 const startAppointmentReminderScheduler =
     require("./jobs/appointmentReminderScheduler");
 
+const patientRoutes = require("./routes/patientRoutes");
+
 const notificationRoutes = require("./routes/notifications");
 
 const app = express();
@@ -89,6 +91,7 @@ app.get("/api/departments", async (req, res) => {
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/patients", patientRoutes);
 
 app.listen(PORT, () => {
     console.log(`Backend running at http://localhost:${PORT}`);

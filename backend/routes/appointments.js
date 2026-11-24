@@ -28,22 +28,22 @@ router.get("/", async (req, res) => {
         const result = await pool.query(
             `SELECT
                 a.id,
-                a.patient_appointment_number,
                 a.external_appointment_id,
                 a.patient_id,
                 a.department_id,
                 a.doctor_id,
+                doc.full_name AS doctor_name,
                 a.scheduled_at,
                 a.status,
-                a.notes,
                 a.created_at,
                 a.updated_at,
                 d.department_code,
                 d.department_name
-             FROM appointments a
-             JOIN departments d ON d.id = a.department_id
-             WHERE a.patient_id = $1
-             ORDER BY a.scheduled_at DESC`,
+            FROM appointments a
+            JOIN departments d ON d.id = a.department_id
+            LEFT JOIN doctors doc ON doc.doctor_id = a.doctor_id
+            WHERE a.patient_id = $1
+            ORDER BY a.scheduled_at DESC`,
             [req.patient.id]
         );
 
@@ -231,6 +231,19 @@ router.post("/", async (req, res) => {
 
         const appointment = result.rows[0];
 
+        // Get the doctor's name for the confirmation notification.
+        const doctorResult = doctorId
+            ? await client.query(
+                `SELECT full_name
+                FROM doctors
+                WHERE doctor_id = $1`,
+                [doctorId]
+            )
+            : { rows: [] };
+
+        const doctorName =
+            doctorResult.rows[0]?.full_name || "your selected doctor";
+
         // Save the confirmation notification.
         await client.query(
             `INSERT INTO patient_notifications (
@@ -240,14 +253,14 @@ router.post("/", async (req, res) => {
                 title,
                 message,
                 detail
-             )
-             VALUES ($1, $2, $3, $4, $5, $6)`,
+            )
+            VALUES ($1, $2, $3, $4, $5, $6)`,
             [
                 req.patient.id,
                 appointment.id,
                 "APPOINTMENT_CONFIRMED",
                 "Appointment Confirmed",
-                `Your appointment with ${doctorId || "your selected doctor"} has been confirmed.`,
+                `Your appointment with ${doctorName} has been confirmed.`,
                 `${scheduledAt.toLocaleString("en-MY", {
                     timeZone: "Asia/Kuala_Lumpur",
                     dateStyle: "medium",
@@ -271,17 +284,26 @@ router.post("/", async (req, res) => {
             }
         });
 
-    } catch (error) {
-        if (transactionStarted) {
-            await client.query("ROLLBACK");
-        }
+        } catch (error) {
+            if (transactionStarted) {
+                await client.query("ROLLBACK");
+            }
 
-        console.error("Create appointment failed:", error.message);
+            // A doctor and appointment time are already occupied.
+            if (error.code === "23505") {
+                return res.status(409).json({
+                    success: false,
+                    code: "DOCTOR_SLOT_UNAVAILABLE",
+                    message: "This doctor’s appointment slot has already been booked. Please select another available time."
+                });
+            }
 
-        return res.status(500).json({
-            success: false,
-            message: "Unable to create appointment."
-        });
+            console.error("Create appointment failed:", error.message);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to create appointment."
+            });
 
     } finally {
         client.release();
@@ -546,21 +568,29 @@ router.put("/:id/reschedule", async (req, res) => {
             appointment: result.rows[0]
         });
 
-    } catch (error) {
-        if (transactionStarted) {
-            await client.query("ROLLBACK");
+        } catch (error) {
+            if (transactionStarted) {
+                await client.query("ROLLBACK");
+            }
+
+            // A doctor and appointment time are already occupied.
+            if (error.code === "23505") {
+                return res.status(409).json({
+                    success: false,
+                    code: "DOCTOR_SLOT_UNAVAILABLE",
+                    message: "This doctor’s appointment slot has already been booked. Please select another available time."
+                });
+            }
+
+            console.error("Reschedule appointment failed:", error.message);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to update appointment."
+            });
+        } finally {
+            client.release();
         }
-
-        console.error("Reschedule appointment failed:", error.message);
-
-        return res.status(500).json({
-            success: false,
-            message: "Unable to update appointment."
-        });
-
-    } finally {
-        client.release();
-    }
 });
 
 
@@ -839,7 +869,7 @@ router.patch("/:id/cancel", async (req, res) => {
 
         const appointment = appointmentResult.rows[0];
 
-        if (!["BOOKED", "CONFIRMED"].includes(appointment.status)) {
+        if (!["BOOKED", "CONFIRMED", "RESCHEDULED"].includes(appointment.status)) {
             return res.status(409).json({
                 success: false,
                 message: "This appointment cannot be cancelled."

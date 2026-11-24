@@ -451,7 +451,8 @@ function appointmentFromApi(row) {
 
         patientId: String(row.patient_id),
         doctorId: String(row.doctor_id || ""),
-        doctorName: selectedDoctor?.name ||
+        doctorName: row.doctor_name ||
+            selectedDoctor?.name ||
             (row.doctor_id ? `Doctor ${row.doctor_id}` : "Doctor to be assigned"),
         specialty: selectedDoctor?.specialty || row.department_name || "",
         departmentId: row.department_id,
@@ -514,14 +515,23 @@ function doctorById(id) {
     return DOCTORS.find(doctor => doctor.id === id);
 }
 
+
+
 function formatDate(value) {
-    if (!value) return "";
-    return new Date(value + "T00:00:00").toLocaleDateString("en-MY", {
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-    });
+    if (!value) return "—";
+
+    // Handle PostgreSQL DATE values without timezone conversion.
+    const dateString = String(value).slice(0, 10);
+
+    const parts = dateString.split("-");
+
+    if (parts.length !== 3) return "—";
+
+    const [year, month, day] = parts;
+
+    return `${day}/${month}/${year}`;
 }
+
 
 function formatClock(value) {
     if (!value) return "—";
@@ -1163,6 +1173,7 @@ function initDoctors() {
 }
 
 
+
 /* =========================
    DOCTOR PROFILE
 ========================= */
@@ -1170,7 +1181,9 @@ function initDoctorProfile() {
     const name = q("#profileDoctorName");
     if (!name) return;
 
-    const doctor = doctorById(new URLSearchParams(location.search).get("doctor"));
+    const doctor = doctorById(
+        new URLSearchParams(location.search).get("doctor")
+    );
 
     if (!doctor) {
         location.href = "doctors.html";
@@ -1179,7 +1192,31 @@ function initDoctorProfile() {
 
     document.title = doctor.name + " | The Care Hospital";
 
-    q("#profileInitials").textContent = doctor.initials;
+    // Doctor avatar
+    const initials = q("#profileInitials");
+    const photo = q("#profilePhoto");
+
+    initials.textContent = doctor.initials;
+
+    // Show initials first as the fallback
+    initials.style.display = "flex";
+    photo.style.display = "none";
+
+    // Load the doctor's Cloudinary photo
+    photo.onload = () => {
+        photo.style.display = "block";
+        initials.style.display = "none";
+    };
+
+    // If the photo fails, keep showing initials
+    photo.onerror = () => {
+        photo.style.display = "none";
+        initials.style.display = "flex";
+    };
+
+    photo.src = doctor.photoUrl || "";
+
+    // Doctor information
     q("#profileSpecialty").textContent = doctor.specialty;
     q("#profileDoctorName").textContent = doctor.name;
     q("#profilePosition").textContent = doctor.position;
@@ -1187,25 +1224,36 @@ function initDoctorProfile() {
     q("#profileLanguages").textContent = doctor.languages;
     q("#profileQualifications").textContent = doctor.qualifications;
     q("#profileAbout").textContent = doctor.about;
-    q("#profileBook").href = "appointment.html?doctor=" + doctor.id;
+
+    q("#profileBook").href =
+        "appointment.html?doctor=" + doctor.id;
 
     q("#profileInterests").innerHTML =
-        doctor.interests.map(item => `<span class="chip">${item}</span>`).join("");
+        doctor.interests.map(item =>
+            `<span class="chip">${item}</span>`
+        ).join("");
 
     q("#profileSchedule").innerHTML =
         Object.entries(doctor.schedule).map(([day, times]) => `
             <div class="schedule-row">
                 <strong>${day}</strong>
-                <span class="status-badge status-info">
-                    ${times[0]} – ${times[times.length - 1]}
-                </span>
+
+                ${
+                    times && times.length > 0
+                        ? `
+                            <span class="status-badge status-info">
+                                ${times[0]} – ${times[times.length - 1]}
+                            </span>
+                        `
+                        : `
+                            <span class="status-badge">
+                                Not Available
+                            </span>
+                        `
+                }
             </div>
         `).join("");
 }
-
-
-
-
 
 function initDepartment() {
     const result = q("#routingResult");
@@ -1791,13 +1839,10 @@ function initHistory() {
                         <div>
                             <div class="appointment-reference">
                                 <i class="bi bi-receipt"></i>
-                               Appointment ${escapeHtml(appointment.patientAppointmentNumber)}
+                                Appointment ${escapeHtml(appointment.patientAppointmentNumber)}
                             </div>
 
                             <h2>${escapeHtml(doctorName)}</h2>
-                            <p>${escapeHtml(
-                                selectedDoctor?.position || appointment.specialty || "Hospital appointment"
-                            )}</p>
                         </div>
 
                         <span class="status-badge ${statusClass(appointment.status)}">
@@ -1806,10 +1851,19 @@ function initHistory() {
                     </div>
 
                     <div class="appointment-detail-grid">
+
                         <div class="appointment-detail-item">
                             <i class="bi bi-hospital"></i>
                             <div>
-                                <span>Department / Specialty</span>
+                                <span>Department</span>
+                                <strong>${escapeHtml(selectedDoctor?.department || "—")}</strong>
+                            </div>
+                        </div>
+
+                        <div class="appointment-detail-item">
+                            <i class="bi bi-heart-pulse"></i>
+                            <div>
+                                <span>Specialty</span>
                                 <strong>${escapeHtml(appointment.specialty || "—")}</strong>
                             </div>
                         </div>
@@ -1830,19 +1884,41 @@ function initHistory() {
                             </div>
                         </div>
 
-                        <div class="appointment-detail-item">
-                            <i class="bi bi-person-badge"></i>
-                            <div>
-                                <span>Doctor</span>
-                                <strong>${escapeHtml(doctorName)}</strong>
-                            </div>
-                        </div>
                     </div>
-                    
                     <div class="appointment-notes">
                         <span>Reason / Notes</span>
                         <p>${escapeHtml(appointment.notes || "No notes provided.")}</p>
                     </div>
+
+                    ${appointment.queueNumber ? `
+                        <div class="appointment-queue">
+                            <div class="appointment-queue-label">
+                                <i class="bi bi-ticket-perforated"></i>
+                                <span>QUEUE NUMBER</span>
+                            </div>
+
+                            <strong>${escapeHtml(appointment.queueNumber)}</strong>
+
+                            <div class="appointment-queue-meta">
+                                <span>
+                                    Status:
+                                    ${escapeHtml({
+                                        WAIT: "Waiting",
+                                        SERVING: "Now Serving",
+                                        HOLD: "On Hold",
+                                        COMPLETED: "Completed"
+                                    }[appointment.queueStatus] || appointment.queueStatus || "Registered")}
+                                </span>
+
+                                ${appointment.registeredAt ? `
+                                    <span>
+                                        Registered:
+                                        ${escapeHtml(new Date(appointment.registeredAt).toLocaleString("en-MY"))}
+                                    </span>
+                                ` : ""}
+                            </div>
+                        </div>
+                    ` : ""}
 
                     <div class="appointment-card-footer">
                         <div class="appointment-booked-date">
@@ -1976,31 +2052,40 @@ function initHistory() {
         });
     }
 
-    async function loadAppointments() {
-        listContainer.innerHTML =
-            `<p class="muted-text">Loading your appointments...</p>`;
+    async function loadAppointments(showLoading = true) {
+        if (showLoading) {
+            listContainer.innerHTML =
+                `<p class="muted-text">Loading your appointments...</p>`;
+        }
 
         try {
             appointments = await fetchPatientAppointments();
             render();
         } catch (error) {
-            listContainer.innerHTML = `
-                <p class="muted-text">
-                    Unable to load appointments: ${escapeHtml(error.message)}
-                </p>
-            `;
-            emptyState.classList.add("hidden");
+            console.error("Unable to refresh appointments:", error);
+
+            if (showLoading) {
+                listContainer.innerHTML = `
+                    <p class="muted-text">
+                        Unable to load appointments: ${escapeHtml(error.message)}
+                    </p>
+                `;
+                emptyState.classList.add("hidden");
+            }
         }
     }
 
     filter.addEventListener("change", render);
 
-    loadAppointments();
+   loadAppointments();
+
+    const appointmentRefreshInterval = setInterval(() => {
+        if (document.visibilityState === "visible") {
+            loadAppointments(false);
+        }
+    }, 5000);
 }
 
-/* =========================
-   DASHBOARD
-========================= */
 
 async function initDashboard() {
     const welcome = q("#dashboardWelcome");
@@ -2017,18 +2102,29 @@ async function initDashboard() {
     const nextElement = q("#dashboardNext");
 
     try {
-        // Load actual appointments from PostgreSQL.
         const appointments = await fetchPatientAppointments();
 
-        const upcoming = appointments.filter(item =>
-            item.status === "Confirmed" &&
-            item.date >= localToday()
-        );
+        const now = new Date();
 
+        // Upcoming: confirmed or rescheduled appointments
+        // whose actual appointment date and time are still in the future.
+        const upcoming = appointments.filter(item => {
+            const appointmentDateTime = new Date(
+                `${item.date}T${item.time}:00`
+            );
+
+            return (
+                ["Confirmed", "Rescheduled"].includes(item.status) &&
+                appointmentDateTime > now
+            );
+        });
+
+        // Registered / Queued: appointments with an issued QMS queue number.
         const registered = appointments.filter(item =>
-            item.status === "Checked In"
+            Boolean(item.queueNumber)
         );
 
+        // Cancelled appointments.
         const cancelled = appointments.filter(item =>
             item.status === "Cancelled"
         );
@@ -2037,9 +2133,13 @@ async function initDashboard() {
         registeredElement.textContent = registered.length;
         cancelledElement.textContent = cancelled.length;
 
-        const next = upcoming.sort((a, b) =>
-            `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)
-        )[0];
+        // Find the nearest upcoming appointment.
+        upcoming.sort((a, b) =>
+            new Date(`${a.date}T${a.time}:00`) -
+            new Date(`${b.date}T${b.time}:00`)
+        );
+
+        const next = upcoming[0];
 
         nextElement.innerHTML = next
             ? `
@@ -2063,26 +2163,185 @@ async function initDashboard() {
 }
 
 
+
 /* =========================
-   PATIENT PROFILE
+   PATIENT PROFILE - DATABASE VERSION
 ========================= */
-function initPatientProfile() {
+async function initPatientProfile() {
     const name = q("#patientProfileName");
+
     if (!name) return;
     if (!requireLogin()) return;
 
-    const user = getUser();
+    const editButton = q("#editProfileBtn");
+    const editForm = q("#profileEditForm");
+    const cancelButton = q("#cancelEditProfileBtn");
 
-    name.textContent = user.name;
-    q("#patientProfileId").textContent = user.id || "—";
-    q("#patientProfileIdentifier").textContent = user.identifier || "—";
-    q("#patientProfileIdentifierType").textContent = user.identifierType || "—";
-    q("#patientProfileDOB").textContent = user.dateOfBirth
-        ? formatDate(user.dateOfBirth)
-        : "—";
+    const emailDisplay = q("#patientProfileEmail");
+    const icDisplay = q("#patientProfileIC");
+    const dobDisplay = q("#patientProfileDOB");
+
+    let currentPatient = null;
+
+    function displayPatient(patient) {
+        currentPatient = patient;
+
+        name.textContent = patient.full_name || "—";
+
+        q("#patientProfileId").textContent =
+            patient.patient_number || patient.id || "—";
+
+        emailDisplay.textContent =
+            patient.email || "Not provided";
+
+        icDisplay.textContent =
+            patient.ic_number || "Not provided";
+
+        dobDisplay.textContent =
+            patient.date_of_birth
+                ? formatDate(patient.date_of_birth)
+                : "Not provided";
+    }
+
+    function closeEditForm() {
+        editForm.hidden = true;
+        editButton.hidden = false;
+    }
+
+    // Load patient profile from PostgreSQL.
+    name.textContent = "Loading profile...";
+
+    try {
+        const result = await patientApiRequest("/patients/profile");
+
+        if (!result.patient) {
+            throw new Error("Patient profile was not returned.");
+        }
+
+        displayPatient(result.patient);
+
+    } catch (error) {
+        console.error("Patient profile loading failed:", error);
+
+        name.textContent = "Unable to load profile";
+
+        q("#patientProfileId").textContent = "—";
+        emailDisplay.textContent = "—";
+        icDisplay.textContent = "—";
+        dobDisplay.textContent = "—";
+
+        return;
+    }
+
+    // Open the edit form.
+    editButton.addEventListener("click", () => {
+        if (!currentPatient) return;
+
+        q("#editProfileName").value =
+            currentPatient.full_name || "";
+
+        q("#editProfileEmail").value =
+            currentPatient.email || "";
+
+        q("#editProfileIC").value =
+            currentPatient.ic_number || "";
+
+        q("#editProfileDOB").value =
+            currentPatient.date_of_birth
+                ? String(currentPatient.date_of_birth).slice(0, 10)
+                : "";
+
+        editButton.hidden = true;
+        editForm.hidden = false;
+    });
+
+    // Cancel editing.
+    cancelButton.addEventListener("click", () => {
+        closeEditForm();
+    });
+
+    // Save profile changes.
+    editForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const fullName = q("#editProfileName").value.trim();
+
+        const email = q("#editProfileEmail").value
+            .trim()
+            .toLowerCase();
+
+        const icNumber = q("#editProfileIC").value
+            .replace(/\D/g, "");
+
+        const dateOfBirth = q("#editProfileDOB").value;
+
+        if (!fullName) {
+            alert("Please enter your full name.");
+            return;
+        }
+
+        if (!email && !icNumber) {
+            alert("Please provide an email address or IC number.");
+            return;
+        }
+
+        if (email && !isValidEmail(email)) {
+            alert("Please enter a valid email address.");
+            return;
+        }
+
+        if (icNumber && !isValidIC(icNumber)) {
+            alert("IC number must contain exactly 12 digits.");
+            return;
+        }
+
+        const saveButton = editForm.querySelector(
+            'button[type="submit"]'
+        );
+
+        saveButton.disabled = true;
+        saveButton.textContent = "Saving...";
+
+        try {
+            const result = await patientApiRequest(
+                "/patients/profile",
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        full_name: fullName,
+                        email: email,
+                        ic_number: icNumber,
+                        date_of_birth: dateOfBirth
+                    })
+                }
+            );
+
+            if (!result.patient) {
+                throw new Error("Updated profile was not returned.");
+            }
+
+            displayPatient(result.patient);
+            closeEditForm();
+
+            alert("Your profile has been updated successfully.");
+
+        } catch (error) {
+            console.error("Patient profile update failed:", error);
+
+            alert(
+                error.message ||
+                "Unable to update your profile. Please try again."
+            );
+
+        } finally {
+            saveButton.disabled = false;
+            saveButton.textContent = "Save Changes";
+        }
+    });
 }
-
-
 
 /* =========================
    NOTIFICATIONS - DATABASE VERSION
