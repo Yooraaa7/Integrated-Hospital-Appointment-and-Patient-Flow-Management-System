@@ -468,9 +468,14 @@ body {
     transform: translateY(-1px);
 }
 
-.queue-item:focus {
+.queue-item:focus-visible {
     outline: 2px solid #1976d2;
     outline-offset: 2px;
+}
+
+/* Hide the focus ring after mouse clicks, but keep it for keyboard users. */
+.queue-item:focus:not(:focus-visible) {
+    outline: none;
 }
 
 .queue-main {

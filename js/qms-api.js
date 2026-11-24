@@ -179,18 +179,45 @@
                 staffContext(dept, counter)
             );
 
-            await refresh();
+            // Update the local dashboard cache from the POST response.
+            // No need to wait for another GET /queues before rendering.
+            const updatedQueue = mapQueue({
+                ...data.queue,
+                department_name: dept,
+                counter_number: Number(
+                    counter.replace("Counter ", "")
+                )
+            });
+
+            const eventType = queue.status === "HOLD"
+                ? "RECALL"
+                : "CALLED";
+
+            updatedQueue.history = [
+                ...(queue.history || []),
+                {
+                    type: eventType,
+                    timestamp: data.queue.called_at || new Date().toISOString(),
+                    counter,
+                    staffID: queue.calledBy || null
+                }
+            ];
+
+            window.QMS_REMOTE_ROWS = (
+                window.QMS_REMOTE_ROWS || []
+            ).map(item =>
+                String(item.id) === String(queue.id)
+                    ? { ...item, ...updatedQueue }
+                    : item
+            );
+
+            // Reconcile with PostgreSQL in the background.
+            void refresh();
 
             return {
                 success: true,
                 message: data.message,
-                queue: mapQueue({
-                    ...data.queue,
-                    department_name: dept,
-                    counter_number: Number(
-                        counter.replace("Counter ", "")
-                    )
-                })
+                queue: updatedQueue
             };
 
         } catch (error) {
