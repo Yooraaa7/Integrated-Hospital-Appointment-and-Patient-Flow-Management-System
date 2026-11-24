@@ -472,7 +472,38 @@ function appointmentFromApi(row) {
 
 async function fetchPatientAppointments() {
     const data = await patientApiRequest("/appointments");
-    return (data.appointments || []).map(appointmentFromApi);
+
+    const appointments = (data.appointments || []).map(appointmentFromApi);
+
+    // Retrieve registered appointment queues from QMS.
+    let queues = [];
+
+    try {
+        const queueData = await qmsPatientRequest(
+            "/appointment-queues/my-queues"
+        );
+
+        queues = queueData.queues || [];
+    } catch (error) {
+        console.error(
+            "Unable to load appointment queue history:",
+            error
+        );
+    }
+
+    // Match each QMS queue to its original appointment.
+    return appointments.map(appointment => {
+        const queue = queues.find(item =>
+            String(item.appointment_id) === String(appointment.id)
+        );
+
+        return {
+            ...appointment,
+            queueNumber: queue?.queue_number || null,
+            queueStatus: queue?.status || null,
+            registeredAt: queue?.issued_at || null
+        };
+    });
 }
 
 function getLocalAppointmentDateTime(date, time) {
@@ -1807,7 +1838,7 @@ function initHistory() {
                             </div>
                         </div>
                     </div>
-
+                    
                     <div class="appointment-notes">
                         <span>Reason / Notes</span>
                         <p>${escapeHtml(appointment.notes || "No notes provided.")}</p>
